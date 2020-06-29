@@ -1,6 +1,6 @@
 # AJ Inventory System
 
-Inventory management system is a software system for tracking inventory levels, orders, sales and deliveries. It can also be used in the manufacturing industry to create a work order. Companies use inventory management software to avoid product overstock and outages. It is a tool for organizing inventory data that before was generally stored in hard-copy form or in spreadsheets.
+Inventory management system is a software system for tracking inventory levels, orders, sales and deliveries. It can also be used in the manufacturing industry to create a work order. It is a tool for organizing inventory data that before was generally stored in hard-copy form or in spreadsheets.
 
 ## Built With
 

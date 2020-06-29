@@ -1,0 +1,34 @@
+<!-- <div>
+	<app-widget-area></app-widget-area>
+</div> -->
+
+<!-- <mat-divider></mat-divider> -->
+
+<div fxLayout="row" fxLayoutAlign="space-between center" fxLayoutGap="10px" class="stats-cards">
+    <mat-card fxFlex="23">
+        <app-widget-card label="New Users" total="1k" percentage="50" [data]="[1, 3, 10, 50]"></app-widget-card>
+    </mat-card>
+    <mat-card fxFlex="23">
+        <app-widget-card label="Users retention" total="5k" percentage="40" [data]="[1, 7, 10, 21]"></app-widget-card>
+    </mat-card>
+    <mat-card fxFlex="23">
+        <app-widget-card label="Sales" total="2k" percentage="30" [data]="cards"></app-widget-card>
+    </mat-card>
+    <mat-card fxFlex="23">
+        <app-widget-card label="Purchase" total="2k" percentage="20" [data]="cards"></app-widget-card>
+    </mat-card>
+</div>
+
+<mat-divider></mat-divider>
+
+<div fxLayout="row" fxLayoutAlign="space-between center" fxLayoutGap="20px">
+    <div fxFlex="60">
+        <div class="mat-elevation-z8">
+            <app-widget-table [tableData]="tableData" [columnHeader]="columnHeader"></app-widget-table>
+        </div>
+
+    </div>
+    <div fxFlex="40">
+        <app-widget-pie [data]="pieChart"></app-widget-pie>
+    </div>
+</div>

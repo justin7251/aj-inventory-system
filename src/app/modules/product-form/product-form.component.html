@@ -1,0 +1,67 @@
+<!-- Title group  -->
+ <div class="title-group container">
+   <h1 class="mat-h1">Add Product</h1>
+ </div>
+
+ <!-- Product form -->
+<div class="inner-wrapper">
+  <form [formGroup]="productForm" (ngSubmit)="submitBook()" #resetProductForm="ngForm" novalidate>
+    <!-- Left block -->
+    <mat-card class="container">
+    <div class="controlers-wrapper example-container">
+      <!-- Product Number -->
+      <mat-form-field class="example-full-width">
+        <input matInput placeholder="Product Number" formControlName="product_no">
+        <mat-error *ngIf="handleError('product_no', 'required')">
+          You must provide a<strong>Product Number</strong>
+        </mat-error>
+      </mat-form-field>
+
+      <!-- Product name -->
+      <mat-form-field class="example-full-width">
+        <input matInput placeholder="Product name" formControlName="product_name">
+        <mat-error *ngIf="handleError('product_name', 'required')">
+          You must provide a<strong>Product name</strong>
+        </mat-error>
+      </mat-form-field>
+
+      <!-- Color -->
+      <mat-form-field class="example-full-width">
+        <input matInput placeholder="Colour" formControlName="color">
+        <mat-error *ngIf="handleError('color', 'required')">
+        You must provide a <strong>Colour</strong>
+        </mat-error>
+      </mat-form-field>
+
+      <!-- Quantity -->
+      <mat-form-field class="example-full-width">
+        <input matInput placeholder="Quantity" formControlName="quantity">
+        <mat-error *ngIf="handleError('quantity', 'required')">
+        You must provide an <strong>Quantity</strong>
+        </mat-error>
+      </mat-form-field>
+
+
+      <!-- Price -->
+      <mat-form-field class="example-full-width">
+        <input matInput placeholder="Sale Price" formControlName="price">
+        <mat-error *ngIf="handleError('price', 'required')">
+        You must provide an <strong>Sale Price</strong>
+        </mat-error>
+      </mat-form-field>
+
+      <div class="form-group">
+        <label class="error">{{ errorMessage}}</label>
+        <label class="success">{{successMessage}}</label>
+      </div>
+      <!-- Submit & Reset -->
+      <div class="full-wrapper button-wrapper">
+        <div class="button-wrapper">
+          <button mat-flat-button color="warn">Submit</button>
+<!--           <button mat-flat-button color="war" (click)="resetForm()">Clear</button> -->
+        </div>
+      </div>
+    </div>
+    </mat-card>
+  </form>
+</div>

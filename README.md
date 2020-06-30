@@ -16,15 +16,15 @@ In this project, I upgraded the Angluar version from 8 to 10, which took me 3 ho
 There are many problems with the upgrade. The `ng update` function shows that all packages are up to date. Therefore, I have to manually update `core`, `cli` and many small packages.
 
 Manually update the software package:
-1. npm outdate
-2. manually update pack.json
-3. delete package-lock.json
-4. npm i @package@10.0.1
-5. npm outdate // check its updated
-6. ng update //check missing package
-7. doing this all overagain
+1. npm outdate  
+2. manually update pack.json  
+3. delete package-lock.json  
+4. npm i @package@10.0.1  
+5. npm outdate // check its updated  
+6. ng update //check missing package  
+7. doing this all overagain  
 
-If needed you might want to delete node_modules
+If needed you might want to delete node_modules  
 
 
 ## Development server
@@ -53,24 +53,23 @@ To get more help on the Angular CLI use `ng help` or go check out the [Angular C
 
 ## Package install
 
-npm i @angular-devkit/build-angular
-npm i typescript
-npm i @angular/compiler-cli
-npm i @angular/compiler
-npm i @angular/core
+npm i @angular-devkit/build-angular  
+npm i typescript  
+npm i @angular/compiler-cli  
+npm i @angular/compiler  
+npm i @angular/core  
 
-
-ng add @angular/material
-npm install highcharts-angular --save
-npm install highcharts --save
-npm i @angular/flex-layout @angular/cdk
-npm install --save firebase @angular/fire
-npm i bootstrap
-npm i font-awesome
+ng add @angular/material  
+npm install highcharts-angular --save  
+npm install highcharts --save  
+npm i @angular/flex-layout @angular/cdk  
+npm install --save firebase @angular/fire  
+npm i bootstrap  
+npm i font-awesome  
 
 
 ##  Delete node_module in window
-npm i rimraf
+npm i rimraf  
 rimraf node_modules
 
 ## update all package

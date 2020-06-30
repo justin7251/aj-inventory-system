@@ -6,7 +6,7 @@ Inventory management system is a software system for tracking inventory levels, 
 
 * [Angular](https://angular.io/) - The Angular framework used
 * [Angular Material](https://material.angular.io/) - Material Design components for Angular
-* [AngluarFire](https://github.com/angular/angularfire/) - Angular Fire is used Firebase as a database service
+* [AngularFire](https://github.com/angular/angularfire/) - Angular Fire is used Firebase as a database service
 
 
 This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 10.0.0.

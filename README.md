@@ -69,9 +69,7 @@ npm i bootstrap
 npm i font-awesome
 
 
-## git reset --hard HEAD~1
-
-##  delete node_module in window
+##  Delete node_module in window
 npm i rimraf
 rimraf node_modules
 

@@ -1,12 +1,12 @@
 # AJ Inventory System
 
-Inventory management system is a software system for tracking inventory levels, orders, sales and deliveries. It can also be used in the manufacturing industry to create a work order. It is a tool for organizing inventory data that before was generally stored in hard-copy form or in spreadsheets.
+Inventory management system is a software system for tracking inventory levels, orders, sales and deliveries. It can also be used in the manufacturing industry to create a work order. It is a tool for organizing inventory data that was generally stored in hard-copy form or in spreadsheets.
 
 ## Built With
 
-* [Anlguar](https://angular.io/) - The Anglar framework used
+* [Angular](https://angular.io/) - The Angular framework used
 * [Angular Material](https://material.angular.io/) - Material Design components for Angular
-* [AngluarFire](https://github.com/angular/angularfire/) - Angluar Fire is used Firebase as a database service
+* [AngluarFire](https://github.com/angular/angularfire/) - Angular Fire is used Firebase as a database service
 
 
 This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 10.0.0.

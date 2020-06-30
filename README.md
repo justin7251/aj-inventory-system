@@ -11,7 +11,7 @@ Inventory management system is a software system for tracking inventory levels, 
 
 This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 10.0.0.
 
-## Upgrade angluar 8 to 10 takes me 3 hours
+## Upgrade angluar 8 to 10
 Manually update the software package:
 1. npm outdate
 2. manually update pack.json

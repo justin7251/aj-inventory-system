@@ -67,21 +67,18 @@ export class ProductFormComponent implements OnInit {
     });
   }
 
-  /* Submit book */
-  submitBook() {
-    if (this.productForm.valid && this.productForm.value){
-  		this.db.AddProduct(this.productForm.value)
-		.then(res => {
-			this.errorMessage = "";
-			this.successMessage = "Record has been created";
-		}, err => {
-		console.log(err);
-			this.errorMessage = err.message;
-			this.successMessage = "";
-		})
+  /* Add Product */
+  addProduct() {
+    if (this.productForm.valid && this.productForm.value) {
+  		this.db.AddProduct(this.productForm.value).then(res => {
+        this.errorMessage = "";
+        this.successMessage = "Record has been created";
+      }, err => {
+        console.log(err);
+        this.errorMessage = err.message;
+        this.successMessage = "";
+      })
   		this.resetForm();
     }
   }
-
-
 }

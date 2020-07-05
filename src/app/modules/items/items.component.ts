@@ -19,7 +19,10 @@ export class ItemsComponent implements OnInit {
 		'product_name',
 		'quantity',
 		'color', 
-		'price',
+    'price',
+    'add',
+    'edit',
+    'delete'
 	];
   constructor(private itemService: ItemService) { }
   
@@ -30,6 +33,10 @@ export class ItemsComponent implements OnInit {
       products.forEach(item => {
         let a = item.payload.doc.data();
         a['$key'] = item.payload.doc.id;
+        a['from'] = 'products';
+        a['add'] = 'Add';
+        a['edit'] = 'Edit';
+        a['delete'] = 'Delete';
         this.tableData.push(a as Product);
       });
     });
@@ -43,17 +50,18 @@ export class ItemsComponent implements OnInit {
     //   this.itemService.updatePolicy(policy);
     // }
     
-    // delete(id: string) {
-      //   this.itemService.deletePolicy(id);
-      // }
-      
-      columnHeader = {'product_no': 'Product ID', 'product_name': 'Product Name', 'quantity': 'Quantity', 'color': 'Color', 'price': 'Price'};
-      // tableData = this.ProductData;
-
-      // columnHeader = {'product_no': 'Product ID', 'product_name': 'Product Name'};
-      // tableData = this.ProductData;
-      // tableData = [
-      //   { product_no: '0', product_name: 'Hydrogen', price: 1.0079, color: 'H', quantity: 20 },
-      //   { product_no: '2', product_name: 'Helium', price: 4.0026, color: 'He', quantity: 20 },
-      // ];
+  deleteOrder(id: string) {
+    this.itemService.Delete('products', id);
+  }
+    
+  columnHeader = {
+    'product_no': 'Product ID',
+    'product_name': 'Product Name',
+    'quantity': 'Quantity',
+    'color': 'Color',
+    'price': 'Price',
+    'add': 'Add',
+    'edit': 'Edit',
+    'delete': 'Delete'
+  };
 }

@@ -1,9 +1,8 @@
 import {Component, OnInit, ViewChild, Input} from '@angular/core';
 import {MatTableModule, MatTableDataSource} from '@angular/material/table';
-import {MatPaginatorModule} from '@angular/material/paginator';
-import {MatSortModule} from '@angular/material/sort'
-
-
+import {MatPaginator} from '@angular/material/paginator';
+import { MatSort} from '@angular/material/sort';
+import {Observable} from 'rxjs';
 
 @Component({
   selector: 'app-widget-table',
@@ -15,24 +14,25 @@ export class TableComponent implements OnInit {
   @Input() columnHeader;
   objectKeys = Object.keys;
   dataSource = new MatTableDataSource<any>();
+  // loading$: Observable<any[]>;
 
-  @ViewChild(MatSortModule,{static:true}) sort: MatSortModule;
-  @ViewChild(MatPaginatorModule, { static: true }) paginator: MatPaginatorModule;
+  @ViewChild(MatPaginator,{static:false}) paginator: MatPaginator;
+  @ViewChild(MatSort, {}) sort: MatSort;
 
-  // @ViewChild(MatSort,{static:true}) sort: MatSort;
-  // @ViewChild(MatPaginator, { static: true }) paginator: MatPaginator;
-
-      
   ngOnInit() {
+    setTimeout(() => {
+      this.dataSource.data = this.tableData;
+    }, 1000);
   }
 
   ngAfterViewInit() {
-    // this.dataSource.paginator = this.paginator;
-    // this.dataSource.sort = this.sort;
-    setTimeout(() => {
-      this.dataSource.data = this.tableData;
-    }, 500);
+    this.dataSource.paginator = this.paginator;
+    this.dataSource.sort = this.sort;
   }
+
+  // delete(id: string) {
+  //   console.log('delete');
+  // }
 
   applyFilter(filterValue: string) {
     this.dataSource.filter = filterValue.trim().toLowerCase();

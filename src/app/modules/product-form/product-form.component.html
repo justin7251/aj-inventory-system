@@ -1,11 +1,11 @@
 <!-- Title group  -->
  <div class="title-group container">
-   <h1 class="mat-h1">Add Product</h1>
+   <h1 class="mat-h1">Add Item</h1>
  </div>
 
  <!-- Product form -->
 <div class="inner-wrapper">
-  <form [formGroup]="productForm" (ngSubmit)="submitBook()" #resetProductForm="ngForm" novalidate>
+  <form [formGroup]="productForm" (ngSubmit)="addProduct()" #resetProductForm="ngForm" novalidate>
     <!-- Left block -->
     <mat-card class="container">
     <div class="controlers-wrapper example-container">

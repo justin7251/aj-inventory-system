@@ -1,27 +1,30 @@
 # AJ Inventory System
 
-Inventory management system is a software system for tracking inventory levels, orders, sales and deliveries. It can also be used in the manufacturing industry to create a work order. It is a tool for organizing inventory data that before was generally stored in hard-copy form or in spreadsheets.
+Inventory management system is a software system for tracking inventory levels, orders, sales and deliveries. It can also be used in the manufacturing industry to create a work order. It is a tool for organizing inventory data that was generally stored in hard-copy form or in spreadsheets.
 
 ## Built With
 
-* [Anlguar](https://angular.io/) - The Anglar framework used
+* [Angular](https://angular.io/) - The Angular framework used
 * [Angular Material](https://material.angular.io/) - Material Design components for Angular
-* [AngluarFire](https://github.com/angular/angularfire/) - Angluar Fire is used Firebase as a database service
+* [AngularFire](https://github.com/angular/angularfire/) - Angular Fire is used Firebase as a database service
 
 
 This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 10.0.0.
 
-## Upgrade angluar 8 to 10 takes me 3 hours
-Manually update the software package:
-1. npm outdate
-2. manually update pack.json
-3. delete package-lock.json
-4. npm i @package@10.0.1
-5. npm outdate // check its updated
-6. ng update //check missing package
-7. doing this all overagain
+## Upgrade Angular 8 to 10
+In this project, I upgraded the Angular version from 8 to 10, which took me 3 hours.
+There are many problems with the upgrade. The `ng update` function shows that all packages are up to date. Therefore, I have to manually update `core`, `cli` and many small packages.
 
-If needed you might want to delete node_modules
+Manually update the software package:
+1. npm outdate  
+2. manually update pack.json  
+3. delete package-lock.json  
+4. npm i @package@10.0.1  
+5. npm outdate // check its updated  
+6. ng update //check missing package  
+7. doing this all overagain  
+
+If needed you might want to delete node_modules  
 
 
 ## Development server
@@ -50,23 +53,23 @@ To get more help on the Angular CLI use `ng help` or go check out the [Angular C
 
 ## Package install
 
-npm i @angular-devkit/build-angular
-npm i typescript
-npm i @angular/compiler-cli
-npm i @angular/compiler
-npm i @angular/core
+npm i @angular-devkit/build-angular  
+npm i typescript  
+npm i @angular/compiler-cli  
+npm i @angular/compiler  
+npm i @angular/core  
+
+ng add @angular/material  
+npm install highcharts-angular --save  
+npm install highcharts --save  
+npm i @angular/flex-layout @angular/cdk  
+npm install --save firebase @angular/fire  
+npm i bootstrap  
+npm i font-awesome  
 
 
-ng add @angular/material
-npm install highcharts-angular --save
-npm install highcharts --save
-npm i @angular/flex-layout @angular/cdk
-npm install --save firebase @angular/fire
-npm i bootstrap
-npm i font-awesome
-
-##  delete node_module in window
-npm i rimraf
+##  Delete node_module in window
+npm i rimraf  
 rimraf node_modules
 
 ## update all package

@@ -1,0 +1,73 @@
+<!-- Title group  -->
+<div class="title-group container">
+    <h1 class="mat-h1">Order List</h1>
+</div>
+  
+  
+  <!-- Books list Angular material data table -->
+  <div class="container">
+      <!-- No data message -->
+      <p *ngIf="OrderData.length <= 0" class="no-data">There is no data added yet!</p>
+      <div class="mat-elevation-z8" *ngIf="OrderData.length > 0">
+          <table mat-table [dataSource]="dataSource" id="table">
+              <ng-container matColumnDef="customer_name">
+                  <th mat-header-cell *matHeaderCellDef> Custom Name </th>
+                  <td mat-cell *matCellDef="let element"> {{element.customer_name}} </td>
+              </ng-container>
+  
+              <ng-container matColumnDef="created_date">
+                  <th mat-header-cell *matHeaderCellDef> Created At</th>
+                  <td mat-cell *matCellDef="let element"> {{element.created_date.toMillis().toString() | date:'d/M/y h:mm:ss a'}} </td>
+              </ng-container>
+  
+              <ng-container matColumnDef="telephone">
+                  <th mat-header-cell *matHeaderCellDef> Telephone </th>
+                  <td mat-cell *matCellDef="let element"> {{element.telephone}} </td>
+              </ng-container>
+  
+              <ng-container matColumnDef="delivery_address">
+                  <th mat-header-cell *matHeaderCellDef> Delivery Address </th>
+                  <td mat-cell *matCellDef="let element"> {{element.delivery_address}} </td>
+              </ng-container>
+  
+              <ng-container matColumnDef="payment_type">
+                  <th mat-header-cell *matHeaderCellDef> Payment Type </th>
+                  <td mat-cell *matCellDef="let element"> {{element.payment_type}} </td>
+              </ng-container>
+  
+              <ng-container matColumnDef="delivery_cost">
+                  <th mat-header-cell *matHeaderCellDef> Delivery Cost </th>
+                  <td mat-cell *matCellDef="let element"> {{element.delivery_cost}} </td>
+              </ng-container>
+  
+              <ng-container matColumnDef="discount">
+                  <th mat-header-cell *matHeaderCellDef> Discount </th>
+                  <td mat-cell *matCellDef="let element"> {{element.discount}} </td>
+              </ng-container>
+  
+              <ng-container matColumnDef="total_cost">
+                  <th mat-header-cell *matHeaderCellDef> Total Cost </th>
+                  <td mat-cell *matCellDef="let element"> {{element.total_cost}} </td>
+              </ng-container>
+  
+              <ng-container matColumnDef="items">
+                  <th mat-header-cell *matHeaderCellDef> Purchase Items </th>
+                  <td mat-cell *matCellDef="let element"> <button (click)="openDialog(element.items)">Open see Items</button> </td>
+              </ng-container>
+  
+              <ng-container matColumnDef="action">
+              <th mat-header-cell *matHeaderCellDef> Action </th>
+              <td mat-cell *matCellDef="let element; let i = index;" style="margin-right: 5px">
+                <button mat-raised-button color="primary" class="push-right"
+                  [routerLink]="['/order_edit/', element.$key]">Edit</button>
+                  <!-- <button mat-raised-button color="accent" (click)="DeleteOrder(i, element)">Delete</button> -->
+              </td>
+              </ng-container>
+  
+              <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+              <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+          </table>
+  
+          <mat-paginator [pageSizeOptions]="[5, 10, 20]" showFirstLastButtons></mat-paginator>
+      </div>
+  </div>

@@ -1,13 +1,7 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DefaultComponent } from './default.component';
-import { DashboardComponent } from 'src/app/modules/dashboard/dashboard.component';
 import { RouterModule } from '@angular/router';
-import { PostsComponent } from 'src/app/modules/posts/posts.component';
-import { SalesComponent } from 'src/app/modules/sales/sales.component';
-import { PurchaseComponent } from 'src/app/modules/purchase/purchase.component';
-import { ItemsComponent } from 'src/app/modules/items/items.component';
-import { ProductFormComponent } from 'src/app/modules/product-form/product-form.component';
 import { SharedModule } from 'src/app/shared/shared.module';
 import { FlexLayoutModule } from '@angular/flex-layout';
 import { DashboardService } from 'src/app/modules/dashboard.service';
@@ -56,6 +50,17 @@ import {MatToolbarModule} from '@angular/material/toolbar';
 import {MatTooltipModule} from '@angular/material/tooltip';
 import {MatTreeModule} from '@angular/material/tree';
 
+import { DashboardComponent } from 'src/app/modules/dashboard/dashboard.component';
+import { PostsComponent } from 'src/app/modules/posts/posts.component';
+import { OrderComponent } from 'src/app/modules/order/order.component';
+import { ItemDialogComponent } from 'src/app/modules/item-dialog/item-dialog.component';
+import { OrderFormComponent } from 'src/app/modules/order-form/order-form.component';
+import { OrderEditComponent } from 'src/app/modules/order-edit/order-edit.component';
+import { PurchaseComponent } from 'src/app/modules/purchase/purchase.component';
+import { ItemsComponent } from 'src/app/modules/items/items.component';
+import { ProductFormComponent } from 'src/app/modules/product-form/product-form.component';
+
+
 
 @NgModule({
   declarations: [
@@ -63,9 +68,12 @@ import {MatTreeModule} from '@angular/material/tree';
     DashboardComponent,
     PostsComponent,
     ItemsComponent,
-    SalesComponent,
+    OrderComponent,
     PurchaseComponent,
-    ProductFormComponent
+    ProductFormComponent,
+    ItemDialogComponent,
+    OrderFormComponent,
+    OrderEditComponent
   ],
   imports: [
     A11yModule,

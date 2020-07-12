@@ -15,8 +15,7 @@ export class ItemService {
     public db: AngularFirestore,
   ) {}
 
-  addRecord(value){
-      /*return this.db.collection('users').doc("2").set({*/
+  addRecord(value) {
     return this.db.collection('records').add({
       user_id: value.uid,
       name: value.name,
@@ -58,7 +57,8 @@ export class ItemService {
 
     const user = JSON.parse(localStorage.getItem('user'));
     return this.db.collection('orders').add({
-      user_id: value.uid,
+      // user_id: value.uid,
+      user_id: '0012',
       customer_name: value.customer_name,
       telephone: value.telephone,
       delivery_address: value.delivery_address,
@@ -67,7 +67,8 @@ export class ItemService {
       discount: value.discount,
       items: value.items,
       total_cost: value.total_cost,
-      created_by: user.name,
+      // created_by: user.name,
+      created_by: 'Justin',
       created_date: new Date()
     });
   }

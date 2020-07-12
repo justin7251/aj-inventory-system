@@ -1,0 +1,56 @@
+<div class="record_form container">
+	<h3 id="record_form_title">Order Details</h3>
+	<form [formGroup]="editOrderForm">
+		<div class="example-container">
+			<mat-form-field>
+				<input matInput placeholder="Customer Full name" formControlName="customer_name">
+			</mat-form-field>
+			<mat-form-field>
+				<input matInput placeholder="Telephone" formControlName="telephone">
+			</mat-form-field>
+			<mat-form-field>
+				<input matInput placeholder="Delivery Address" formControlName="delivery_address">
+			</mat-form-field>
+			<mat-form-field>
+				<input matInput placeholder="Payment Type" formControlName="payment_type">
+			</mat-form-field>
+			<mat-form-field>
+				<input matInput placeholder="Delivery Cost" formControlName="delivery_cost">
+			</mat-form-field>
+			<mat-form-field>
+				<input matInput placeholder="Discount" formControlName="discount">
+			</mat-form-field>
+		</div>
+		<!-- Add Item -->
+		<div class="example-container" formArrayName="items">
+			<label>Purchase Item</label>
+			<div *ngFor="let item of itemForms.controls; let i = index;" [formGroupName]="i" class="form-inline">
+				<mat-form-field>
+					<input matInput placeholder="Product Name" formControlName="name">
+				</mat-form-field>
+				<mat-form-field>
+					<input matInput placeholder="Product Number" formControlName="product_no">
+				</mat-form-field>
+				<mat-form-field>
+					<input matInput placeholder="Product Color" formControlName="color">
+				</mat-form-field>
+				<mat-form-field>
+					<input matInput placeholder="Prodcut Quantity" formControlName="quantity">
+				</mat-form-field>
+				<mat-form-field>
+					<input matInput placeholder="Item Cost" (change)="getTotal()" formControlName="item_cost">
+				</mat-form-field>
+				<button class="btn btn-danger" style="margin-left:20px" (click)="deleteItem(i)"><i class="glyphicon glyphicon-trash"></i>Delete</button>
+			</div>
+			<br>
+			<button class="btn btn-primary" (click)="addItem()"><i class="glyphicon glyphicon-plus"></i>Add Item</button>
+		</div>
+		<div class="example-container">
+			<mat-form-field>
+				<input matInput placeholder="Total Cost" formControlName="total_cost">
+			</mat-form-field>
+		</div>
+		<!-- End Add Item -->
+		<button type="submit" (click)="onSubmit(editOrderForm.value)" mat-flat-button color="warn" class="float-right">Submit</button>
+	</form>
+</div>

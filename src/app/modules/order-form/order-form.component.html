@@ -11,15 +11,6 @@
 			<mat-form-field>
 				<input matInput placeholder="Delivery Address" formControlName="delivery_address">
 			</mat-form-field>
-			<mat-form-field>
-				<input matInput placeholder="Payment Type" formControlName="payment_type">
-			</mat-form-field>
-			<mat-form-field>
-				<input matInput placeholder="Delivery Cost" formControlName="delivery_cost">
-			</mat-form-field>
-			<mat-form-field>
-				<input matInput placeholder="Discount" formControlName="discount">
-			</mat-form-field>
 		</div>
 		<!-- Add Item -->
 		<div class="example-container" formArrayName="items">
@@ -47,6 +38,15 @@
 		</div>
 		<div class="example-container">
 			<mat-form-field>
+				<input matInput placeholder="Payment Type" formControlName="payment_type">
+			</mat-form-field>
+			<mat-form-field>
+				<input matInput placeholder="Delivery Cost" formControlName="delivery_cost">
+			</mat-form-field>
+			<mat-form-field>
+				<input matInput placeholder="Discount" formControlName="discount">
+			</mat-form-field>
+			<mat-form-field>
 				<input matInput placeholder="Total Cost" formControlName="total_cost">
 			</mat-form-field>
 		</div>
@@ -54,7 +54,10 @@
 		<div class="form-group">
          	 <label class="error">{{errorMessage}}</label>
           	<label class="success">{{successMessage}}</label>
-      	</div>
-		<button type="submit" (click)="onSubmit(orderForm.value)" mat-flat-button color="warn" class="float-right">Submit</button>
+		</div>
+		<div class="btn_wrapper">
+			<button type="submit" (click)="onSubmit(orderForm.value)" mat-flat-button color="primary" class="float-left">Submit</button>
+			<button type="submit" (click)="resetForm()" mat-flat-button color="secondary" class="float-left">Cancel</button>
+		</div>
 	</form>
 </div>

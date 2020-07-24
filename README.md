@@ -24,7 +24,7 @@ Manually update the software package:
 6. ng update //check missing package  
 7. doing this all overagain  
 
-If needed you might want to delete node_modules  
+If needed, you need to delete node_modules
 
 
 ## Development server

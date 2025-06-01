@@ -110,7 +110,7 @@ export class ItemService {
           if (product.length > 0) {
             this.exist = true;
             product.forEach(item => {
-              this.productID = item.payload.doc.id;
+              this.productID = (item.payload.doc as any).id;
               const data = item.payload.doc.data() as Product;
               this.old_quantity = data.quantity;
             });

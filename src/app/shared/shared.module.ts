@@ -10,7 +10,6 @@ import {MatListModule} from '@angular/material/list';
 import {MatTableModule} from '@angular/material/table';
 import {MatPaginatorModule} from '@angular/material/paginator';
 
-import { FlexLayoutModule } from '@angular/flex-layout';
 import { RouterModule } from '@angular/router';
 import { HighchartsChartModule } from 'highcharts-angular';
 
@@ -40,7 +39,6 @@ import { TableComponent } from './widgets/table/table.component';
 		MatToolbarModule,
 		MatIconModule,
 		MatButtonModule,
-		FlexLayoutModule,
 		MatMenuModule,
 		MatListModule,
 		RouterModule,

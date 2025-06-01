@@ -3,7 +3,6 @@ import { CommonModule } from '@angular/common';
 import { DefaultComponent } from './default.component';
 import { RouterModule } from '@angular/router';
 import { SharedModule } from 'src/app/shared/shared.module';
-import { FlexLayoutModule } from '@angular/flex-layout';
 import { DashboardService } from 'src/app/modules/dashboard.service';
 import { ItemService } from 'src/app/modules/services/item.service';
 import {FormsModule, ReactiveFormsModule} from '@angular/forms';
@@ -121,7 +120,6 @@ import { ProductFormComponent } from 'src/app/modules/product-form/product-form.
     CommonModule,
     RouterModule,
     SharedModule,
-    FlexLayoutModule,
     FormsModule,
     ReactiveFormsModule
   ],

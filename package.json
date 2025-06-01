@@ -25,7 +25,7 @@
     "@angular/platform-browser": "^17.3.12",
     "@angular/platform-browser-dynamic": "^17.3.12",
     "@angular/router": "^17.3.12",
-    "@firebase/firestore": "^1.15.5",
+    "@firebase/firestore": "^4.7.16",
     "bootstrap": "^4.6.2",
     "firebase": "^10.14.1",
     "font-awesome": "^4.7.0",

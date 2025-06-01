@@ -2,8 +2,8 @@ import { Component, OnInit } from '@angular/core';
 import { ItemService } from '../services/item.service';
 import { Product } from '../model/product.model';
 
-import { MatTableDataSource } from '@angular/material/table';
-import {MatPaginatorModule} from '@angular/material/paginator';
+import { MatLegacyTableDataSource as MatTableDataSource } from '@angular/material/legacy-table';
+import {MatLegacyPaginatorModule as MatPaginatorModule} from '@angular/material/legacy-paginator';
 
 @Component({
   selector: 'app-items',

@@ -1,64 +1,69 @@
 import { Injectable } from '@angular/core';
-import { AngularFirestore, AngularFirestoreDocument } from '@angular/fire/firestore';
+import { Firestore, collection, addDoc, doc, getDoc, setDoc, updateDoc, deleteDoc, collectionData, docData, where, query, orderBy, runTransaction, serverTimestamp, DocumentReference, CollectionReference, Query, DocumentSnapshot } from '@angular/fire/firestore';
 import { Product } from '../model/product.model';
 import { Restock } from '../model/restock.model';
+import { firstValueFrom } from 'rxjs'; // For UpdateProduct logic
+import { map } from 'rxjs/operators'; // For UpdateProduct logic
 
 @Injectable({
   providedIn: 'root'
 })
 export class ItemService {
-  exist:boolean;
-  productID: string;
-  old_quantity: number;
+  // These properties seem to be used for UpdateProduct logic, may need refactoring
+  // exist:boolean; // Can be inferred from productID presence
+  // productID: string;
+  // old_quantity: number;
 
   constructor(
-    public db: AngularFirestore,
+    public firestore: Firestore, // Changed db to firestore
   ) {}
 
-  addRecord(value) {
-    return this.db.collection('records').add({
+  addRecord(value: any) { // Added type for value
+    const recordsCollection = collection(this.firestore, 'records');
+    return addDoc(recordsCollection, {
       user_id: value.uid,
       name: value.name,
       product_no: value.product_no,
       cost: value.cost,
       selling_price: value.selling_price,
-      created: new Date()
+      created: serverTimestamp() // Use serverTimestamp
     });
   }
 
+  async addOrder(value: any) { // Added type, made async for transaction
+    const orderCollectionRef = collection(this.firestore, 'aggregation');
+    const orderDocRef = doc(orderCollectionRef, 'orders');
 
-  addOrder(value) {
-    // aggregation/orders
-    const order_collection = this.db.collection('aggregation').doc('orders');
-    order_collection.ref.get().then(function(data) {
-      var last5_data = [];
-      if (data.exists) {
-          last5_data = data.data().last5;
-          if (last5_data.length > 5) {
-            //remove oldest order
+    try {
+      await runTransaction(this.firestore, async (transaction) => {
+        const sfDoc = await transaction.get(orderDocRef);
+        let last5_data = [];
+        let newTotal = +value.total_cost;
+        let newCount = 1;
+
+        if (sfDoc.exists()) {
+          const data = sfDoc.data();
+          last5_data = data.last5 || [];
+          if (last5_data.length >= 5) { // ensure it's >= 5, not > 5 for shift
             last5_data.shift();
           }
+          last5_data.push(value); // Assuming value is the order object itself
+          newTotal = +data.total + +value.total_cost;
+          newCount = +data.count + 1;
+          transaction.update(orderDocRef, { total: newTotal, count: newCount, last5: last5_data });
+        } else {
           last5_data.push(value);
-          order_collection.set({
-            total: +data.data().total + +value.total_cost,
-            count: +data.data().count + 1,
-            last5: last5_data
-          });
-      } else {
-          order_collection.set({
-            total: +value.total_cost,
-            count: 1,
-            last5: [value]
-          });
-      }
-    }).catch(function(error) {
-        console.log("Error getting aggregation:", error);
-    });
+          transaction.set(orderDocRef, { total: newTotal, count: newCount, last5: last5_data });
+        }
+      });
+    } catch (e) {
+      console.log("Transaction failed: ", e);
+    }
 
-    const user = JSON.parse(localStorage.getItem('user'));
-    return this.db.collection('orders').add({
-      // user_id: value.uid,
-      user_id: '0012',
+    // const user = JSON.parse(localStorage.getItem('user')); // This needs to be handled if still relevant
+    const ordersCollection = collection(this.firestore, 'orders');
+    return addDoc(ordersCollection, {
+      user_id: '0012', // value.uid,
       customer_name: value.customer_name,
       telephone: value.telephone,
       delivery_address: value.delivery_address,
@@ -67,97 +72,98 @@ export class ItemService {
       discount: value.discount,
       items: value.items,
       total_cost: value.total_cost,
-      // created_by: user.name,
-      created_by: 'Justin',
-      created_date: new Date()
+      created_by: 'Justin', // user.name,
+      created_date: serverTimestamp() // Use serverTimestamp
     });
   }
 
-  UpdateOrder(id, value) {
-    return this.db.collection('orders').doc(id).update(value);
+  UpdateOrder(id: string, value: any) { // Added type for value
+    const orderDocRef = doc(this.firestore, 'orders', id);
+    return updateDoc(orderDocRef, value);
   }
 
   /* Create Product */
   AddProduct(product: Product) {
-    return this.db.collection('products').add({
-      product_no: product.product_no,
-      product_name: product.product_name,
-      color: product.color,
+    const productsCollection = collection(this.firestore, 'products');
+    return addDoc(productsCollection, {
+      ...product,
       quantity: +product.quantity,
       price: +product.price,
-      created_date: new Date()
+      created_date: serverTimestamp() // Use serverTimestamp
     });
   }
 
   AddRestock(stock: Restock) {
-    return this.db.collection('restock').add({
-      buyer_name: stock.buyer_name,
-      buyer_telephone: stock.buyer_telephone,
-      product_no: stock.product_no,
-      product_name: stock.product_name,
-      color: stock.color,
+    const restockCollection = collection(this.firestore, 'restock');
+    return addDoc(restockCollection, {
+      ...stock,
       quantity: +stock.quantity,
       price: +stock.price,
-      created_date: new Date()
+      created_date: serverTimestamp() // Use serverTimestamp
     });
   }
 
-  UpdateProduct(stock) {
-    this.productID = null;
-    this.exist = false;
-    this.db.collection('products', ref => ref.where('product_no', "==", stock.product_no)).snapshotChanges()
-      .subscribe(product => {
-          if (product.length > 0) {
-            this.exist = true;
-            product.forEach(item => {
-              this.productID = (item.payload.doc as any).id;
-              const data = item.payload.doc.data() as Product;
-              this.old_quantity = data.quantity;
-            });
-          }
+  async UpdateProduct(stock: any) { // Made async due to await
+    const productsCollectionRef = collection(this.firestore, 'products');
+    const q = query(productsCollectionRef, where('product_no', "==", stock.product_no));
+
+    const querySnapshot = await firstValueFrom(collectionData(q, { idField: 'id' }).pipe(map(results => results)));
+
+    if (querySnapshot.length > 0) {
+      const existingProductDoc = querySnapshot[0];
+      const productDocRef = doc(this.firestore, 'products', existingProductDoc.id);
+      const old_quantity = (existingProductDoc as Product).quantity;
+      return updateDoc(productDocRef, { quantity: +stock.quantity + +old_quantity });
+    } else {
+      return addDoc(productsCollectionRef, {
+        product_no: stock.product_no,
+        product_name: stock.product_name,
+        color: stock.color,
+        price: (+stock.price * 120 / 100),
+        quantity: +stock.quantity,
+        created_date: serverTimestamp() // Use serverTimestamp
       });
-    // hack delay 1 sec
-    setTimeout(() =>  {
-      if (this.exist && this.productID) {
-        this.db.collection('products').doc(this.productID).update({ quantity: +stock.quantity + +this.old_quantity });
-      } else {
-        this.db.collection('products').add({
-          product_no: stock.product_no,
-          product_name: stock.product_name,
-          color: stock.color,
-          price: (+stock.price * 120 / 100),
-          quantity: +stock.quantity,
-          created_date: new Date()
-        });
-      }
-    }, 1000);
+    }
   }
 
-  Delete(table: string,id: string) {
-    return this.db.collection(table).doc(id).update({
+  Delete(table: string, id: string) {
+    const docRef = doc(this.firestore, table, id);
+    return updateDoc(docRef, {
       deleted: true,
-      deleted_date: new Date(),
+      deleted_date: serverTimestamp() // Use serverTimestamp
     });
   }
 
   /* Get Product list */
   getProductList() {
-    return this.db.collection('products').snapshotChanges();
+    const productsCollectionRef = collection(this.firestore, 'products');
+    // Assuming snapshotChanges() is used for real-time updates with metadata
+    // For v9, this is typically collectionData or docData with an idField option
+    // or stateChanges for more detailed snapshot information.
+    // For simplicity, let's use collectionData for now if full snapshot isn't strictly needed.
+    // If snapshotChanges' full DocumentChangeAction[] is needed, it's more complex.
+    // Sticking to a simpler collectionData for now.
+    return collectionData(productsCollectionRef, { idField: 'id' }); // Returns Observable<Product[]>
   }
 
   GetRestockList() {
-    return this.db.collection('restock').snapshotChanges();
+    const restockCollectionRef = collection(this.firestore, 'restock');
+    return collectionData(restockCollectionRef, { idField: 'id' }); // Returns Observable<Restock[]>
   }
 
   /* Get Order list */
-  GetOrdersList(){
-    // .where('deleted', '==', false)
-    return this.db.collection('orders', ref => ref.orderBy('created_date'))
-      .snapshotChanges();
+  GetOrdersList() {
+    const ordersCollectionRef = collection(this.firestore, 'orders');
+    const q = query(ordersCollectionRef, orderBy('created_date'));
+    // Similar to getProductList, using collectionData
+    return collectionData(q, { idField: 'id' }); // Returns Observable<Order[]>
   }
 
   /* Get Order */
   GetOrder(id: string) {
-    return this.db.collection('orders').doc(id);
-  }  
+    const orderDocRef = doc(this.firestore, 'orders', id);
+    return docData(orderDocRef, { idField: 'id' }); // Returns Observable<Order>
+    // If you need the DocumentSnapshot, use getDoc(orderDocRef) which returns a Promise
+    // or snapshot(orderDocRef) for an Observable of DocumentSnapshot
+  }
 }

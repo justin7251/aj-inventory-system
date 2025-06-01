@@ -1,7 +1,7 @@
 import { Component, OnInit, ViewChild } from '@angular/core';
 import { COMMA, ENTER } from '@angular/cdk/keycodes';
-import { MatChipInputEvent } from '@angular/material/chips';
-import { FormGroup, FormBuilder, Validators } from "@angular/forms";
+import { MatLegacyChipInputEvent as MatChipInputEvent } from '@angular/material/legacy-chips';
+import { UntypedFormGroup, UntypedFormBuilder, Validators } from "@angular/forms";
 import { ItemService } from '../services/item.service';
 
 @Component({
@@ -18,13 +18,13 @@ export class ProductFormComponent implements OnInit {
 	// @ViewChild('chipList') chipList;
  	// @ViewChild('resetProductForm') myNgForm;
   readonly separatorKeysCodes: number[] = [ENTER, COMMA];
-	productForm: FormGroup;
+	productForm: UntypedFormGroup;
 	ProductType: any = ['Paperback', 'Case binding', 'Perfect binding', 'Saddle stitch binding', 'Spiral binding'];
 	errorMessage: string = '';
 	successMessage: string = '';
 
 	constructor(
-	    public fb: FormBuilder,
+	    public fb: UntypedFormBuilder,
 	    public db: ItemService,
 	) { }
 

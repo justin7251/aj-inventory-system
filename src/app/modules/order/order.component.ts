@@ -1,10 +1,10 @@
 import { Component, OnInit, ViewChild } from '@angular/core';
-import {MatTableModule, MatTableDataSource} from '@angular/material/table';
-import {MatPaginator} from '@angular/material/paginator';
+import {MatLegacyTableModule as MatTableModule, MatLegacyTableDataSource as MatTableDataSource} from '@angular/material/legacy-table';
+import {MatLegacyPaginator as MatPaginator} from '@angular/material/legacy-paginator';
 import { MatSort} from '@angular/material/sort';
 
 
-import {MatDialog, MatDialogRef, MAT_DIALOG_DATA} from '@angular/material/dialog';
+import {MatLegacyDialog as MatDialog, MatLegacyDialogRef as MatDialogRef, MAT_LEGACY_DIALOG_DATA as MAT_DIALOG_DATA} from '@angular/material/legacy-dialog';
 import { ItemDialogComponent } from '../item-dialog/item-dialog.component';
 // User item service for now
 import { ItemService } from '../services/item.service';

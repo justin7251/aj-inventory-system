@@ -2,7 +2,7 @@ import { Component, OnInit, ViewChild } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Location } from '@angular/common';
 import { FileUploader } from "ng2-file-upload";
-import { FormBuilder, FormGroup, FormArray, Validators } from '@angular/forms';
+import { UntypedFormBuilder, UntypedFormGroup, UntypedFormArray, Validators } from '@angular/forms';
 // User item service for now
 import { ItemService } from '../services/item.service';
 
@@ -16,7 +16,7 @@ export class OrderFormComponent implements OnInit {
 	uid: string;
 	items: [];
 	total: number = 0;
-	orderForm: FormGroup;
+	orderForm: UntypedFormGroup;
 	errorMessage: string = '';
 	successMessage: string = '';
 	@ViewChild('resetOrderForm') myNgForm;
@@ -26,7 +26,7 @@ export class OrderFormComponent implements OnInit {
     private route: ActivatedRoute,
     private location : Location,
     public db: ItemService,
-    private fb: FormBuilder
+    private fb: UntypedFormBuilder
   ) { }
 
   ngOnInit(): void {
@@ -53,7 +53,7 @@ export class OrderFormComponent implements OnInit {
 	}
 
 	get itemForms() {
-		return this.orderForm.get('items') as FormArray
+		return this.orderForm.get('items') as UntypedFormArray
 	}
 
 	addItem() {

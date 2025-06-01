@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { FormBuilder, FormGroup, FormArray, Validators } from '@angular/forms';
+import { UntypedFormBuilder, UntypedFormGroup, UntypedFormArray, Validators } from '@angular/forms';
 // User item service for now
 import { ItemService } from '../services/item.service';
 import { Order } from '../model/order.model';
@@ -11,7 +11,7 @@ import { Order } from '../model/order.model';
   styleUrls: ['./order-edit.component.scss']
 })
 export class OrderEditComponent implements OnInit {
-	editOrderForm: FormGroup;
+	editOrderForm: UntypedFormGroup;
 	items: [];
 	id: string;
   start: boolean = true;
@@ -20,10 +20,10 @@ export class OrderEditComponent implements OnInit {
     private router: Router,
     private route: ActivatedRoute,
     public db: ItemService,
-		private fb: FormBuilder
+		private fb: UntypedFormBuilder
 	) {
 	    this.id = this.route.snapshot.paramMap.get('id');
-	  	this.db.GetOrder(this.id).valueChanges().subscribe(data => {
+		this.db.GetOrder(this.id).subscribe(data => {
 			if (this.start) {
 				for (let i = 0; i < data['items'].length; ++i) {
 					this.addItem();
@@ -53,7 +53,7 @@ export class OrderEditComponent implements OnInit {
 	}
 
 	get itemForms() {
-		return this.editOrderForm.get('items') as FormArray
+		return this.editOrderForm.get('items') as UntypedFormArray
 	}
 
 	addItem() {

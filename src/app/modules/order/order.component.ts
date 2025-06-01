@@ -44,7 +44,7 @@ export class OrderComponent implements OnInit {
 			.subscribe(order => {
 		    order.forEach(item => {
 		      let a = item.payload.doc.data();
-		      a['$key'] = item.payload.doc.id;
+		      a['$key'] = (item.payload.doc as any).id;
 		      this.OrderData.push(a as Order)
 		    })
 		    /* Data table */

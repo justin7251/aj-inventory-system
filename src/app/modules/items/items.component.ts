@@ -32,7 +32,7 @@ export class ItemsComponent implements OnInit {
     this.itemService.getProductList().subscribe(products => {
       products.forEach(item => {
         let a = item.payload.doc.data();
-        a['$key'] = item.payload.doc.id;
+        a['$key'] = (item.payload.doc as any).id;
         a['from'] = 'products';
         a['add'] = 'Add';
         a['edit'] = 'Edit';

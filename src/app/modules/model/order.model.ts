@@ -9,6 +9,7 @@ export interface Order {
 	delivery_cost: number;
 	discount: number;
 	total_cost: number;
+	totalEarnings?: number; // Added totalEarnings
 	update_date: Date;
 	created_date: Date;
 	deleted_date: Date;

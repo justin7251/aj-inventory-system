@@ -43,6 +43,7 @@ export class ProductFormComponent implements OnInit {
 		color: ['', [Validators.required]],
 		quantity: ['', [Validators.required]],
 		price: ['', [Validators.required]],
+		costPrice: ['', [Validators.required]], // Added costPrice form control
     })
   }
 

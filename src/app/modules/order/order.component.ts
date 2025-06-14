@@ -32,6 +32,7 @@ export class OrderComponent implements OnInit {
 		'delivery_cost',
 		'discount',
 		'total_cost',
+		'totalEarnings', // Added totalEarnings
 		'items',
 		'action'
 	];

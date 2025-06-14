@@ -50,6 +50,14 @@
         </mat-error>
       </mat-form-field>
 
+      <!-- Cost Price -->
+      <mat-form-field class="example-full-width">
+        <input matInput type="number" placeholder="Cost Price" formControlName="costPrice">
+        <mat-error *ngIf="handleError('costPrice', 'required')">
+        You must provide a <strong>Cost Price</strong>
+        </mat-error>
+      </mat-form-field>
+
       <div class="form-group">
         <label class="error">{{ errorMessage}}</label>
         <label class="success">{{successMessage}}</label>

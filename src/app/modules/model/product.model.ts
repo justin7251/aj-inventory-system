@@ -6,6 +6,7 @@ export interface Product {
    quantity: number;
    product_type: string;
    price: number;
+   costPrice?: number;
    update_date: Date;
    created_date: Date;
    deleted_date: Date;

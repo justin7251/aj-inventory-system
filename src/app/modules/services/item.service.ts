@@ -62,6 +62,54 @@ export class ItemService {
 
     // const user = JSON.parse(localStorage.getItem('user')); // This needs to be handled if still relevant
     const ordersCollection = collection(this.firestore, 'orders');
+
+    // Calculate totalEarnings
+    let totalEarnings = 0;
+    if (value.items && Array.isArray(value.items)) {
+      for (const item of value.items) {
+        if (!item.product_no || !item.quantity || !item.item_cost) {
+          console.warn(`Order item is missing product_no, quantity, or item_cost. Skipping earnings calculation for this item.`, item);
+          continue;
+        }
+
+        const productsCollectionRef = collection(this.firestore, 'products');
+        const productQuery = query(productsCollectionRef, where('product_no', "==", item.product_no));
+
+        try {
+          const querySnapshot = await firstValueFrom(collectionData(productQuery, { idField: 'id' }).pipe(map(results => results)));
+
+          if (querySnapshot.length > 0) {
+            const productData = querySnapshot[0] as Product; // Assuming Product model has costPrice
+            if (productData.costPrice !== undefined && productData.costPrice !== null) {
+              const itemQuantity = parseFloat(item.quantity);
+              const itemSellingPrice = parseFloat(item.item_cost); // This is price_per_unit * quantity for that item line from order form
+              // item_cost in order is often total for that line, not per unit. Assuming item.item_cost is price per unit here.
+              // If item.item_cost is total for line, then it should be item_total_selling_price = parseFloat(item.item_cost)
+              // And earnings would be item_total_selling_price - (itemQuantity * parseFloat(productData.costPrice))
+              // Let's assume item.item_cost is PER UNIT as per typical order forms.
+
+              const itemCostPrice = parseFloat(productData.costPrice.toString());
+
+              if (isNaN(itemQuantity) || isNaN(itemSellingPrice) || isNaN(itemCostPrice)) {
+                console.warn(`Invalid number format for item: ${item.product_no}. Skipping earnings calculation for this item.`);
+                continue;
+              }
+
+              // Earnings for this line item = (Quantity * Selling Price/Unit) - (Quantity * Cost Price/Unit)
+              const item_earnings = (itemQuantity * itemSellingPrice) - (itemQuantity * itemCostPrice);
+              totalEarnings += item_earnings;
+            } else {
+              console.warn(`Product ${item.product_no} found, but costPrice is missing. Skipping earnings calculation for this item.`);
+            }
+          } else {
+            console.warn(`Product ${item.product_no} not found in database. Skipping earnings calculation for this item.`);
+          }
+        } catch (error) {
+          console.error(`Error fetching product ${item.product_no}:`, error);
+        }
+      }
+    }
+
     return addDoc(ordersCollection, {
       user_id: '0012', // value.uid,
       customer_name: value.customer_name,
@@ -72,6 +120,7 @@ export class ItemService {
       discount: value.discount,
       items: value.items,
       total_cost: value.total_cost,
+      totalEarnings: totalEarnings, // Add totalEarnings to the order
       created_by: 'Justin', // user.name,
       created_date: serverTimestamp() // Use serverTimestamp
     });
@@ -89,6 +138,7 @@ export class ItemService {
       ...product,
       quantity: +product.quantity,
       price: +product.price,
+      costPrice: +product.costPrice, // Add costPrice
       created_date: serverTimestamp() // Use serverTimestamp
     });
   }
@@ -113,15 +163,25 @@ export class ItemService {
       const existingProductDoc = querySnapshot[0];
       const productDocRef = doc(this.firestore, 'products', existingProductDoc.id);
       const old_quantity = (existingProductDoc as Product).quantity;
-      return updateDoc(productDocRef, { quantity: +stock.quantity + +old_quantity });
+      // Update costPrice and quantity
+      return updateDoc(productDocRef, {
+        quantity: +stock.quantity + +old_quantity,
+        costPrice: +stock.price // stock.price is the new costPrice
+        // Selling price is not changed here as per requirements
+      });
     } else {
+      // Add new product with costPrice and calculated selling price
       return addDoc(productsCollectionRef, {
         product_no: stock.product_no,
         product_name: stock.product_name,
         color: stock.color,
-        price: (+stock.price * 120 / 100),
+        costPrice: +stock.price, // stock.price is the costPrice
+        price: (+stock.price * 120 / 100), // Calculate selling price
         quantity: +stock.quantity,
-        created_date: serverTimestamp() // Use serverTimestamp
+        created_date: serverTimestamp(), // Use serverTimestamp
+        // Ensure other Product fields are considered if necessary e.g. product_type
+        // For now, aligning with existing fields in this block.
+        product_type: stock.product_type || '' // Add product_type, default to empty string if not provided
       });
     }
   }

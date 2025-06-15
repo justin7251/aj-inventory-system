@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Firestore, collection, addDoc, doc, getDoc, setDoc, updateDoc, deleteDoc, collectionData, docData, where, query, orderBy, runTransaction, serverTimestamp, DocumentReference, CollectionReference, Query, DocumentSnapshot } from '@angular/fire/firestore';
+import { Firestore, collection, addDoc, doc, getDoc, setDoc, updateDoc, deleteDoc, collectionData, docData, where, query, orderBy, runTransaction, serverTimestamp, DocumentReference, CollectionReference, Query, DocumentSnapshot, Timestamp } from '@angular/fire/firestore';
 import { Product } from '../model/product.model';
 import { Restock } from '../model/restock.model';
 import { firstValueFrom } from 'rxjs'; // For UpdateProduct logic
@@ -206,6 +206,13 @@ export class ItemService {
     return collectionData(productsCollectionRef, { idField: 'id' }); // Returns Observable<Product[]>
   }
 
+  /* Get Low Stock Products */
+  getLowStockProducts(threshold: number) {
+    const productsCollectionRef = collection(this.firestore, 'products');
+    const q = query(productsCollectionRef, where('quantity', '<=', threshold));
+    return collectionData(q, { idField: 'id' }); // Returns Observable<Product[]>
+  }
+
   GetRestockList() {
     const restockCollectionRef = collection(this.firestore, 'restock');
     return collectionData(restockCollectionRef, { idField: 'id' }); // Returns Observable<Restock[]>
@@ -225,5 +232,98 @@ export class ItemService {
     return docData(orderDocRef, { idField: 'id' }); // Returns Observable<Order>
     // If you need the DocumentSnapshot, use getDoc(orderDocRef) which returns a Promise
     // or snapshot(orderDocRef) for an Observable of DocumentSnapshot
+  }
+
+  /**
+   * Retrieves the sales history for a specific product.
+   * @param productNo The product number (SKU or identifier) to find sales for.
+   * @returns Observable of an array, where each element is { date: Timestamp, quantity: number }
+   */
+  getProductSalesHistory(productNo: string): Observable<{ date: Timestamp, quantity: number }[]> {
+    const ordersCollectionRef = collection(this.firestore, 'orders');
+    // Fetch all orders and then filter client-side.
+    // This is because querying for a value within an array of objects is complex with Firestore directly.
+    // For very large 'orders' collections, consider alternative data structures or backend processing.
+    return (collectionData(ordersCollectionRef, { idField: 'id' }) as Observable<any[]>).pipe(
+      map(orders => {
+        const salesHistory: { date: Timestamp, quantity: number }[] = [];
+        orders.forEach(order => {
+          if (order.items && Array.isArray(order.items) && order.created_date) {
+            order.items.forEach((item: any) => {
+              if (item.product_no === productNo && item.quantity) {
+                salesHistory.push({
+                  date: order.created_date as Timestamp, // Assuming created_date is a Firestore Timestamp
+                  quantity: +item.quantity
+                });
+              }
+            });
+          }
+        });
+        // Sort by date ascending, which is good for time series analysis
+        return salesHistory.sort((a, b) => a.date.toMillis() - b.date.toMillis());
+      })
+    );
+  }
+
+  /**
+   * Predicts stock levels for the next 7 days based on sales history.
+   * @param productNo The product number (SKU or identifier).
+   * @param currentStock The current available stock quantity.
+   * @returns Observable of an array of { date: Date, predictedStock: number } for the next 7 days.
+   */
+  predictStock(productNo: string, currentStock: number): Observable<{ date: Date, predictedStock: number }[]> {
+    return this.getProductSalesHistory(productNo).pipe(
+      map(salesHistory => {
+        const predictions: { date: Date, predictedStock: number }[] = [];
+        let averageDailySales = 0;
+
+        if (salesHistory && salesHistory.length > 0) {
+          // Filter sales for the last 30 days
+          const thirtyDaysAgo = new Date();
+          thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+          const recentSales = salesHistory.filter(sale => sale.date.toDate() > thirtyDaysAgo);
+
+          let relevantSales = recentSales.length > 0 ? recentSales : salesHistory;
+
+          // Calculate total quantity sold and the time span in days
+          if (relevantSales.length > 0) {
+            const totalQuantitySold = relevantSales.reduce((sum, sale) => sum + sale.quantity, 0);
+
+            const firstSaleDate = relevantSales[0].date.toDate();
+            const lastSaleDate = relevantSales[relevantSales.length - 1].date.toDate();
+
+            let timeSpanDays = (lastSaleDate.getTime() - firstSaleDate.getTime()) / (1000 * 3600 * 24);
+            if (timeSpanDays < 1 && relevantSales.length >=1) { // if all sales on same day, or only one sale
+                timeSpanDays = 1; // avoid division by zero and assume it's one day's worth of sales
+            } else if (relevantSales.length > 1) {
+                timeSpanDays = Math.max(1, Math.round(timeSpanDays)); // Ensure at least 1 day
+            }
+
+
+            if (timeSpanDays > 0) {
+              averageDailySales = totalQuantitySold / timeSpanDays;
+            } else if (totalQuantitySold > 0) { // All sales on the same day
+              averageDailySales = totalQuantitySold;
+            }
+          }
+        }
+
+        let predictedStock = currentStock;
+        for (let i = 0; i < 7; i++) {
+          const futureDate = new Date();
+          futureDate.setDate(futureDate.getDate() + i);
+
+          if (i > 0) { // For day 0 (today), prediction is current stock before deduction
+            predictedStock -= averageDailySales;
+          }
+
+          predictions.push({
+            date: futureDate,
+            predictedStock: Math.max(0, Math.round(predictedStock)) // Ensure stock doesn't go below zero and round it
+          });
+        }
+        return predictions;
+      })
+    );
   }
 }

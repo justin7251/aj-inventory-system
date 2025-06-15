@@ -1,0 +1,33 @@
+<div class="low-stock-container">
+  <h2>Low Stock Products (Threshold: {{ threshold }})</h2>
+
+  <ng-container *ngIf="(lowStockProducts$ | async) as products; else loadingOrNoProducts">
+    <table *ngIf="products.length > 0; else noProductsTemplate" class="table table-striped">
+      <thead>
+        <tr>
+          <th>Product Name</th>
+          <th>Quantity</th>
+          <th>Price</th>
+          <th>Product No</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let product of products">
+          <td>{{ product.product_name }}</td>
+          <td>{{ product.quantity }}</td>
+          <td>{{ product.price | currency:'USD':'symbol':'1.2-2' }}</td>
+          <td>{{ product.product_no }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </ng-container>
+
+  <ng-template #loadingOrNoProducts>
+    <!-- You can add a loading indicator here if needed -->
+    <p>Loading products or no products to display...</p>
+  </ng-template>
+
+  <ng-template #noProductsTemplate>
+    <p>No products are currently low on stock (below or equal to {{ threshold }} items).</p>
+  </ng-template>
+</div>

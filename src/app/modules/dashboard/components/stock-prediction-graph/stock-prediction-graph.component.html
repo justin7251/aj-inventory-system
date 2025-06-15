@@ -1,0 +1,34 @@
+<div class="stock-prediction-container">
+  <h3>Stock Prediction Graph</h3>
+
+  <div class="controls">
+    <label for="product-select">Select Product:</label>
+    <select id="product-select" (change)="onProductSelected($event)" class="form-control">
+      <option value="">-- Select a Product --</option>
+      <ng-container *ngIf="products$ | async as products">
+        <option *ngFor="let product of products" [value]="product.product_no">
+          {{ product.product_name }} ({{ product.product_no }}) - Stock: {{product.quantity}}
+        </option>
+      </ng-container>
+    </select>
+  </div>
+
+  <div *ngIf="isLoading" class="loading-indicator">
+    <p>Loading prediction data...</p>
+    <!-- You can use a spinner or a more sophisticated loading animation here -->
+  </div>
+
+  <div *ngIf="error" class="error-message">
+    <p>Error: {{ error }}</p>
+  </div>
+
+  <div class="chart-container" *ngIf="(predictionData$ | async) as chartData">
+    <app-widget-area [chartOptions]="chartData"></app-widget-area>
+  </div>
+
+  <!-- Fallback message if product is not selected and chartData is null/initial -->
+  <div *ngIf="!(selectedProductNoSubject.value) && !(predictionData$ | async)?.series?.[0]?.data?.length" class="fallback-message">
+     <p>Please select a product to view its stock prediction.</p>
+  </div>
+
+</div>

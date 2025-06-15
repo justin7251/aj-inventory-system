@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, Input } from '@angular/core'; // Added Input
 import * as Highcharts from 'highcharts';
 import HC_exporting from 'highcharts/modules/exporting';
 
@@ -9,14 +9,15 @@ import HC_exporting from 'highcharts/modules/exporting';
 })
 export class AreaComponent implements OnInit {
 
-	chartOptions: {};
-	Highcharts = Highcharts;
+  @Input() chartOptions: Highcharts.Options = {}; // Added Input and type
+  Highcharts = Highcharts;
 
 
 	constructor() { }
 
 	ngOnInit() {
-		this.chartOptions = {
+    // Default options if none are provided
+    const defaultOptions: Highcharts.Options = {
 		    chart: {
 		        type: 'line'
 		    },
@@ -44,12 +45,19 @@ export class AreaComponent implements OnInit {
 		    },
 		    series: [{
 		        name: 'Tokyo',
+		        type: 'line', // Added type to series
 		        data: [7.0, 6.9, 9.5, 14.5, 18.4, 21.5, 25.2, 26.5, 23.3, 18.3, 13.9, 9.6]
 		    }, {
 		        name: 'London',
+		        type: 'line', // Added type to series
 		        data: [3.9, 4.2, 5.7, 8.5, 11.9, 15.2, 17.0, 16.6, 14.2, 10.3, 6.6, 4.8]
 		    }]
 		};
+
+    this.chartOptions = {
+      ...defaultOptions,
+      ...this.chartOptions // User-provided options will override defaults
+    };
 
 		HC_exporting(Highcharts);
 

@@ -1,0 +1,22 @@
+.stock-monitoring-section {
+  margin-top: 20px;
+  padding: 15px;
+  background-color: #fff; // Optional: give it a slightly different background
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05); // Optional: subtle shadow
+}
+
+.section-title {
+  font-size: 1.5em;
+  color: #3f51b5; // Using a color similar to Material Design primary
+  margin-bottom: 20px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid #3f51b5;
+  display: inline-block; // To make border only under text
+}
+
+// Note: Spacing between components (app-low-stock-products and app-stock-prediction-graph)
+// is primarily handled by fxLayoutGap="20px" in the HTML's column layout
+// and an additional margin-top on the second component's container in the HTML.
+// Explicit CSS margins here might be redundant or conflict.
+// The current HTML structure should provide adequate spacing.

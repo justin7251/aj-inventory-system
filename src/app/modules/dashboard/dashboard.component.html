@@ -68,3 +68,19 @@
         <app-widget-pie [data]="pieChart"></app-widget-pie>
     </div>
 </div>
+
+<mat-divider style="margin-top: 20px; margin-bottom: 20px;"></mat-divider>
+
+<!-- Stock Monitoring Section -->
+<div class="stock-monitoring-section">
+  <h2 class="section-title">Stock Monitoring</h2>
+
+  <div fxLayout="column" fxLayoutGap="20px">
+    <div fxFlex="100">
+      <app-low-stock-products></app-low-stock-products>
+    </div>
+    <div fxFlex="100" style="margin-top: 20px;">
+      <app-stock-prediction-graph></app-stock-prediction-graph>
+    </div>
+  </div>
+</div>

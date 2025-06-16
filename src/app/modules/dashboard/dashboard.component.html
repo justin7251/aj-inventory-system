@@ -57,6 +57,31 @@
 
 <mat-divider></mat-divider>
 
+<!-- NEW CHARTS SECTION -->
+<div fxLayout="row" fxLayoutAlign="space-between start" fxLayoutGap="20px" style="margin-top: 20px; margin-bottom: 20px;">
+    <div fxFlex="60">
+        <mat-card *ngIf="monthlySalesChartOptions$ | async as options">
+            <mat-card-content>
+                <!-- Title for area chart is set within options by DashboardService -->
+                <app-widget-area [chartOptions]="options"></app-widget-area>
+            </mat-card-content>
+        </mat-card>
+    </div>
+    <div fxFlex="40">
+        <mat-card *ngIf="salesByProductData$ | async as pieData">
+            <mat-card-header>
+                <mat-card-title style="font-size: 18px; text-align: center; width: 100%;">Sales by Product (Current Month)</mat-card-title>
+            </mat-card-header>
+            <mat-card-content>
+                <app-widget-pie [data]="pieData"></app-widget-pie>
+            </mat-card-content>
+        </mat-card>
+    </div>
+</div>
+<!-- END NEW CHARTS SECTION -->
+
+<mat-divider></mat-divider>
+
 <div fxLayout="row" fxLayoutAlign="space-between center" fxLayoutGap="20px">
     <div fxFlex="60">
         <div class="mat-elevation-z8">

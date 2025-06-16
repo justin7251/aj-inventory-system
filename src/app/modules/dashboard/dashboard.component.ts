@@ -1,8 +1,10 @@
-import { Component, OnInit, OnDestroy, ViewChild } from '@angular/core'; // Added OnDestroy
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { DashboardService } from '../dashboard.service';
-import { ItemService } from '../services/item.service'; // Added ItemService
-import { Order } from '../model/order.model'; // Added Order model
-import { Subscription } from 'rxjs'; // Added Subscription
+import { ItemService } from '../services/item.service';
+import { Order } from '../model/order.model';
+import { Observable, Subscription } from 'rxjs'; // Added Observable
+import { Timestamp } from '@angular/fire/firestore'; // Keep for existing logic
+import * as Highcharts from 'highcharts'; // Import Highcharts for Options type
 
 export interface PeriodicElement {
   name: string;
@@ -11,77 +13,69 @@ export interface PeriodicElement {
   symbol: string;
 }
 
-// Define a type for the order data if it's coming from the older Firebase SDK structure
-// For now, assuming GetOrdersList returns Observable<Order[]> as per ItemService refactor
-// interface FirestoreOrder {
-//   payload: {
-//     doc: {
-//       data: () => Order;
-//       id: string;
-//     }
-//   }
-// }
-
-
 @Component({
   selector: 'app-dashboard',
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.scss']
 })
-export class DashboardComponent implements OnInit, OnDestroy { // Implemented OnDestroy
+export class DashboardComponent implements OnInit, OnDestroy {
 
-	bigChart = [];
-	cards = [];
-	pieChart = [];
+  // Existing properties
+  bigChart = []; // This is assigned from dashboardService.bigChart()
+  cards = [];    // This is assigned from dashboardService.cards()
+  pieChart = []; // This is assigned from dashboardService.pieChart() - the original generic one
 
-  // Properties for aggregated data
   totalLifetimeEarnings: number = 0;
   totalOrders: number = 0;
   averageEarningsPerOrder: number = 0;
   isLoading: boolean = true;
   private ordersSubscription: Subscription;
+
+  // New properties for our charts
+  monthlySalesChartOptions$: Observable<Highcharts.Options>;
+  salesByProductData$: Observable<{ name: string; y: number }[]>;
   
-	constructor(
+  constructor(
     private dashboardService: DashboardService,
-    public itemService: ItemService // Injected ItemService
+    public itemService: ItemService
   ) { }
   
-	ngOnInit() {
-    this.bigChart = this.dashboardService.bigChart();
-		this.cards = this.dashboardService.cards(); // This might be replaced or augmented
-		this.pieChart = this.dashboardService.pieChart();
+  ngOnInit() {
+    // Existing initializations
+    this.bigChart = this.dashboardService.bigChart(); // Keep as is, might be used by other parts of template
+    this.cards = this.dashboardService.cards();       // Keep as is
+    this.pieChart = this.dashboardService.pieChart(); // Keep as is (original pie chart data)
 
-    this.fetchOrderData();
+    this.fetchOrderData(); // Existing method for summary cards
+
+    // New chart data fetching
+    this.monthlySalesChartOptions$ = this.dashboardService.getMonthlySalesAndOrdersData();
+    // For sales by product, let's get data for the current month by default.
+    // We can enhance this later with a month selector if needed.
+    this.salesByProductData$ = this.dashboardService.getSalesByProductData();
   }
 
   fetchOrderData() {
     this.isLoading = true;
     this.ordersSubscription = this.itemService.GetOrdersList()
       .subscribe(
-        (orders: any[]) => { // Use any[] for now due to Firestore data structure uncertainty
+        (orders: any[]) => {
           let currentTotalEarnings = 0;
           let currentTotalOrders = 0;
 
-          // Check if orders are in the old Firebase format or new
-          // The OrderComponent used item.payload.doc.data()
-          // ItemService.GetOrdersList was changed to return Observable<Order[]>
-          // Let's assume it's Order[] for now as per ItemService's current signature
-          // If it's from snapshotChanges(), it will be like FirestoreOrder[]
-
           const processedOrders: Order[] = orders.map(orderData => {
-            // If orderData has payload.doc.data structure
             if (orderData.payload && orderData.payload.doc) {
               const data = orderData.payload.doc.data() as Order;
               data.$key = orderData.payload.doc.id;
               return data;
             }
-            // If orderData is already in Order structure (from collectionData)
             return orderData as Order;
           });
 
           for (const order of processedOrders) {
+            // Ensure totalEarnings is a valid number before adding
             if (order.totalEarnings !== undefined && typeof order.totalEarnings === 'number' && !isNaN(order.totalEarnings)) {
-              currentTotalEarnings += order.totalEarnings;
+                 currentTotalEarnings += order.totalEarnings;
             }
             currentTotalOrders++;
           }
@@ -93,7 +87,7 @@ export class DashboardComponent implements OnInit, OnDestroy { // Implemented On
           this.isLoading = false;
         },
         (error) => {
-          console.error('Error fetching orders:', error);
+          console.error('Error fetching orders for summary cards:', error);
           this.isLoading = false;
         }
       );
@@ -103,14 +97,16 @@ export class DashboardComponent implements OnInit, OnDestroy { // Implemented On
     if (this.ordersSubscription) {
       this.ordersSubscription.unsubscribe();
     }
+    // No need to unsubscribe from monthlySalesChartOptions$ and salesByProductData$
+    // if we use the async pipe in the template.
   }
 
-	columnHeader = {'position': 'Position', 'name': 'Name', 'weight': 'Total Cost', 'symbol': 'Shipping'};
+  // Existing table data properties
+  columnHeader = {'position': 'Position', 'name': 'Name', 'weight': 'Total Cost', 'symbol': 'Shipping'};
   tableData: PeriodicElement[] = [
     { position: 1, name: 'John', weight: 50.99, symbol: 'H' },
     { position: 2, name: 'Tim', weight: 10.52, symbol: 'He' },
     { position: 3, name: 'Alan', weight: 20.5, symbol: 'Li' },
     { position: 4, name: 'Henry', weight: 60, symbol: 'Be' },
   ];
-
 }

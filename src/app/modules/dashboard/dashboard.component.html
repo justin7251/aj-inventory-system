@@ -68,17 +68,46 @@
         </mat-card>
     </div>
     <div fxFlex="40">
-        <mat-card *ngIf="salesByProductData$ | async as pieData">
+        <div style="margin-bottom: 10px;">
+          <mat-form-field appearance="fill" style="margin-right: 10px;">
+            <mat-label>Start Date</mat-label>
+            <input matInput type="date" id="salesByProductStartDate" [(ngModel)]="salesByProductStartDate">
+          </mat-form-field>
+          <mat-form-field appearance="fill" style="margin-right: 10px;">
+            <mat-label>End Date</mat-label>
+            <input matInput type="date" id="salesByProductEndDate" [(ngModel)]="salesByProductEndDate">
+          </mat-form-field>
+          <button mat-raised-button color="primary" (click)="loadSalesByProductData()">Apply Filter</button>
+        </div>
+        <mat-card>
             <mat-card-header>
-                <mat-card-title style="font-size: 18px; text-align: center; width: 100%;">Sales by Product (Current Month)</mat-card-title>
+                <mat-card-title style="font-size: 18px; text-align: center; width: 100%;">Sales by Product</mat-card-title>
             </mat-card-header>
             <mat-card-content>
-                <app-widget-pie [data]="pieData"></app-widget-pie>
+                <div *ngIf="isSalesByProductLoading" style="display: flex; justify-content: center; align-items: center; min-height: 200px;">
+                    <mat-spinner diameter="50"></mat-spinner>
+                </div>
+                <app-widget-pie *ngIf="!isSalesByProductLoading && (salesByProductData$ | async)" [data]="salesByProductData$ | async"></app-widget-pie>
             </mat-card-content>
         </mat-card>
     </div>
 </div>
 <!-- END NEW CHARTS SECTION -->
+
+<!-- COGS vs Revenue Chart -->
+<div fxLayout="row" fxLayoutAlign="start start" fxLayoutGap="20px" style="margin-top: 20px; margin-bottom: 20px;">
+    <div fxFlex="100">
+        <mat-card>
+            <mat-card-content>
+                <div *ngIf="isCogsRevenueLoading" style="display: flex; justify-content: center; align-items: center; min-height: 300px;">
+                    <mat-spinner diameter="50"></mat-spinner>
+                </div>
+                <!-- Title for the chart is set within options by DashboardService -->
+                <app-widget-area *ngIf="!isCogsRevenueLoading && (monthlyCogsRevenueChartOptions$ | async)" [chartOptions]="monthlyCogsRevenueChartOptions$ | async"></app-widget-area>
+            </mat-card-content>
+        </mat-card>
+    </div>
+</div>
 
 <mat-divider></mat-divider>
 

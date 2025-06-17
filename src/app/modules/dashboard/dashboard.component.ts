@@ -2,7 +2,8 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { DashboardService } from '../dashboard.service';
 import { ItemService } from '../services/item.service';
 import { Order } from '../model/order.model';
-import { Observable, Subscription } from 'rxjs'; // Added Observable
+import { Observable, Subscription, of } from 'rxjs';
+import { finalize } from 'rxjs/operators'; // Added finalize
 import { Timestamp } from '@angular/fire/firestore'; // Keep for existing logic
 import * as Highcharts from 'highcharts'; // Import Highcharts for Options type
 
@@ -33,7 +34,12 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   // New properties for our charts
   monthlySalesChartOptions$: Observable<Highcharts.Options>;
-  salesByProductData$: Observable<{ name: string; y: number }[]>;
+  salesByProductData$: Observable<{ name: string; y: number }[]> = of([]);
+  salesByProductStartDate: string = '';
+  salesByProductEndDate: string = '';
+  isSalesByProductLoading: boolean = false;
+  monthlyCogsRevenueChartOptions$: Observable<Highcharts.Options> = of({});
+  isCogsRevenueLoading: boolean = false;
   
   constructor(
     private dashboardService: DashboardService,
@@ -49,10 +55,50 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.fetchOrderData(); // Existing method for summary cards
 
     // New chart data fetching
-    this.monthlySalesChartOptions$ = this.dashboardService.getMonthlySalesAndOrdersData();
+    this.monthlySalesChartOptions$ = this.dashboardService.getMonthlySalesAndOrdersData(); // Assuming this one doesn't need a specific loader for now as per req.
+
+    this.isCogsRevenueLoading = true;
+    this.monthlyCogsRevenueChartOptions$ = this.dashboardService.getMonthlyCogsAndRevenue().pipe(
+      finalize(() => this.isCogsRevenueLoading = false)
+    );
+
     // For sales by product, let's get data for the current month by default.
-    // We can enhance this later with a month selector if needed.
-    this.salesByProductData$ = this.dashboardService.getSalesByProductData();
+    this.loadSalesByProductData();
+  }
+
+  loadSalesByProductData(): void {
+    this.isSalesByProductLoading = true;
+    let startDate: Date | undefined;
+    let endDate: Date | undefined;
+
+    if (this.salesByProductStartDate) {
+      startDate = new Date(this.salesByProductStartDate);
+      if (isNaN(startDate.getTime())) { // Check if date is invalid
+        startDate = undefined;
+      }
+    }
+
+    if (this.salesByProductEndDate) {
+      endDate = new Date(this.salesByProductEndDate);
+      if (isNaN(endDate.getTime())) { // Check if date is invalid
+        endDate = undefined;
+      }
+    }
+
+    // If one date is set, but not the other, or if dates are invalid,
+    // we might want to default to current month or show an error.
+    // For now, if either is invalid or missing (when one is provided), we fetch default.
+    if ((startDate && !endDate) || (!startDate && endDate) || !startDate || !endDate ) {
+        // If dates are partially set or invalid, fetch current month's data
+        this.salesByProductData$ = this.dashboardService.getSalesByProductData().pipe(
+          finalize(() => this.isSalesByProductLoading = false)
+        );
+    } else {
+        // Both dates are valid and provided
+        this.salesByProductData$ = this.dashboardService.getSalesByProductData(startDate, endDate).pipe(
+          finalize(() => this.isSalesByProductLoading = false)
+        );
+    }
   }
 
   fetchOrderData() {
@@ -110,3 +156,4 @@ export class DashboardComponent implements OnInit, OnDestroy {
     { position: 4, name: 'Henry', weight: 60, symbol: 'Be' },
   ];
 }
+// Trivial change for new commit

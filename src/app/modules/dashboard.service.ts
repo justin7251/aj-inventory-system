@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
-import { ItemService } from '../services/item.service';
-import { Order } from '../model/order.model'; // Adjusted path if necessary based on actual location
-import { Product } from '../model/product.model'; // Adjusted path if necessary
+import { ItemService } from './services/item.service';
+import { Order } from './model/order.model'; // Adjusted path if necessary based on actual location
+import { Product } from './model/product.model'; // Adjusted path if necessary
 import { Observable, map, of, switchMap, forkJoin, from, catchError } from 'rxjs';
 import { Timestamp, Firestore, collection, query, where, getDocs } from '@angular/fire/firestore';
 import * as Highcharts from 'highcharts';
@@ -70,7 +70,7 @@ export class DashboardService {
           title: { text: 'Monthly Sales and Orders (Last 6 Months)' },
           xAxis: { categories: categories, title: { text: 'Month' } },
           yAxis: [
-            { title: { text: 'Total Sales' }, labels: { formatter: function() { return '$' + Highcharts.numberFormat(this.value, 0, '.', ','); } } },
+            { title: { text: 'Total Sales' }, labels: { formatter: function() { return '$' + Highcharts.numberFormat(Number(this.value), 0, '.', ','); } } },
             { title: { text: 'Number of Orders' }, opposite: true, labels: { format: '{value}'} }
           ],
           series: [
@@ -179,7 +179,7 @@ export class DashboardService {
           chart: { type: 'column' },
           title: { text: 'Monthly Revenue vs. COGS (Last 6 Months)' },
           xAxis: { categories: categories, title: { text: 'Month' } },
-          yAxis: [{ title: { text: 'Amount' }, labels: { formatter: function() { return '$' + Highcharts.numberFormat(this.value, 0, '.', ','); } } }],
+          yAxis: [{ title: { text: 'Amount' }, labels: { formatter: function() { return '$' + Highcharts.numberFormat(Number(this.value), 0, '.', ','); } } }],
           series: [
             { name: 'Total Revenue', type: 'column', data: revenueData },
             { name: 'Total COGS', type: 'column', data: cogsData }
@@ -218,7 +218,7 @@ export class DashboardService {
       chart: { type: 'column' },
       title: { text: 'Monthly Revenue vs. COGS (Last 6 Months)' },
       xAxis: { categories: categories, title: { text: 'Month' } },
-      yAxis: [{ title: { text: 'Amount' }, labels: { formatter: function() { return '$' + Highcharts.numberFormat(this.value, 0, '.', ','); } } }],
+      yAxis: [{ title: { text: 'Amount' }, labels: { formatter: function() { return '$' + Highcharts.numberFormat(Number(this.value), 0, '.', ','); } } }],
       series: [
         { name: 'Total Revenue', type: 'column', data: Array(6).fill(0) },
         { name: 'Total COGS', type: 'column', data: Array(6).fill(0) }

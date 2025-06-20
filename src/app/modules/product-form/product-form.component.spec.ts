@@ -1,4 +1,4 @@
-import { async, ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
+import { waitForAsync, ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { ProductFormComponent } from './product-form.component';
 import { ReactiveFormsModule, UntypedFormBuilder, Validators } from '@angular/forms';
 import { ItemService } from '../services/item.service';
@@ -11,7 +11,7 @@ describe('ProductFormComponent', () => {
   let fb: UntypedFormBuilder; // Keep if you need to manually create forms in tests
   let mockItemService: any;
 
-  beforeEach(async(() => {
+  beforeEach(waitForAsync(() => {
     mockItemService = jasmine.createSpyObj('ItemService', ['AddProduct']);
 
     TestBed.configureTestingModule({

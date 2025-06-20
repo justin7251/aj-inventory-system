@@ -112,7 +112,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
           const processedOrders: Order[] = orders.map(orderData => {
             if (orderData.payload && orderData.payload.doc) {
               const data = orderData.payload.doc.data() as Order;
-              data.$key = orderData.payload.doc.id;
+              data.id = orderData.payload.doc.id; // Changed $key to id
               return data;
             }
             return orderData as Order;

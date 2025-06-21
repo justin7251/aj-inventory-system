@@ -37,7 +37,59 @@ For detailed information and deployment options, refer to the official Angular d
 
 ## Running unit tests
 
-Run `ng test` to execute the unit tests via [Karma](https://karma-runner.github.io).
+Unit tests are crucial for ensuring code quality and stability. They verify individual components and services work as expected.
+
+### 1. Install Dependencies
+
+Before running tests, ensure all project dependencies are installed. Navigate to the project's root directory in your terminal and run:
+
+```bash
+npm install
+```
+
+**Note on Peer Dependencies:** This project currently has some peer dependency conflicts. If `npm install` fails or you encounter issues, you might need to run the following command instead:
+
+```bash
+npm install --legacy-peer-deps
+```
+It's recommended to address the underlying peer dependency conflicts for a cleaner build in the long term.
+
+### 2. Execute Tests Locally
+
+To run the unit tests via [Karma](https://karma-runner.github.io), use the following command:
+
+```bash
+npx ng test
+```
+
+This will:
+* Compile the application.
+* Launch a browser (usually Chrome) to run the tests.
+* Display test results in the terminal and the browser.
+* Watch for file changes and re-run tests automatically (useful during development).
+
+**Interpreting Results:**
+*   **SUCCESS:** Look for a message indicating all tests passed (e.g., "Executed X of X SUCCESS").
+*   **FAILURES:** The terminal will detail which tests failed and why, helping you pinpoint issues.
+
+### 3. Execute Tests for CI/Automation
+
+For continuous integration (CI) pipelines or automated environments where no browser UI is available, use:
+
+```bash
+npx ng test --watch=false --browsers=ChromeHeadless
+```
+*   `--watch=false`: Ensures tests run once and the process exits.
+*   `--browsers=ChromeHeadless`: Runs tests in a headless Chrome browser.
+
+### Known Issues & Current Status
+
+While many improvements have been made to the test suite, please be aware of the following known complex issues that are pending resolution:
+
+*   **Firestore V9 Mocking:** The tests for `ItemService.spec.ts` (which interacts heavily with Firestore) require a more robust mocking strategy for the Firebase V9 SDK.
+*   **"Standalone Component" Errors:** Some tests report components as "standalone" unexpectedly, which may point to deeper configuration issues in the test environment.
+
+Addressing these issues is important for achieving a fully stable and reliable test suite.
 
 ## Running end-to-end tests
 

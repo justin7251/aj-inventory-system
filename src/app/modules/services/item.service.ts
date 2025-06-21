@@ -2,8 +2,17 @@ import { Injectable } from '@angular/core';
 import { Firestore, collection, addDoc, doc, getDoc, setDoc, updateDoc, deleteDoc, collectionData, docData, where, query, orderBy, runTransaction, serverTimestamp, DocumentReference, CollectionReference, Query, DocumentSnapshot, Timestamp } from '@angular/fire/firestore';
 import { Product } from '../model/product.model';
 import { Restock } from '../model/restock.model';
-import { firstValueFrom } from 'rxjs'; // For UpdateProduct logic
-import { map } from 'rxjs/operators'; // For UpdateProduct logic
+import { Observable, firstValueFrom } from 'rxjs'; // Ensure Observable is imported from 'rxjs'
+import { map } from 'rxjs/operators';
+
+// Define a simple Order interface for typing within this service
+interface OrderForService {
+  id?: string;
+  items?: { product_no: string; quantity: number; [key: string]: any }[];
+  created_date?: Timestamp | Date | string; // Allow for various date types from Firestore/input
+  [key: string]: any; // Allow other properties
+}
+
 
 @Injectable({
   providedIn: 'root'
@@ -241,18 +250,31 @@ export class ItemService {
    */
   getProductSalesHistory(productNo: string): Observable<{ date: Timestamp, quantity: number }[]> {
     const ordersCollectionRef = collection(this.firestore, 'orders');
-    // Fetch all orders and then filter client-side.
-    // This is because querying for a value within an array of objects is complex with Firestore directly.
-    // For very large 'orders' collections, consider alternative data structures or backend processing.
-    return (collectionData(ordersCollectionRef, { idField: 'id' }) as Observable<any[]>).pipe(
+    return collectionData<OrderForService>(ordersCollectionRef, { idField: 'id' }).pipe(
       map(orders => {
         const salesHistory: { date: Timestamp, quantity: number }[] = [];
         orders.forEach(order => {
-          if (order.items && Array.isArray(order.items) && order.created_date) {
+          // Ensure created_date is properly handled and converted to Timestamp if necessary
+          let validatedTimestamp: Timestamp | null = null;
+          if (order.created_date) {
+            if (order.created_date instanceof Timestamp) {
+              validatedTimestamp = order.created_date;
+            } else if (order.created_date instanceof Date) {
+              validatedTimestamp = Timestamp.fromDate(order.created_date);
+            } else if (typeof order.created_date === 'string') {
+              // Attempt to parse if string, though this is less reliable
+              const parsed = new Date(order.created_date);
+              if (!isNaN(parsed.getTime())) {
+                validatedTimestamp = Timestamp.fromDate(parsed);
+              }
+            }
+          }
+
+          if (order.items && Array.isArray(order.items) && validatedTimestamp) {
             order.items.forEach((item: any) => {
               if (item.product_no === productNo && item.quantity) {
                 salesHistory.push({
-                  date: order.created_date as Timestamp, // Assuming created_date is a Firestore Timestamp
+                  date: validatedTimestamp as Timestamp,
                   quantity: +item.quantity
                 });
               }
@@ -273,7 +295,7 @@ export class ItemService {
    */
   predictStock(productNo: string, currentStock: number): Observable<{ date: Date, predictedStock: number }[]> {
     return this.getProductSalesHistory(productNo).pipe(
-      map(salesHistory => {
+      map(salesHistory => { // salesHistory is now { date: Timestamp, quantity: number }[]
         const predictions: { date: Date, predictedStock: number }[] = [];
         let averageDailySales = 0;
 
@@ -281,6 +303,8 @@ export class ItemService {
           // Filter sales for the last 30 days
           const thirtyDaysAgo = new Date();
           thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+          // Ensure date comparison is correct (toDate() needed for Timestamp)
           const recentSales = salesHistory.filter(sale => sale.date.toDate() > thirtyDaysAgo);
 
           let relevantSales = recentSales.length > 0 ? recentSales : salesHistory;
@@ -289,20 +313,19 @@ export class ItemService {
           if (relevantSales.length > 0) {
             const totalQuantitySold = relevantSales.reduce((sum, sale) => sum + sale.quantity, 0);
 
-            const firstSaleDate = relevantSales[0].date.toDate();
-            const lastSaleDate = relevantSales[relevantSales.length - 1].date.toDate();
+            const firstSaleDate = relevantSales[0].date.toDate(); // convert Timestamp to Date
+            const lastSaleDate = relevantSales[relevantSales.length - 1].date.toDate(); // convert Timestamp to Date
 
             let timeSpanDays = (lastSaleDate.getTime() - firstSaleDate.getTime()) / (1000 * 3600 * 24);
-            if (timeSpanDays < 1 && relevantSales.length >=1) { // if all sales on same day, or only one sale
-                timeSpanDays = 1; // avoid division by zero and assume it's one day's worth of sales
+            if (timeSpanDays < 1 && relevantSales.length >=1) {
+                timeSpanDays = 1;
             } else if (relevantSales.length > 1) {
-                timeSpanDays = Math.max(1, Math.round(timeSpanDays)); // Ensure at least 1 day
+                timeSpanDays = Math.max(1, Math.round(timeSpanDays));
             }
-
 
             if (timeSpanDays > 0) {
               averageDailySales = totalQuantitySold / timeSpanDays;
-            } else if (totalQuantitySold > 0) { // All sales on the same day
+            } else if (totalQuantitySold > 0) {
               averageDailySales = totalQuantitySold;
             }
           }

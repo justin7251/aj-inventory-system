@@ -1,4 +1,4 @@
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { waitForAsync, ComponentFixture, TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
 import { ItemsComponent } from './items.component';
 import { ItemService } from '../services/item.service';
@@ -12,7 +12,7 @@ describe('ItemsComponent', () => {
   let fixture: ComponentFixture<ItemsComponent>;
   let mockItemService: any; // Using any for spy object simplicity
 
-  beforeEach(async(() => {
+  beforeEach(waitForAsync(() => {
     // Create a spy object for ItemService
     mockItemService = jasmine.createSpyObj('ItemService', ['getProductList', 'Delete']);
 

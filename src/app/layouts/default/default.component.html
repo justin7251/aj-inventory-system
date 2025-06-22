@@ -1,12 +1,15 @@
 <app-header (switchingSideBar)="sideBarToggler()"></app-header>
 
-<mat-drawer-container>
-    <mat-drawer mode="side" [opened]="sideBarOpen">
+<mat-drawer-container class="app-container">
+    <mat-drawer mode="side" [opened]="sideBarOpen" class="left-sidebar">
         <app-sidebar></app-sidebar>
     </mat-drawer>
-    <mat-drawer-content>
+    <mat-drawer-content class="main-content">
         <router-outlet></router-outlet>
     </mat-drawer-content>
+    <mat-drawer mode="side" position="end" opened class="right-sidebar">
+        <app-right-sidebar></app-right-sidebar>
+    </mat-drawer>
 </mat-drawer-container>
 
 <app-footer></app-footer>

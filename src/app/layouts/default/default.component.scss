@@ -1,17 +1,44 @@
 @import '@angular/material/prebuilt-themes/deeppurple-amber.css';
 :host {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-}
-mat-drawer {
-  width: 350px;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
 }
 
-mat-drawer-container {
-  height: 100%;
+mat-drawer-container.app-container { // Targeting the specific container
+    height: 100%;
+    display: flex;
 }
 
-mat-drawer-content {
-  padding: 20px;
+mat-drawer.left-sidebar {
+    width: 250px; // Adjusted width for left sidebar
+    background: #f0f0f0;
+}
+
+mat-drawer-content.main-content {
+    flex-grow: 1;
+    padding: 20px;
+    overflow-y: auto;
+}
+
+mat-drawer.right-sidebar {
+    width: 200px; // Width for right sidebar
+    padding: 10px;
+    border-left: 1px solid #ccc;
+    background: #f9f9f9;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    mat-drawer.left-sidebar, mat-drawer.right-sidebar {
+        display: none; /* Hide sidebars on smaller screens */
+    }
+
+    mat-drawer-content.main-content {
+        padding: 10px; /* Adjust padding for smaller screens */
+    }
+
+    // If sidebars are meant to be toggleable on small screens (mode="over")
+    // The default.component.ts would need logic to change mode and opened state
+    // For now, this assumes they are hidden.
 }

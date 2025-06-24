@@ -14,5 +14,11 @@ export const environment = {
     endpoint: 'https://api.ebay.com/sell/fulfillment/v1/order', // Example real API endpoint
     mockDataUrl: '', // No mock data in production
     apiKey: 'YOUR_EBAY_API_KEY_HERE' // Placeholder for actual API key
+  },
+  shopifyApiConfig: {
+    endpoint: 'https://your-shop-name.myshopify.com/admin/api/2024-04', // Replace with your actual Shopify API endpoint and version
+    mockDataUrl: '', // No mock data in production
+    apiKey: 'YOUR_SHOPIFY_API_ACCESS_TOKEN_HERE', // Or API Key for public apps
+    password: 'YOUR_SHOPIFY_APP_PASSWORD_OR_API_SECRET_HERE' // If using private app or specific auth
   }
 };

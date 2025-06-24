@@ -1,0 +1,11 @@
+.active-link {
+  background-color: rgba(0, 0, 0, 0.04); /* Subtle background for active link */
+}
+
+mat-card-content {
+  padding-top: 16px;
+}
+
+mat-icon[matListItemIcon] {
+    margin-right: 10px; /* Space out icon from text */
+}

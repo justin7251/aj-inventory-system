@@ -18,6 +18,12 @@ export const environment = {
     endpoint: '', // Real API endpoint for eBay (leave empty if using mock)
     mockDataUrl: '/assets/mock-ebay-orders.json', // Path to local mock data
     apiKey: '' // Placeholder for actual API key if needed
+  },
+  shopifyApiConfig: {
+    endpoint: '', // Real API endpoint for Shopify (e.g., 'https://your-shop-name.myshopify.com/admin/api/2023-10')
+    mockDataUrl: '/assets/mock-shopify-orders.json', // Path to local mock data
+    apiKey: '', // Placeholder for Shopify Access Token / API Key
+    password: '' // Placeholder for Shopify App Password (if using Basic Auth for private app)
   }
 };
 

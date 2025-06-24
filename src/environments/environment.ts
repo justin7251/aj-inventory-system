@@ -13,6 +13,17 @@ export const environment = {
     messagingSenderId: "876847456256",
     appId: "1:876847456256:web:4e6e36e3d9d7b6722778e5",
     measurementId: "G-P3Q9T80DF0"
+  },
+  ebayApiConfig: {
+    endpoint: '', // Real API endpoint for eBay (leave empty if using mock)
+    mockDataUrl: '/assets/mock-ebay-orders.json', // Path to local mock data
+    apiKey: '' // Placeholder for actual API key if needed
+  },
+  shopifyApiConfig: {
+    endpoint: '', // Real API endpoint for Shopify (e.g., 'https://your-shop-name.myshopify.com/admin/api/2023-10')
+    mockDataUrl: '/assets/mock-shopify-orders.json', // Path to local mock data
+    apiKey: '', // Placeholder for Shopify Access Token / API Key
+    password: '' // Placeholder for Shopify App Password (if using Basic Auth for private app)
   }
 };
 

@@ -1,0 +1,59 @@
+[
+  {
+    "ebayOrderId": "EBAY-MOCK-001",
+    "buyerUsername": "mock_buyer_one",
+    "buyerShippingAddress": "101 Mock Data Rd, Dev Town, DT 54321",
+    "paymentMethod": "MockPay",
+    "shippingCost": 7.50,
+    "orderDiscount": 0.00,
+    "orderTotal": 77.49,
+    "items": [
+      {
+        "sku": "SKU101",
+        "productTitle": "Advanced Mockingbird Feeder",
+        "quantitySold": 1,
+        "unitPrice": 69.99,
+        "lineItemTotal": 69.99
+      }
+    ],
+    "orderDate": "2024-05-20T10:30:00Z"
+  },
+  {
+    "ebayOrderId": "EBAY-MOCK-002",
+    "buyerUsername": "mock_buyer_two",
+    "buyerShippingAddress": "202 Test Ave, Debug City, DC 98765",
+    "paymentMethod": "CreditCardSim",
+    "shippingCost": 3.25,
+    "orderDiscount": 5.00,
+    "orderTotal": 38.23,
+    "items": [
+      {
+        "sku": "SKU202",
+        "productTitle": "Ultra Soft Developer Hoodie",
+        "quantitySold": 1,
+        "unitPrice": 39.98,
+        "lineItemTotal": 39.98
+      }
+    ],
+    "orderDate": "2024-05-21T14:00:00Z"
+  },
+  {
+    "ebayOrderId": "EBAY-MOCK-003",
+    "buyerUsername": "mock_buyer_three",
+    "buyerShippingAddress": "303 Staging St, Localhost LP 11223",
+    "paymentMethod": "MockCoin",
+    "shippingCost": 0.00,
+    "orderDiscount": 10.00,
+    "orderTotal": 90.00,
+    "items": [
+      {
+        "sku": "SKU001",
+        "productTitle": "Fancy Gadget Model X",
+        "quantitySold": 2,
+        "unitPrice": 50.00,
+        "lineItemTotal": 100.00
+      }
+    ],
+    "orderDate": "2024-05-22T09:15:00Z"
+  }
+]

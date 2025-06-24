@@ -1,0 +1,92 @@
+<div class="container mt-4">
+  <mat-card>
+    <mat-card-header>
+      <mat-card-title>Packing Queue</mat-card-title>
+      <mat-card-subtitle>Items pending packing and their statuses.</mat-card-subtitle>
+    </mat-card-header>
+    <mat-card-content>
+      <div *ngIf="packingItems$ | async as packingItems; else loadingOrError">
+        <div *ngIf="packingItems.length > 0; else noItems" class="table-responsive">
+          <table mat-table [dataSource]="packingItems" class="mat-elevation-z8 w-100">
+
+            <!-- Creation Date Column -->
+            <ng-container matColumnDef="creationDate">
+              <th mat-header-cell *matHeaderCellDef mat-sort-header>Date Created</th>
+              <td mat-cell *matCellDef="let item">{{ item.creationDate?.toDate() | date:'short' }}</td>
+            </ng-container>
+
+            <!-- Order ID Column -->
+            <ng-container matColumnDef="orderId">
+              <th mat-header-cell *matHeaderCellDef>Order ID</th>
+              <td mat-cell *matCellDef="let item">{{ item.orderId }}</td>
+            </ng-container>
+
+            <!-- Product Name Column -->
+            <ng-container matColumnDef="productName">
+              <th mat-header-cell *matHeaderCellDef>Product</th>
+              <td mat-cell *matCellDef="let item">{{ item.productName }} ({{item.productId}})</td>
+            </ng-container>
+
+            <!-- Quantity Column -->
+            <ng-container matColumnDef="quantityToPack">
+              <th mat-header-cell *matHeaderCellDef>Qty</th>
+              <td mat-cell *matCellDef="let item">{{ item.quantityToPack }}</td>
+            </ng-container>
+
+            <!-- Customer Name Column -->
+            <ng-container matColumnDef="customerName">
+              <th mat-header-cell *matHeaderCellDef>Customer</th>
+              <td mat-cell *matCellDef="let item">{{ item.customerName }}</td>
+            </ng-container>
+
+            <!-- Status Column -->
+            <ng-container matColumnDef="status">
+              <th mat-header-cell *matHeaderCellDef>Status</th>
+              <td mat-cell *matCellDef="let item">
+                <mat-chip-listbox aria-label="Status selection">
+                    <mat-chip [selected]="item.status === 'pending'" color="warn" highlighted>Pending</mat-chip>
+                    <mat-chip [selected]="item.status === 'packed'" color="accent" highlighted>Packed</mat-chip>
+                    <mat-chip [selected]="item.status === 'shipped'" color="primary" highlighted>Shipped</mat-chip>
+                    <mat-chip *ngIf="item.status === 'on_hold'" selected color="default" highlighted>On Hold</mat-chip>
+                    <mat-chip *ngIf="item.status === 'cancelled'" selected color="default" highlighted>Cancelled</mat-chip>
+                </mat-chip-listbox>
+              </td>
+            </ng-container>
+
+            <!-- Actions Column -->
+            <ng-container matColumnDef="actions">
+              <th mat-header-cell *matHeaderCellDef>Actions</th>
+              <td mat-cell *matCellDef="let item">
+                <mat-form-field appearance="fill" class="status-select">
+                  <mat-label>Change Status</mat-label>
+                  <mat-select (selectionChange)="updateStatus(item, $event.value)" [value]="item.status">
+                    <mat-option *ngFor="let statusOption of availableStatuses" [value]="statusOption">
+                      {{ statusOption | titlecase }}
+                    </mat-option>
+                  </mat-select>
+                </mat-form-field>
+                <!-- Add more buttons for other actions if needed -->
+                <!-- e.g., <button mat-icon-button (click)="viewDetails(item)"><mat-icon>visibility</mat-icon></button> -->
+              </td>
+            </ng-container>
+
+            <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+            <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+          </table>
+        </div>
+        <ng-template #noItems>
+          <div class="alert alert-info text-center mt-3">
+            <p>No items currently in the packing queue.</p>
+          </div>
+        </ng-template>
+      </div>
+      <ng-template #loadingOrError>
+        <!-- Check if there's an error object or just show loading -->
+        <div class="text-center mt-5">
+          <mat-progress-spinner mode="indeterminate" diameter="50"></mat-progress-spinner>
+          <p>Loading packing items...</p>
+        </div>
+      </ng-template>
+    </mat-card-content>
+  </mat-card>
+</div>

@@ -1,0 +1,36 @@
+<div class="container mt-4">
+  <mat-card>
+    <mat-card-header>
+      <mat-card-title>Shopify Order Synchronization</mat-card-title>
+      <mat-card-subtitle>Fetch new orders from Shopify and add them to the system.</mat-card-subtitle>
+    </mat-card-header>
+    <mat-card-content>
+      <button mat-raised-button color="primary" (click)="syncShopifyOrders()" [disabled]="isLoading">
+        <mat-icon *ngIf="!isLoading">sync</mat-icon>
+        <mat-progress-spinner *ngIf="isLoading" mode="indeterminate" diameter="20" class="mr-2"></mat-progress-spinner>
+        {{ isLoading ? 'Syncing...' : 'Sync New Shopify Orders' }}
+      </button>
+
+      <div *ngIf="lastSyncTime" class="mt-3">
+        <p><strong>Last Sync Attempt:</strong> {{ lastSyncTime | date:'medium' }}</p>
+        <p *ngIf="!isLoading && (ordersProcessed > 0 || ordersFailed > 0)">
+          Successfully processed: {{ ordersProcessed }} orders.
+          <span *ngIf="ordersFailed > 0" class="text-danger">Failed to process: {{ ordersFailed }} orders.</span>
+        </p>
+        <p *ngIf="!isLoading && ordersProcessed === 0 && ordersFailed === 0 && errorMessages.length === 0">
+          No new Shopify orders were found or processed in the last sync.
+        </p>
+      </div>
+
+      <div *ngIf="errorMessages.length > 0" class="mt-3 alert alert-danger">
+        <strong>Errors encountered:</strong>
+        <ul>
+          <li *ngFor="let msg of errorMessages">{{ msg }}</li>
+        </ul>
+      </div>
+    </mat-card-content>
+    <mat-card-actions *ngIf="isLoading">
+        <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+    </mat-card-actions>
+  </mat-card>
+</div>

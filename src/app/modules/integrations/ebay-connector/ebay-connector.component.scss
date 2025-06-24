@@ -1,0 +1,25 @@
+.mr-2 {
+  margin-right: 8px; /* For spacing spinner from text */
+}
+
+.text-danger {
+  color: red;
+}
+
+.alert-danger {
+  padding: 10px;
+  background-color: #f8d7da;
+  border-color: #f5c6cb;
+  color: #721c24;
+  border-radius: 4px;
+  margin-top: 1rem;
+}
+
+mat-card-content {
+  padding-top: 16px; /* Add some space above the button */
+}
+
+mat-progress-spinner { /* Ensure spinner aligns well with button text */
+  display: inline-block;
+  vertical-align: middle;
+}

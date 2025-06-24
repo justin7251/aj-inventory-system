@@ -2,8 +2,11 @@ import { Injectable } from '@angular/core';
 import { Firestore, collection, addDoc, doc, getDoc, setDoc, updateDoc, deleteDoc, collectionData, docData, where, query, orderBy, runTransaction, serverTimestamp, DocumentReference, CollectionReference, Query, DocumentSnapshot, Timestamp } from '@angular/fire/firestore';
 import { Product } from '../model/product.model';
 import { Restock } from '../model/restock.model';
-import { Observable, firstValueFrom } from 'rxjs'; // Ensure Observable is imported from 'rxjs'
-import { map } from 'rxjs/operators';
+import { Order, OrderItem } from '../model/order.model'; // Import full Order model
+import { PackingQueueService } from './packing-queue.service'; // Import PackingQueueService
+import { PackingItem } from '../model/packing-item.model'; // Import PackingItem model
+import { Observable, firstValueFrom, forkJoin, of } from 'rxjs'; // Ensure Observable is imported from 'rxjs'
+import { map, switchMap, catchError } from 'rxjs/operators';
 
 // Define a simple Order interface for typing within this service
 interface OrderForService {
@@ -25,6 +28,7 @@ export class ItemService {
 
   constructor(
     public firestore: Firestore, // Changed db to firestore
+    private packingQueueService: PackingQueueService // Inject PackingQueueService
   ) {}
 
   addRecord(value: any) { // Added type for value
@@ -39,103 +43,130 @@ export class ItemService {
     });
   }
 
-  async addOrder(value: any) { // Added type, made async for transaction
+  /**
+   * Adds a new order to the system. This includes:
+   * - Updating order aggregation data (total orders, count, last 5 orders summary).
+   * - Calculating total earnings for the order based on product cost prices.
+   * - Saving the order document to the 'orders' collection in Firestore.
+   * - Adding each item from the order to the packing queue via `PackingQueueService`.
+   *
+   * @param orderData - The `Order` object containing all details of the order.
+   * @returns A Promise resolving with the `DocumentReference` of the newly created order in Firestore.
+   */
+  async addOrder(orderData: Order): Promise<DocumentReference<Order>> {
     const orderCollectionRef = collection(this.firestore, 'aggregation');
     const orderDocRef = doc(orderCollectionRef, 'orders');
+
+    // Ensure items are part of orderData before trying to access them
+    const itemsForAggregation = orderData.items || [];
 
     try {
       await runTransaction(this.firestore, async (transaction) => {
         const sfDoc = await transaction.get(orderDocRef);
         let last5_data = [];
-        let newTotal = +value.total_cost;
+        // Ensure total_cost is a number
+        let newTotal = +orderData.total_cost;
         let newCount = 1;
 
         if (sfDoc.exists()) {
           const data = sfDoc.data();
           last5_data = data.last5 || [];
-          if (last5_data.length >= 5) { // ensure it's >= 5, not > 5 for shift
+          if (last5_data.length >= 5) {
             last5_data.shift();
           }
-          last5_data.push(value); // Assuming value is the order object itself
-          newTotal = +data.total + +value.total_cost;
+          // Push a summary or the full orderData as needed for 'last5'
+          last5_data.push({ id: 'new_order_placeholder', total_cost: orderData.total_cost, customer_name: orderData.customer_name });
+          newTotal = +data.total + +orderData.total_cost;
           newCount = +data.count + 1;
           transaction.update(orderDocRef, { total: newTotal, count: newCount, last5: last5_data });
         } else {
-          last5_data.push(value);
+          last5_data.push({ id: 'new_order_placeholder', total_cost: orderData.total_cost, customer_name: orderData.customer_name });
           transaction.set(orderDocRef, { total: newTotal, count: newCount, last5: last5_data });
         }
       });
     } catch (e) {
-      console.log("Transaction failed: ", e);
+      console.error("Order aggregation transaction failed: ", e);
+      // Decide if you want to proceed with adding the order if aggregation fails
     }
 
-    // const user = JSON.parse(localStorage.getItem('user')); // This needs to be handled if still relevant
     const ordersCollection = collection(this.firestore, 'orders');
 
     // Calculate totalEarnings
     let totalEarnings = 0;
-    if (value.items && Array.isArray(value.items)) {
-      for (const item of value.items) {
-        if (!item.product_no || !item.quantity || !item.item_cost) {
+    if (itemsForAggregation.length > 0) {
+      const productPromises = itemsForAggregation.map(item => {
+        if (!item.product_no || typeof item.quantity !== 'number' || typeof item.item_cost !== 'number') {
           console.warn(`Order item is missing product_no, quantity, or item_cost. Skipping earnings calculation for this item.`, item);
-          continue;
+          return Promise.resolve(null); // Resolve with null for items that can't be processed
         }
-
         const productsCollectionRef = collection(this.firestore, 'products');
         const productQuery = query(productsCollectionRef, where('product_no', "==", item.product_no));
+        return firstValueFrom(collectionData(productQuery, { idField: 'id' }).pipe(map(results => results[0] as Product || null)));
+      });
 
-        try {
-          const querySnapshot = await firstValueFrom(collectionData(productQuery, { idField: 'id' }).pipe(map(results => results)));
+      const products = await Promise.all(productPromises);
 
-          if (querySnapshot.length > 0) {
-            const productData = querySnapshot[0] as Product; // Assuming Product model has costPrice
-            if (productData.costPrice !== undefined && productData.costPrice !== null) {
-              const itemQuantity = parseFloat(item.quantity);
-              const itemSellingPrice = parseFloat(item.item_cost); // This is price_per_unit * quantity for that item line from order form
-              // item_cost in order is often total for that line, not per unit. Assuming item.item_cost is price per unit here.
-              // If item.item_cost is total for line, then it should be item_total_selling_price = parseFloat(item.item_cost)
-              // And earnings would be item_total_selling_price - (itemQuantity * parseFloat(productData.costPrice))
-              // Let's assume item.item_cost is PER UNIT as per typical order forms.
+      itemsForAggregation.forEach((item, index) => {
+        const productData = products[index];
+        if (productData && productData.costPrice !== undefined && productData.costPrice !== null) {
+          const itemQuantity = +item.quantity;
+          // Assuming item.item_cost is total for the line item. If it's per unit, adjust logic.
+          // For earnings, we need (Total Selling Price for line) - (Quantity * Cost Price per unit)
+          const lineItemTotalSellingPrice = +item.item_cost;
+          const itemCostPrice = +productData.costPrice;
 
-              const itemCostPrice = parseFloat(productData.costPrice.toString());
-
-              if (isNaN(itemQuantity) || isNaN(itemSellingPrice) || isNaN(itemCostPrice)) {
-                console.warn(`Invalid number format for item: ${item.product_no}. Skipping earnings calculation for this item.`);
-                continue;
-              }
-
-              // Earnings for this line item = (Quantity * Selling Price/Unit) - (Quantity * Cost Price/Unit)
-              const item_earnings = (itemQuantity * itemSellingPrice) - (itemQuantity * itemCostPrice);
-              totalEarnings += item_earnings;
-            } else {
-              console.warn(`Product ${item.product_no} found, but costPrice is missing. Skipping earnings calculation for this item.`);
-            }
-          } else {
-            console.warn(`Product ${item.product_no} not found in database. Skipping earnings calculation for this item.`);
+          if (isNaN(itemQuantity) || isNaN(lineItemTotalSellingPrice) || isNaN(itemCostPrice)) {
+            console.warn(`Invalid number format for earnings calculation on item: ${item.product_no}.`);
+            return; // Skip this item
           }
-        } catch (error) {
-          console.error(`Error fetching product ${item.product_no}:`, error);
+          totalEarnings += lineItemTotalSellingPrice - (itemQuantity * itemCostPrice);
+        } else if (productData) {
+          console.warn(`Product ${item.product_no} found, but costPrice is missing. Skipping earnings for this item.`);
+        } else if (item.product_no) { // Only warn if product_no was valid enough to attempt fetch
+          console.warn(`Product ${item.product_no} not found. Skipping earnings for this item.`);
+        }
+      });
+    }
+
+    const orderDocToSave: Omit<Order, 'id'> = {
+      ...orderData,
+      user_id: orderData.user_id || '0012', // Default or from orderData
+      totalEarnings: totalEarnings,
+      created_date: serverTimestamp() as Timestamp, // Firestore server timestamp
+      // created_by: 'Justin', // Consider making this dynamic if needed
+    };
+
+    const newOrderRef = await addDoc(ordersCollection, orderDocToSave as any) as DocumentReference<Order>;
+
+    // After order is successfully added, add items to packing queue
+    if (newOrderRef.id && itemsForAggregation.length > 0) {
+      for (const orderItem of itemsForAggregation) {
+        if (!orderItem.product_no || typeof orderItem.quantity !== 'number') {
+          console.warn('Skipping packing item due to missing product_no or quantity:', orderItem);
+          continue;
+        }
+        const packingItemData: Omit<PackingItem, 'id' | 'creationDate' | 'lastUpdateDate'> = {
+          orderId: newOrderRef.id,
+          externalOrderId: orderData.id, // Assuming orderData.id might be an external ID if provided
+          productId: orderItem.product_no, // Using product_no as the reference. Consider if a Firestore product ID is better.
+          productName: orderItem.product_name || 'N/A', // Ensure product_name is available
+          quantityToPack: orderItem.quantity,
+          status: 'pending',
+          customerName: orderData.customer_name,
+          deliveryAddress: orderData.delivery_address,
+        };
+        try {
+          await this.packingQueueService.addItemToPackingQueue(packingItemData);
+        } catch (packError) {
+          console.error(`Failed to add item ${orderItem.product_no} to packing queue for order ${newOrderRef.id}:`, packError);
+          // Potentially add to a retry queue or log for manual intervention
         }
       }
     }
-
-    return addDoc(ordersCollection, {
-      user_id: '0012', // value.uid,
-      customer_name: value.customer_name,
-      telephone: value.telephone,
-      delivery_address: value.delivery_address,
-      payment_type: value.payment_type,
-      delivery_cost: value.delivery_cost,
-      discount: value.discount,
-      items: value.items,
-      total_cost: value.total_cost,
-      totalEarnings: totalEarnings, // Add totalEarnings to the order
-      created_by: 'Justin', // user.name,
-      created_date: serverTimestamp() // Use serverTimestamp
-    });
+    return newOrderRef;
   }
 
-  UpdateOrder(id: string, value: any) { // Added type for value
+  UpdateOrder(id: string, value: Partial<Order>) { // Typed value
     const orderDocRef = doc(this.firestore, 'orders', id);
     return updateDoc(orderDocRef, value);
   }

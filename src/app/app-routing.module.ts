@@ -23,6 +23,14 @@ const routes: Routes = [{
 		{ path: 'product_form', component: ProductFormComponent},
 		{ path: 'order_form', component: OrderFormComponent},
 		{ path: 'order_edit', component: OrderEditComponent},
+		{
+			path: 'integrations',
+			loadChildren: () => import('./modules/integrations/integrations.module').then(m => m.IntegrationsModule)
+		},
+		{
+			path: 'packing',
+			loadChildren: () => import('./modules/packing/packing.module').then(m => m.PackingModule)
+		}
 	]
 }];
 

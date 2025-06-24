@@ -13,6 +13,11 @@ export const environment = {
     messagingSenderId: "876847456256",
     appId: "1:876847456256:web:4e6e36e3d9d7b6722778e5",
     measurementId: "G-P3Q9T80DF0"
+  },
+  ebayApiConfig: {
+    endpoint: '', // Real API endpoint for eBay (leave empty if using mock)
+    mockDataUrl: '/assets/mock-ebay-orders.json', // Path to local mock data
+    apiKey: '' // Placeholder for actual API key if needed
   }
 };
 

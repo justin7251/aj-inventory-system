@@ -1,0 +1,71 @@
+.mat-elevation-z8 {
+  width: 100%;
+}
+
+.status-select {
+  min-width: 150px; // Give select some space
+  margin-right: 8px;
+}
+
+.table-responsive {
+  overflow-x: auto;
+}
+
+.w-100 {
+    width: 100%;
+}
+
+.container.mt-4 {
+    margin-top: 1.5rem; /* Standard Bootstrap mt-4 */
+}
+
+.alert.alert-info {
+    color: #0c5460;
+    background-color: #d1ecf1;
+    border-color: #bee5eb;
+    padding: .75rem 1.25rem;
+    margin-bottom: 1rem;
+    border: 1px solid transparent;
+    border-radius: .25rem;
+}
+
+.text-center {
+    text-align: center;
+}
+
+.mt-3 {
+    margin-top: 1rem;
+}
+.mt-5 {
+    margin-top: 3rem;
+}
+
+/* For error snackbar if you add panelClass */
+.error-snackbar {
+  background-color: #f44336; /* Red for errors */
+  color: white;
+}
+
+/* Style mat-chips for status for better visual distinction if not using select for display */
+mat-chip {
+  font-weight: bold;
+  padding: 5px 10px !important;
+  min-height: 28px !important;
+  font-size: 0.85em;
+}
+
+/* You can add more specific styles for different status chips if needed */
+/* Example:
+mat-chip[color="warn"] { // Pending
+  background-color: #ffebee !important; // Light red
+  color: #c62828 !important; // Darker red text
+}
+mat-chip[color="accent"] { // Packed
+  background-color: #e8eaf6 !important; // Light indigo
+  color: #283593 !important; // Darker indigo text
+}
+mat-chip[color="primary"] { // Shipped
+  background-color: #e3f2fd !important; // Light blue
+  color: #1565c0 !important; // Darker blue text
+}
+*/

@@ -9,5 +9,10 @@ export const environment = {
     messagingSenderId: "876847456256",
     appId: "1:876847456256:web:4e6e36e3d9d7b6722778e5",
     measurementId: "G-P3Q9T80DF0"
+  },
+  ebayApiConfig: {
+    endpoint: 'https://api.ebay.com/sell/fulfillment/v1/order', // Example real API endpoint
+    mockDataUrl: '', // No mock data in production
+    apiKey: 'YOUR_EBAY_API_KEY_HERE' // Placeholder for actual API key
   }
 };

@@ -18,8 +18,43 @@ export class DashboardService {
 
   // Making firestore directly accessible if itemService already has it public
   // Or pass it to the constructor if needed. For this example, assume itemService.firestore is accessible.
-  constructor(private itemService: ItemService, private firestore: Firestore) { }
+  constructor(private itemService: ItemService, private firestore: Firestore) { } // itemService will be replaced by OrderService later
 
+  public getOrderSummaryData(): Observable<OrderSummaryData> {
+    return this.itemService.GetOrdersList().pipe( // This will change to orderService.getAllOrders()
+      map((orders: Order[]) => {
+        let totalLifetimeEarnings = 0;
+        let totalOrders = 0;
+
+        // Assuming GetOrdersList() now correctly returns Observable<Order[]>
+        // as per the refactored ItemService/OrderService.
+        for (const order of orders) { // Use orders directly
+          if (order.totalEarnings !== undefined && typeof order.totalEarnings === 'number' && !isNaN(order.totalEarnings)) {
+            totalLifetimeEarnings += order.totalEarnings;
+          }
+          totalOrders++;
+        }
+        const averageEarningsPerOrder = totalOrders > 0 ? totalLifetimeEarnings / totalOrders : 0;
+
+        return {
+          totalLifetimeEarnings,
+          totalOrders,
+          averageEarningsPerOrder,
+          isLoading: false // isLoading can be part of the emitted object
+        };
+      }),
+      catchError(error => {
+        console.error('Error fetching order summary data:', error);
+        return of({
+          totalLifetimeEarnings: 0,
+          totalOrders: 0,
+          averageEarningsPerOrder: 0,
+          isLoading: false, // Ensure isLoading is false on error too
+          error: true
+        });
+      })
+    );
+  }
 
   public getMonthlySalesAndOrdersData(): Observable<Highcharts.Options> {
     return this.itemService.GetOrdersList().pipe(
@@ -98,7 +133,7 @@ export class DashboardService {
             return of({ ...order, calculatedCogs: 0 } as OrderWithCogs);
           }
 
-          const itemCostObservables: Observable<number>[] = order.items.map((item: any) => {
+          const itemCostObservables: Observable<number>[] = order.items.map((item: OrderItem) => {
             const productNo = String(item.product_no); // Ensure product_no is a string
             const quantity = parseFloat(String(item.quantity)) || 0;
 
@@ -270,9 +305,11 @@ export class DashboardService {
 
             if (includeOrder) {
               if (order.items && Array.isArray(order.items)) {
-                order.items.forEach((item: any) => {
+                order.items.forEach((item: OrderItem) => {
                   const productKey = item.product_no || 'Unknown Product';
-                  const itemName = item.product_name || item.name || productKey;
+                  const itemName = item.product_name || /* item.name was never part of OrderItem */ productKey;
+                  // item.name was not in OrderItem, if it was intended, OrderItem model needs update.
+                  // For now, using product_name or productKey.
                   // Ensure item_cost is treated as a number
                   const itemCost = (typeof item.item_cost === 'string' ? parseFloat(item.item_cost) : Number(item.item_cost)) || 0;
 

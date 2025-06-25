@@ -1,38 +1,30 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
-import { DashboardService } from '../dashboard.service';
-import { ItemService } from '../services/item.service';
-import { Order } from '../model/order.model';
-import { Observable, Subscription, of } from 'rxjs';
-import { finalize } from 'rxjs/operators'; // Added finalize
-import { Timestamp } from '@angular/fire/firestore'; // Keep for existing logic
-import * as Highcharts from 'highcharts'; // Import Highcharts for Options type
+import { Component, OnInit } from '@angular/core'; // Removed OnDestroy
+import { DashboardService, OrderSummaryData } from '../dashboard.service'; // Added OrderSummaryData
+// import { ItemService } from '../services/item.service'; // No longer directly needed if all data comes from DashboardService
+import { Order } from '../model/order.model'; // May still be needed if any other part uses it, or can be removed
+import { Observable, of } from 'rxjs'; // Removed Subscription
+import { finalize } from 'rxjs/operators';
+import { Timestamp } from '@angular/fire/firestore';
+import * as Highcharts from 'highcharts';
 
-export interface PeriodicElement {
-  name: string;
-  position: number;
-  weight: number;
-  symbol: string;
-}
+// Removed PeriodicElement interface as it appears to be unused example code
 
 @Component({
   selector: 'app-dashboard',
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.scss']
 })
-export class DashboardComponent implements OnInit, OnDestroy {
+export class DashboardComponent implements OnInit { // Removed OnDestroy
 
-  // Existing properties
-  bigChart = []; // This is assigned from dashboardService.bigChart()
-  cards = [];    // This is assigned from dashboardService.cards()
-  pieChart = []; // This is assigned from dashboardService.pieChart() - the original generic one
+  // Existing properties for charts directly from service
+  bigChart = [];
+  cards = [];
+  pieChart = [];
 
-  totalLifetimeEarnings: number = 0;
-  totalOrders: number = 0;
-  averageEarningsPerOrder: number = 0;
-  isLoading: boolean = true;
-  private ordersSubscription: Subscription;
+  // New property for order summary data
+  orderSummaryData$: Observable<OrderSummaryData>;
 
-  // New properties for our charts
+  // Properties for other charts
   monthlySalesChartOptions$: Observable<Highcharts.Options>;
   salesByProductData$: Observable<{ name: string; y: number }[]> = of([]);
   salesByProductStartDate: string = '';
@@ -42,20 +34,20 @@ export class DashboardComponent implements OnInit, OnDestroy {
   isCogsRevenueLoading: boolean = false;
   
   constructor(
-    private dashboardService: DashboardService,
-    public itemService: ItemService
+    private dashboardService: DashboardService
+    // public itemService: ItemService // Removed ItemService injection
   ) { }
   
   ngOnInit() {
-    // Existing initializations
-    this.bigChart = this.dashboardService.bigChart(); // Keep as is, might be used by other parts of template
-    this.cards = this.dashboardService.cards();       // Keep as is
-    this.pieChart = this.dashboardService.pieChart(); // Keep as is (original pie chart data)
+    this.bigChart = this.dashboardService.bigChart();
+    this.cards = this.dashboardService.cards();
+    this.pieChart = this.dashboardService.pieChart();
 
-    this.fetchOrderData(); // Existing method for summary cards
+    // Get order summary data from the service
+    this.orderSummaryData$ = this.dashboardService.getOrderSummaryData();
 
-    // New chart data fetching
-    this.monthlySalesChartOptions$ = this.dashboardService.getMonthlySalesAndOrdersData(); // Assuming this one doesn't need a specific loader for now as per req.
+    // Chart data fetching
+    this.monthlySalesChartOptions$ = this.dashboardService.getMonthlySalesAndOrdersData();
 
     this.isCogsRevenueLoading = true;
     this.monthlyCogsRevenueChartOptions$ = this.dashboardService.getMonthlyCogsAndRevenue().pipe(
@@ -147,13 +139,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
     // if we use the async pipe in the template.
   }
 
-  // Existing table data properties
-  columnHeader = {'position': 'Position', 'name': 'Name', 'weight': 'Total Cost', 'symbol': 'Shipping'};
-  tableData: PeriodicElement[] = [
-    { position: 1, name: 'John', weight: 50.99, symbol: 'H' },
-    { position: 2, name: 'Tim', weight: 10.52, symbol: 'He' },
-    { position: 3, name: 'Alan', weight: 20.5, symbol: 'Li' },
-    { position: 4, name: 'Henry', weight: 60, symbol: 'Be' },
-  ];
+  // Removed columnHeader and tableData properties as they appear to be unused example code
 }
 // Trivial change for new commit

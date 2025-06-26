@@ -12,7 +12,7 @@
   "private": true,
   "dependencies": {
     "-": "0.0.1",
-    "@angular-devkit/build-angular": "^20.0.2",
+    "@angular-devkit/build-angular": "^0.1002.1",
     "@angular/animations": "^20.0.2",
     "@angular/cdk": "^20.0.3",
     "@angular/common": "^20.0.2",
@@ -25,10 +25,10 @@
     "@angular/platform-browser": "^20.0.2",
     "@angular/platform-browser-dynamic": "^20.0.2",
     "@angular/router": "^20.0.2",
-    "@firebase/firestore": "^1.15.5",
-    "@swimlane/ngx-charts": "^22.0.0",
+    "@firebase/firestore": "^4.7.17",
+    "@swimlane/ngx-charts": "^23.0.0-alpha.0",
     "bootstrap": "^5.3.7",
-    "firebase": "^10.14.1",
+    "firebase": "^11.9.1",
     "font-awesome": "^4.7.0",
     "hammerjs": "^2.0.8",
     "highcharts": "^11.4.8",
@@ -50,7 +50,7 @@
     "@angular/language-service": "^20.0.2",
     "@types/jasmine": "~3.8.0",
     "@types/jasminewd2": "~2.0.3",
-    "@types/node": "~8.9.4",
+    "@types/node": "^18.19.112",
     "ajv": "^8.17.1",
     "jasmine-core": "~3.8.0",
     "jasmine-spec-reporter": "~7.0.0",
@@ -59,7 +59,7 @@
     "karma-coverage-istanbul-reporter": "~3.0.2",
     "karma-jasmine": "~4.0.0",
     "karma-jasmine-html-reporter": "^1.7.0",
-    "protractor": "^7.0.0",
+    "protractor": "^3.3.0",
     "ts-node": "~10.9.0"
   }
 }

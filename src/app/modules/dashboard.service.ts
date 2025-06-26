@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { ItemService } from './services/item.service';
+import { OrderService } from './services/order.service'; // Changed ItemService to OrderService
 import { Order } from './model/order.model'; // Adjusted path if necessary based on actual location
 import { Product } from './model/product.model'; // Adjusted path if necessary
 import { Observable, map, of, switchMap, forkJoin, from, catchError } from 'rxjs';
@@ -16,12 +16,12 @@ interface OrderWithCogs extends Order {
 })
 export class DashboardService {
 
-  // Making firestore directly accessible if itemService already has it public
-  // Or pass it to the constructor if needed. For this example, assume itemService.firestore is accessible.
-  constructor(private itemService: ItemService, private firestore: Firestore) { } // itemService will be replaced by OrderService later
+  // Making firestore directly accessible if orderService already has it public
+  // Or pass it to the constructor if needed. For this example, assume orderService.firestore is accessible.
+  constructor(private orderService: OrderService, private firestore: Firestore) { }
 
   public getOrderSummaryData(): Observable<OrderSummaryData> {
-    return this.itemService.GetOrdersList().pipe( // This will change to orderService.getAllOrders()
+    return this.orderService.getAllOrders().pipe(
       map((orders: Order[]) => {
         let totalLifetimeEarnings = 0;
         let totalOrders = 0;
@@ -57,7 +57,7 @@ export class DashboardService {
   }
 
   public getMonthlySalesAndOrdersData(): Observable<Highcharts.Options> {
-    return this.itemService.GetOrdersList().pipe(
+    return this.orderService.getAllOrders().pipe(
       map((orders: Order[]) => {
         const monthlyData: { [monthKey: string]: { sales: number; count: number } } = {};
         const monthYearFormat = new Intl.DateTimeFormat('en-US', { month: 'short', year: '2-digit' });
@@ -121,7 +121,7 @@ export class DashboardService {
   }
 
   public getMonthlyCogsAndRevenue(): Observable<Highcharts.Options> {
-    return this.itemService.GetOrdersList().pipe(
+    return this.orderService.getAllOrders().pipe(
       switchMap((orders: Order[]) => {
         if (!orders || orders.length === 0) {
           // Return empty chart options if there are no orders
@@ -265,7 +265,7 @@ export class DashboardService {
   }
 
   public getSalesByProductData(startDate?: Date, endDate?: Date): Observable<{ name: string; y: number }[]> {
-    return this.itemService.GetOrdersList().pipe(
+    return this.orderService.getAllOrders().pipe(
       map((orders: Order[]) => {
         const productSales: { [productKey: string]: { name: string; sales: number } } = {};
 

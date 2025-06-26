@@ -11,11 +11,14 @@ import {FormsModule, ReactiveFormsModule} from '@angular/forms';
 import { initializeApp, provideFirebaseApp } from '@angular/fire/app';
 import { provideDatabase, getDatabase } from '@angular/fire/database';
 import { provideFirestore, getFirestore } from '@angular/fire/firestore';
+import { provideAuth, getAuth } from '@angular/fire/auth'; // Import provideAuth and getAuth
+import { LoginComponent } from './components/login/login.component'; // Import LoginComponent
 
 
 @NgModule({
   declarations: [
     AppComponent,
+    LoginComponent, // Add LoginComponent to declarations
   ],
   imports: [
     BrowserModule,
@@ -28,7 +31,8 @@ import { provideFirestore, getFirestore } from '@angular/fire/firestore';
   providers: [
     provideFirebaseApp(() => initializeApp(environment.firebaseConfig)),
     provideDatabase(() => getDatabase()),
-    provideFirestore(() => getFirestore())
+    provideFirestore(() => getFirestore()),
+    provideAuth(() => getAuth()) // Add provideAuth
   ],
   bootstrap: [AppComponent]
 })

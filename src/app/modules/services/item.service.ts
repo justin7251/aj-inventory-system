@@ -9,8 +9,7 @@ import { Firestore, collection, addDoc, serverTimestamp } from '@angular/fire/fi
 // Query, DocumentSnapshot, Timestamp
 
 // Interface for the data expected by addRecord
-export interface GenericRecordData {
-  uid: string;
+export interface ItemRecordData { // Renamed for clarity
   name: string;
   product_no: string;
   cost: number;
@@ -32,10 +31,10 @@ export class ItemService {
   ) {}
 
   // This method's purpose is still under review. Keeping it here for now.
-  addRecord(value: GenericRecordData) {
+  addRecord(userId: string, value: ItemRecordData) { // Added userId parameter
     const recordsCollection = collection(this.firestore, 'records');
     return addDoc(recordsCollection, {
-      user_id: value.uid, // Assuming value.uid corresponds to user_id
+      userId: userId, // Ensure userId is saved for authorization
       name: value.name,
       product_no: value.product_no,
       cost: value.cost,

@@ -32,6 +32,7 @@ export class DashboardComponent implements OnInit { // Removed OnDestroy
   isSalesByProductLoading: boolean = false;
   monthlyCogsRevenueChartOptions$: Observable<Highcharts.Options> = of({});
   isCogsRevenueLoading: boolean = false;
+  topSellingProductsChartData$: Observable<{ name: string; y: number }[]>;
   
   constructor(
     private dashboardService: DashboardService
@@ -56,6 +57,9 @@ export class DashboardComponent implements OnInit { // Removed OnDestroy
 
     // For sales by product, let's get data for the current month by default.
     this.loadSalesByProductData();
+
+    // Load data for the new top selling products chart
+    this.topSellingProductsChartData$ = this.dashboardService.getTopSellingProductsData();
   }
 
   loadSalesByProductData(): void {

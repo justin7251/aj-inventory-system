@@ -384,4 +384,59 @@ export class DashboardService {
         y: 2.61
     }];
   }
+
+  public getTopSellingProductsData(): Observable<{ name: string; y: number }[]> {
+    return this.orderService.getAllOrders().pipe(
+      map((orders: Order[]) => {
+        const productSales: { [productKey: string]: { name: string; sales: number } } = {};
+        const twelveMonthsAgo = new Date();
+        twelveMonthsAgo.setMonth(twelveMonthsAgo.getMonth() - 12);
+        // Ensure the time is set to the beginning of the day for accurate comparison
+        twelveMonthsAgo.setHours(0, 0, 0, 0);
+
+        orders.forEach(order => {
+          let orderDate: Date | undefined;
+          if (order.created_date) {
+            if (order.created_date instanceof Timestamp) {
+              orderDate = order.created_date.toDate();
+            } else if (order.created_date instanceof Date) {
+              orderDate = order.created_date;
+            } else {
+              const parsedDate = new Date(order.created_date as any);
+              if (!isNaN(parsedDate.getTime())) {
+                orderDate = parsedDate;
+              }
+            }
+          }
+
+          if (orderDate && orderDate >= twelveMonthsAgo) {
+            if (order.items && Array.isArray(order.items)) {
+              order.items.forEach((item: OrderItem) => {
+                const productKey = item.product_no || 'Unknown Product';
+                // Prefer product_name if available, otherwise use productKey
+                const itemName = item.product_name || productKey;
+                const itemCost = (typeof item.item_cost === 'string' ? parseFloat(item.item_cost) : Number(item.item_cost)) || 0;
+
+                if (productSales[productKey]) {
+                  productSales[productKey].sales += itemCost;
+                } else {
+                  productSales[productKey] = { name: itemName, sales: itemCost };
+                }
+              });
+            }
+          }
+        });
+
+        const sortedProducts = Object.values(productSales)
+          .map(p => ({ name: p.name, y: p.sales }))
+          .sort((a, b) => b.y - a.y); // Sort by sales descending
+
+        return sortedProducts.slice(0, 5); // Take top 5
+      }),
+      catchError(error => {
+        console.error('Error fetching top selling products data:', error);
+        return of([]); // Return empty array on error
+      })
+    );
+  }
 }

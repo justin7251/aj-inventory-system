@@ -61,5 +61,8 @@
     "karma-jasmine-html-reporter": "^1.7.0",
     "protractor": "^7.0.0",
     "ts-node": "~10.9.0"
+  },
+  "overrides": {
+    "tough-cookie": "4.1.4"
   }
 }

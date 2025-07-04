@@ -1,14 +1,16 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
-import {MatDividerModule} from '@angular/material/divider';
-import {MatToolbarModule} from '@angular/material/toolbar';
-import {MatIconModule} from '@angular/material/icon';
-import {MatButtonModule} from '@angular/material/button';
-import {MatMenuModule} from '@angular/material/menu';
-import {MatListModule} from '@angular/material/list';
-import {MatTableModule} from '@angular/material/table';
-import {MatPaginatorModule} from '@angular/material/paginator';
+// Individual Material module imports are removed, MaterialModule will be used.
+// import {MatDividerModule} from '@angular/material/divider';
+// import {MatToolbarModule} from '@angular/material/toolbar';
+// import {MatIconModule} from '@angular/material/icon';
+// import {MatButtonModule} from '@angular/material/button';
+// import {MatMenuModule} from '@angular/material/menu';
+// import {MatListModule} from '@angular/material/list';
+// import {MatTableModule} from '@angular/material/table';
+// import {MatPaginatorModule} from '@angular/material/paginator';
+import { MaterialModule } from './material.module'; // Import the consolidated MaterialModule
 
 import { RouterModule } from '@angular/router';
 import { HighchartsChartModule } from 'highcharts-angular';
@@ -35,16 +37,17 @@ import { TableComponent } from './widgets/table/table.component';
 	],
 	imports: [
 		CommonModule,
-		MatDividerModule,
-		MatToolbarModule,
-		MatIconModule,
-		MatButtonModule,
-		MatMenuModule,
-		MatListModule,
+		// MatDividerModule,
+		// MatToolbarModule,
+		// MatIconModule,
+		// MatButtonModule,
+		// MatMenuModule,
+		// MatListModule,
+		MaterialModule, // Add MaterialModule here
 		RouterModule,
 		HighchartsChartModule,
-		MatTableModule,
-		MatPaginatorModule
+		// MatTableModule, // Covered by MaterialModule
+		// MatPaginatorModule // Covered by MaterialModule
 	],
 	exports: [
 		HeaderComponent,
@@ -53,7 +56,8 @@ import { TableComponent } from './widgets/table/table.component';
 		AreaComponent,
 		CardComponent,
 		PieComponent,
-		TableComponent
+		TableComponent,
+		MaterialModule // Also export MaterialModule
 	]
 })
 export class SharedModule { }

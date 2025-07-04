@@ -1,8 +1,8 @@
 import { Injectable } from '@angular/core';
-import { OrderService } from './services/order.service'; // Changed ItemService to OrderService
-import { Order } from './model/order.model'; // Adjusted path if necessary based on actual location
-import { Product } from './model/product.model'; // Adjusted path if necessary
-import { Observable, map, of, switchMap, forkJoin, from, catchError } from 'rxjs';
+import { OrderService } from './services/order.service';
+import { Order, OrderItem } from './model/order.model';
+import { Product } from './model/product.model';
+import { Observable, map, of, switchMap, forkJoin, from, catchError, startWith } from 'rxjs';
 import { Timestamp, Firestore, collection, query, where, getDocs } from '@angular/fire/firestore';
 import * as Highcharts from 'highcharts';
 
@@ -11,14 +11,56 @@ interface OrderWithCogs extends Order {
   calculatedCogs: number;
 }
 
+// Interface for general chart data with loading and error states
+export interface ChartData<T> {
+  isLoading: boolean;
+  data?: T;
+  error?: any;
+}
+
+// Specific types for chart data
+export interface SalesByProductEntry { // Renamed from SalesByProductChartData to avoid conflict with the wrapper
+  name: string;
+  y: number;
+}
+
+export interface HighchartsChartOptionsData extends ChartData<Highcharts.Options> {}
+export interface SalesByProductData extends ChartData<SalesByProductEntry[]> {}
+
+// Interface for OrderSummary to be used by component
+export interface OrderSummaryData {
+  totalLifetimeEarnings: number;
+  totalOrders: number;
+  averageEarningsPerOrder: number;
+  isLoading: boolean;
+  error?: any;
+}
+
+
 @Injectable({
   providedIn: 'root'
 })
 export class DashboardService {
 
-  // Making firestore directly accessible if orderService already has it public
-  // Or pass it to the constructor if needed. For this example, assume orderService.firestore is accessible.
   constructor(private orderService: OrderService, private firestore: Firestore) { }
+
+  private safeGetDate(dateInput: any): Date | undefined {
+    if (!dateInput) {
+      return undefined;
+    }
+    if (dateInput instanceof Timestamp) {
+      return dateInput.toDate();
+    }
+    if (dateInput instanceof Date) {
+      return dateInput;
+    }
+    // Attempt to parse if it's a string or number
+    const parsedDate = new Date(dateInput);
+    if (!isNaN(parsedDate.getTime())) {
+      return parsedDate;
+    }
+    return undefined;
+  }
 
   public getOrderSummaryData(): Observable<OrderSummaryData> {
     return this.orderService.getAllOrders().pipe(
@@ -26,9 +68,7 @@ export class DashboardService {
         let totalLifetimeEarnings = 0;
         let totalOrders = 0;
 
-        // Assuming GetOrdersList() now correctly returns Observable<Order[]>
-        // as per the refactored ItemService/OrderService.
-        for (const order of orders) { // Use orders directly
+        for (const order of orders) {
           if (order.totalEarnings !== undefined && typeof order.totalEarnings === 'number' && !isNaN(order.totalEarnings)) {
             totalLifetimeEarnings += order.totalEarnings;
           }
@@ -40,23 +80,34 @@ export class DashboardService {
           totalLifetimeEarnings,
           totalOrders,
           averageEarningsPerOrder,
-          isLoading: false // isLoading can be part of the emitted object
+          isLoading: false
         };
       }),
+      startWith({ totalLifetimeEarnings: 0, totalOrders: 0, averageEarningsPerOrder: 0, isLoading: true }),
       catchError(error => {
         console.error('Error fetching order summary data:', error);
         return of({
           totalLifetimeEarnings: 0,
           totalOrders: 0,
           averageEarningsPerOrder: 0,
-          isLoading: false, // Ensure isLoading is false on error too
+          isLoading: false,
           error: true
         });
       })
     );
   }
 
-  public getMonthlySalesAndOrdersData(): Observable<Highcharts.Options> {
+  // --- Chart Data Methods ---
+  // The following methods prepare data and Highcharts options for various dashboard charts.
+  // Consideration for future refactoring:
+  // If the number of charts grows significantly, or if there's a need for highly standardized
+  // styling and behavior across many charts, consider creating:
+  // 1. A base Highcharts options helper function that provides common configurations (e.g., styling, credits).
+  // 2. More dedicated chart builder services/functions for very complex charts.
+  // For the current set of charts, the direct construction of options within each method is manageable.
+  // Empty/error chart states are handled by `createEmptyChartOptions` and `createEmptyCogsRevenueChartOptions`.
+
+  public getMonthlySalesAndOrdersData(): Observable<HighchartsChartOptionsData> {
     return this.orderService.getAllOrders().pipe(
       map((orders: Order[]) => {
         const monthlyData: { [monthKey: string]: { sales: number; count: number } } = {};
@@ -72,19 +123,7 @@ export class DashboardService {
         }
 
         orders.forEach(order => {
-          let orderDate: Date | undefined;
-          if (order.created_date) {
-            if (order.created_date instanceof Timestamp) {
-                orderDate = order.created_date.toDate();
-            } else if (order.created_date instanceof Date) {
-                orderDate = order.created_date;
-            } else {
-                const parsedDate = new Date(order.created_date as any);
-                if (!isNaN(parsedDate.getTime())) {
-                    orderDate = parsedDate;
-                }
-            }
-          }
+          const orderDate = this.safeGetDate(order.created_date);
 
           if (orderDate) {
             const orderMonthKey = monthYearFormat.format(orderDate);
@@ -100,7 +139,7 @@ export class DashboardService {
         const salesData = categories.map(cat => monthlyData[cat].sales);
         const ordersCountData = categories.map(cat => monthlyData[cat].count);
 
-        return {
+        return { // Highcharts.Options
           chart: { type: 'area' },
           title: { text: 'Monthly Sales and Orders (Last 6 Months)' },
           xAxis: { categories: categories, title: { text: 'Month' } },
@@ -115,64 +154,95 @@ export class DashboardService {
           tooltip: { shared: true, crosshairs: true },
           credits: { enabled: false },
           exporting: { enabled: true }
-        } as Highcharts.Options;
+        };
+      }),
+      map(options => ({ isLoading: false, data: options as Highcharts.Options } as HighchartsChartOptionsData)),
+      startWith({ isLoading: true } as HighchartsChartOptionsData),
+      catchError(error => {
+        console.error('Error fetching monthly sales and orders data:', error);
+        return of({ isLoading: false, error: true, data: this.createEmptyChartOptions('Monthly Sales and Orders (Error)') } as HighchartsChartOptionsData);
       })
     );
   }
 
-  public getMonthlyCogsAndRevenue(): Observable<Highcharts.Options> {
+  public getMonthlyCogsAndRevenue(): Observable<HighchartsChartOptionsData> {
     return this.orderService.getAllOrders().pipe(
       switchMap((orders: Order[]) => {
         if (!orders || orders.length === 0) {
-          // Return empty chart options if there are no orders
-          return of(this.createEmptyCogsRevenueChartOptions());
+          return of({ options: this.createEmptyCogsRevenueChartOptions(), productsMap: new Map<string, number>() });
         }
 
-        const orderCogsObservables: Observable<OrderWithCogs>[] = orders.map(order => {
-          if (!order.items || !Array.isArray(order.items) || order.items.length === 0) {
-            return of({ ...order, calculatedCogs: 0 } as OrderWithCogs);
+        // Collect all unique product numbers from all orders
+        const allProductNos = new Set<string>();
+        orders.forEach(order => {
+          if (order.items && Array.isArray(order.items)) {
+            order.items.forEach(item => {
+              if (item.product_no) {
+                allProductNos.add(String(item.product_no));
+              }
+            });
           }
-
-          const itemCostObservables: Observable<number>[] = order.items.map((item: OrderItem) => {
-            const productNo = String(item.product_no); // Ensure product_no is a string
-            const quantity = parseFloat(String(item.quantity)) || 0;
-
-            if (!productNo || quantity === 0) {
-              return of(0); // No product number or zero quantity
-            }
-
-            const productQuery = query(collection(this.firestore, 'products'), where('product_no', '==', productNo));
-            return from(getDocs(productQuery)).pipe(
-              map(querySnapshot => {
-                if (!querySnapshot.empty) {
-                  const productData = querySnapshot.docs[0].data() as Product;
-                  const costPrice = parseFloat(String(productData.costPrice) || '0') || 0;
-                  return quantity * costPrice;
-                }
-                return 0; // Product not found
-              }),
-              catchError(() => of(0)) // Error during product fetch
-            );
-          });
-
-          // If itemCostObservables is empty, forkJoin would error. Return 0 COGS for the order.
-          if (itemCostObservables.length === 0) {
-             return of({ ...order, calculatedCogs: 0 } as OrderWithCogs);
-          }
-
-          return forkJoin(itemCostObservables).pipe(
-            map(costs => {
-              const totalOrderCogs = costs.reduce((acc, cost) => acc + cost, 0);
-              return { ...order, calculatedCogs: totalOrderCogs } as OrderWithCogs;
-            }),
-            catchError(() => of({ ...order, calculatedCogs: 0 } as OrderWithCogs)) // Error in forkJoin
-          );
         });
 
-        return forkJoin(orderCogsObservables);
+        if (allProductNos.size === 0) {
+          // No products to fetch, so COGS will be 0 for all orders
+          const ordersWithCogs = orders.map(order => ({ ...order, calculatedCogs: 0 } as OrderWithCogs));
+          return of({ ordersWithCogs, productsMap: new Map<string, number>() });
+        }
+
+        // Fetch all products from Firestore.
+        // This assumes the number of products is manageable.
+        // For very large product catalogs, a more optimized strategy (e.g., batched 'IN' queries) would be needed.
+        const productsCollection = collection(this.firestore, 'products');
+        // We are fetching all products here. If specific product_no filtering is needed and efficient,
+        // it would require multiple 'IN' queries due to Firestore limits (max 30 per query).
+        // For now, fetching all and filtering locally is simpler than complex batching logic.
+        return from(getDocs(productsCollection)).pipe(
+          map(productsSnapshot => {
+            const productsMap = new Map<string, number>();
+            productsSnapshot.forEach(doc => {
+              const product = doc.data() as Product;
+              if (product.product_no) { // Ensure product_no exists
+                productsMap.set(String(product.product_no), parseFloat(String(product.costPrice) || '0') || 0);
+              }
+            });
+            return { orders, productsMap }; // Pass original orders and the created map
+          }),
+          catchError(err => {
+            console.error("Error fetching products for COGS calculation:", err);
+            // If product fetch fails, proceed with 0 COGS for all orders
+            return of({ orders, productsMap: new Map<string, number>() });
+          })
+        );
       }),
-      map((ordersWithCogs: OrderWithCogs[]) => {
-        // This part is similar to the original logic but uses ordersWithCogs
+      map(({ orders, productsMap, options }: { orders?: Order[], productsMap: Map<string, number>, options?: Highcharts.Options }) => {
+        if (options) { // Came from the early exit (no orders)
+            return options;
+        }
+        if (!orders) { // Should not happen if options is not set, but as a safeguard
+             return this.createEmptyCogsRevenueChartOptions();
+        }
+
+        const ordersWithCogs: OrderWithCogs[] = orders.map(order => {
+          let calculatedCogs = 0;
+          if (order.items && Array.isArray(order.items)) {
+            order.items.forEach(item => {
+              const productNo = String(item.product_no);
+              const quantity = parseFloat(String(item.quantity)) || 0;
+              if (productNo && quantity > 0 && productsMap.has(productNo)) {
+                calculatedCogs += (productsMap.get(productNo) as number) * quantity;
+              }
+            });
+          }
+          return { ...order, calculatedCogs };
+        });
+
+        // This part remains the same, using ordersWithCogs
+        if ('chart' in ordersWithCogsOrOptions && ordersWithCogsOrOptions.chart) {
+            return ordersWithCogsOrOptions as Highcharts.Options;
+        }
+
+        const ordersWithCogs = ordersWithCogsOrOptions as OrderWithCogs[];
         const monthlyData: { [monthKey: string]: { revenue: number; cogs: number } } = {};
         const monthYearFormat = new Intl.DateTimeFormat('en-US', { month: 'short', year: '2-digit' });
 
@@ -185,23 +255,13 @@ export class DashboardService {
         }
 
         ordersWithCogs.forEach(order => {
-          let orderDate: Date | undefined;
-          if (order.created_date) {
-            if (order.created_date instanceof Timestamp) {
-              orderDate = order.created_date.toDate();
-            } else if (order.created_date instanceof Date) {
-              orderDate = order.created_date;
-            } else {
-              const parsedDate = new Date(order.created_date as any);
-              if (!isNaN(parsedDate.getTime())) { orderDate = parsedDate; }
-            }
-          }
+          const orderDate = this.safeGetDate(order.created_date);
 
           if (orderDate) {
             const orderMonthKey = monthYearFormat.format(orderDate);
             if (monthlyData[orderMonthKey]) {
               monthlyData[orderMonthKey].revenue += order.total_cost || 0;
-              monthlyData[orderMonthKey].cogs += order.calculatedCogs; // Use pre-calculated COGS
+              monthlyData[orderMonthKey].cogs += order.calculatedCogs;
             }
           }
         });
@@ -210,7 +270,7 @@ export class DashboardService {
         const revenueData = categories.map(cat => monthlyData[cat].revenue);
         const cogsData = categories.map(cat => monthlyData[cat].cogs);
 
-        return {
+        return { // Highcharts.Options
           chart: { type: 'column' },
           title: { text: 'Monthly Revenue vs. COGS (Last 6 Months)' },
           xAxis: { categories: categories, title: { text: 'Month' } },
@@ -232,16 +292,18 @@ export class DashboardService {
           },
           credits: { enabled: false },
           exporting: { enabled: true }
-        } as Highcharts.Options;
+        };
       }),
+      map(options => ({ isLoading: false, data: options as Highcharts.Options } as HighchartsChartOptionsData)),
+      startWith({ isLoading: true } as HighchartsChartOptionsData),
       catchError(error => {
         console.error("Error in getMonthlyCogsAndRevenue:", error);
-        return of(this.createEmptyCogsRevenueChartOptions()); // Return empty chart on error
+        return of({ isLoading: false, error: true, data: this.createEmptyCogsRevenueChartOptions("Monthly Revenue vs. COGS (Error)") } as HighchartsChartOptionsData);
       })
     );
   }
 
-  private createEmptyCogsRevenueChartOptions(): Highcharts.Options {
+  private createEmptyCogsRevenueChartOptions(titleText?: string): Highcharts.Options {
     const categories = [];
     for (let i = 5; i >= 0; i--) {
       const d = new Date();
@@ -251,7 +313,7 @@ export class DashboardService {
     }
     return {
       chart: { type: 'column' },
-      title: { text: 'Monthly Revenue vs. COGS (Last 6 Months)' },
+      title: { text: titleText || 'Monthly Revenue vs. COGS (Last 6 Months)' },
       xAxis: { categories: categories, title: { text: 'Month' } },
       yAxis: [{ title: { text: 'Amount' }, labels: { formatter: function() { return '$' + Highcharts.numberFormat(Number(this.value), 0, '.', ','); } } }],
       series: [
@@ -260,29 +322,38 @@ export class DashboardService {
       ],
       credits: { enabled: false },
       exporting: { enabled: true },
-      plotOptions: { series: { animation: false } } // Disable animation for empty/error state
+      plotOptions: { series: { animation: false } }
     };
   }
 
-  public getSalesByProductData(startDate?: Date, endDate?: Date): Observable<{ name: string; y: number }[]> {
+  // Helper for empty generic chart options
+  private createEmptyChartOptions(titleText: string, type: string = 'area'): Highcharts.Options {
+    const categories = [];
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(1);
+      d.setMonth(d.getMonth() - i);
+      categories.push(new Intl.DateTimeFormat('en-US', { month: 'short', year: '2-digit' }).format(d));
+    }
+    return {
+      chart: { type: type as any },
+      title: { text: titleText },
+      xAxis: { categories: categories },
+      yAxis: [{ title: { text: '' } }],
+      series: [{ type: type as any, name: 'No data', data: Array(6).fill(0) }],
+      credits: { enabled: false },
+      exporting: { enabled: true },
+      plotOptions: { series: { animation: false } }
+    };
+  }
+
+  public getSalesByProductData(startDate?: Date, endDate?: Date): Observable<SalesByProductData> {
     return this.orderService.getAllOrders().pipe(
       map((orders: Order[]) => {
         const productSales: { [productKey: string]: { name: string; sales: number } } = {};
 
         orders.forEach(order => {
-          let orderDate: Date | undefined;
-          if (order.created_date) {
-            if (order.created_date instanceof Timestamp) {
-              orderDate = order.created_date.toDate();
-            } else if (order.created_date instanceof Date) {
-              orderDate = order.created_date;
-            } else {
-              const parsedDate = new Date(order.created_date as any);
-              if (!isNaN(parsedDate.getTime())) {
-                orderDate = parsedDate;
-              }
-            }
-          }
+          const orderDate = this.safeGetDate(order.created_date);
 
           if (orderDate) {
             let includeOrder = false;
@@ -323,12 +394,26 @@ export class DashboardService {
             }
           }
         });
-        return Object.values(productSales).map(p => ({ name: p.name, y: p.sales }));
+        return Object.values(productSales).map(p => ({ name: p.name, y: p.sales } as SalesByProductEntry));
+      }),
+      map(data => ({ isLoading: false, data } as SalesByProductData)),
+      startWith({ isLoading: true, data: [] } as SalesByProductData), // Provide empty array for data initially
+      catchError(error => {
+        console.error('Error fetching sales by product data:', error);
+        return of({ isLoading: false, error: true, data: [] } as SalesByProductData);
       })
     );
   }
 
   // --- Existing methods from the original file ---
+  // These methods return static/mock data and are used for generic widgets.
+  // For a production application, this data would typically be fetched from a backend
+  // or derived from actual application data.
+
+  /**
+   * @returns Static data for a multi-series area chart.
+   * TODO: Replace with actual data source if this chart is intended for production use.
+   */
   bigChart() {
     return [{
         name: 'Asia',
@@ -348,11 +433,21 @@ export class DashboardService {
     }];
   }
 
+  /**
+   * @returns Static data array for widget cards.
+   * TODO: Replace with actual data source or calculations if these cards are intended for production use.
+   * Note: The dashboard currently uses this for "Sales" and "Purchase" cards,
+   * while "New Users" and "Users retention" have different hardcoded data.
+   */
   cards() {
     return [71, 78, 39, 66];
   }
 
-  pieChart() { // This is the original generic pie chart data
+  /**
+   * @returns Static data for a generic pie chart (browser usage).
+   * TODO: Replace with actual, relevant data if this chart is intended for production use.
+   */
+  pieChart() {
     return [{
         name: 'Chrome',
         y: 61.41,
@@ -385,35 +480,21 @@ export class DashboardService {
     }];
   }
 
-  public getTopSellingProductsData(): Observable<{ name: string; y: number }[]> {
+  public getTopSellingProductsData(): Observable<SalesByProductData> {
     return this.orderService.getAllOrders().pipe(
       map((orders: Order[]) => {
         const productSales: { [productKey: string]: { name: string; sales: number } } = {};
         const twelveMonthsAgo = new Date();
         twelveMonthsAgo.setMonth(twelveMonthsAgo.getMonth() - 12);
-        // Ensure the time is set to the beginning of the day for accurate comparison
         twelveMonthsAgo.setHours(0, 0, 0, 0);
 
         orders.forEach(order => {
-          let orderDate: Date | undefined;
-          if (order.created_date) {
-            if (order.created_date instanceof Timestamp) {
-              orderDate = order.created_date.toDate();
-            } else if (order.created_date instanceof Date) {
-              orderDate = order.created_date;
-            } else {
-              const parsedDate = new Date(order.created_date as any);
-              if (!isNaN(parsedDate.getTime())) {
-                orderDate = parsedDate;
-              }
-            }
-          }
+          const orderDate = this.safeGetDate(order.created_date);
 
           if (orderDate && orderDate >= twelveMonthsAgo) {
             if (order.items && Array.isArray(order.items)) {
               order.items.forEach((item: OrderItem) => {
                 const productKey = item.product_no || 'Unknown Product';
-                // Prefer product_name if available, otherwise use productKey
                 const itemName = item.product_name || productKey;
                 const itemCost = (typeof item.item_cost === 'string' ? parseFloat(item.item_cost) : Number(item.item_cost)) || 0;
 
@@ -428,14 +509,16 @@ export class DashboardService {
         });
 
         const sortedProducts = Object.values(productSales)
-          .map(p => ({ name: p.name, y: p.sales }))
-          .sort((a, b) => b.y - a.y); // Sort by sales descending
+          .map(p => ({ name: p.name, y: p.sales } as SalesByProductEntry))
+          .sort((a, b) => b.y - a.y);
 
-        return sortedProducts.slice(0, 5); // Take top 5
+        return sortedProducts.slice(0, 5);
       }),
+      map(data => ({ isLoading: false, data } as SalesByProductData)),
+      startWith({ isLoading: true, data: [] } as SalesByProductData),
       catchError(error => {
         console.error('Error fetching top selling products data:', error);
-        return of([]); // Return empty array on error
+        return of({ isLoading: false, error: true, data: [] } as SalesByProductData);
       })
     );
   }

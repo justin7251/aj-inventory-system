@@ -7,15 +7,17 @@ import { DashboardService } from 'src/app/modules/dashboard.service';
 import { ItemService } from 'src/app/modules/services/item.service';
 import {FormsModule, ReactiveFormsModule} from '@angular/forms';
 
-import {MatButtonModule} from '@angular/material/button';
-import {MatCardModule} from '@angular/material/card';
-import {MatDialogModule} from '@angular/material/dialog';
-import {MatDividerModule} from '@angular/material/divider';
-import {MatIconModule} from '@angular/material/icon';
-import {MatInputModule} from '@angular/material/input';
-import {MatPaginatorModule} from '@angular/material/paginator';
-import {MatSortModule} from '@angular/material/sort';
-import {MatTableModule} from '@angular/material/table';
+// Angular Material modules are now imported via MaterialModule
+// import {MatButtonModule} from '@angular/material/button';
+// import {MatCardModule} from '@angular/material/card';
+// import {MatDialogModule} from '@angular/material/dialog';
+// import {MatDividerModule} from '@angular/material/divider';
+// import {MatIconModule} from '@angular/material/icon';
+// import {MatInputModule} from '@angular/material/input';
+// import {MatPaginatorModule} from '@angular/material/paginator';
+// import {MatSortModule} from '@angular/material/sort';
+// import {MatTableModule} from '@angular/material/table';
+import { MaterialModule } from 'src/app/shared/material.module';
 
 import { DashboardModule } from 'src/app/modules/dashboard/dashboard.module';
 import { PostsModule } from 'src/app/modules/posts/posts.module';
@@ -31,15 +33,16 @@ import { ProductFormModule } from 'src/app/modules/product-form/product-form.mod
     DefaultComponent
   ],
   imports: [
-    MatButtonModule,
-    MatCardModule,
-    MatDialogModule,
-    MatDividerModule,
-    MatIconModule,
-    MatInputModule,
-    MatPaginatorModule,
-    MatSortModule,
-    MatTableModule,
+    // MatButtonModule,
+    // MatCardModule,
+    // MatDialogModule,
+    // MatDividerModule,
+    // MatIconModule,
+    // MatInputModule,
+    // MatPaginatorModule,
+    // MatSortModule,
+    // MatTableModule,
+    MaterialModule,
     CommonModule,
     RouterModule,
     SharedModule,
@@ -53,8 +56,8 @@ import { ProductFormModule } from 'src/app/modules/product-form/product-form.mod
     ProductFormModule
   ],
   providers: [
-    DashboardService,
-    ItemService
+    // DashboardService and ItemService are providedIn: 'root',
+    // so they do not need to be listed in providers here.
   ]
 })
 export class DefaultModule { }

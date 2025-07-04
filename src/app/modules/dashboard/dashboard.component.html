@@ -1,37 +1,43 @@
 <!-- Financial Summary Cards -->
-<div *ngIf="!isLoading" fxLayout="row" fxLayoutAlign="space-around center" fxLayoutGap="20px" class="stats-cards" style="margin-bottom: 20px;">
-    <mat-card fxFlex="30">
-        <mat-card-header>
-            <mat-card-title>Total Lifetime Earnings</mat-card-title>
-        </mat-card-header>
-        <mat-card-content>
-            <p style="font-size: 24px; font-weight: bold;">{{ totalLifetimeEarnings | currency }}</p>
-        </mat-card-content>
-    </mat-card>
+<ng-container *ngIf="orderSummaryData$ | async as summaryData">
+    <div *ngIf="!summaryData.isLoading" fxLayout="row" fxLayoutAlign="space-around center" fxLayoutGap="20px" class="stats-cards" style="margin-bottom: 20px;">
+        <mat-card fxFlex="30">
+            <mat-card-header>
+                <mat-card-title>Total Lifetime Earnings</mat-card-title>
+            </mat-card-header>
+            <mat-card-content>
+                <p style="font-size: 24px; font-weight: bold;">{{ summaryData.totalLifetimeEarnings | currency }}</p>
+            </mat-card-content>
+        </mat-card>
 
-    <mat-card fxFlex="30">
-        <mat-card-header>
-            <mat-card-title>Total Orders</mat-card-title>
-        </mat-card-header>
-        <mat-card-content>
-            <p style="font-size: 24px; font-weight: bold;">{{ totalOrders }}</p>
-        </mat-card-content>
-    </mat-card>
+        <mat-card fxFlex="30">
+            <mat-card-header>
+                <mat-card-title>Total Orders</mat-card-title>
+            </mat-card-header>
+            <mat-card-content>
+                <p style="font-size: 24px; font-weight: bold;">{{ summaryData.totalOrders }}</p>
+            </mat-card-content>
+        </mat-card>
 
-    <mat-card fxFlex="30">
-        <mat-card-header>
-            <mat-card-title>Avg. Earnings Per Order</mat-card-title>
-        </mat-card-header>
-        <mat-card-content>
-            <p style="font-size: 24px; font-weight: bold;">{{ averageEarningsPerOrder | currency }}</p>
-        </mat-card-content>
-    </mat-card>
-</div>
+        <mat-card fxFlex="30">
+            <mat-card-header>
+                <mat-card-title>Avg. Earnings Per Order</mat-card-title>
+            </mat-card-header>
+            <mat-card-content>
+                <p style="font-size: 24px; font-weight: bold;">{{ summaryData.averageEarningsPerOrder | currency }}</p>
+            </mat-card-content>
+        </mat-card>
+    </div>
 
-<!-- Loading Spinner -->
-<div *ngIf="isLoading" style="text-align: center; padding: 20px; margin-bottom: 20px;">
-  <mat-spinner diameter="50"></mat-spinner>
-</div>
+    <!-- Loading Spinner -->
+    <div *ngIf="summaryData.isLoading" style="text-align: center; padding: 20px; margin-bottom: 20px;">
+        <mat-spinner diameter="50"></mat-spinner>
+    </div>
+
+    <div *ngIf="summaryData.error" class="error-message" style="text-align: center; padding: 20px; color: red;">
+        Error loading summary data. Please try again later.
+    </div>
+</ng-container>
 
 <!-- Existing app-widget-card cards -->
 <!-- <div>
@@ -60,12 +66,19 @@
 <!-- NEW CHARTS SECTION -->
 <div fxLayout="row" fxLayoutAlign="space-between start" fxLayoutGap="20px" style="margin-top: 20px; margin-bottom: 20px;">
     <div fxFlex="60">
-        <mat-card *ngIf="monthlySalesChartOptions$ | async as options">
-            <mat-card-content>
-                <!-- Title for area chart is set within options by DashboardService -->
-                <app-widget-area [chartOptions]="options"></app-widget-area>
-            </mat-card-content>
-        </mat-card>
+        <ng-container *ngIf="monthlySalesChartOptions$ | async as chartWrapper">
+            <mat-card>
+                <mat-card-content>
+                    <div *ngIf="chartWrapper.isLoading" style="display: flex; justify-content: center; align-items: center; min-height: 300px;">
+                        <mat-spinner diameter="50"></mat-spinner>
+                    </div>
+                    <div *ngIf="chartWrapper.error" class="error-message" style="text-align: center; padding: 20px; color: red;">
+                        Error loading monthly sales data.
+                    </div>
+                    <app-widget-area *ngIf="!chartWrapper.isLoading && !chartWrapper.error && chartWrapper.data" [chartOptions]="chartWrapper.data"></app-widget-area>
+                </mat-card-content>
+            </mat-card>
+        </ng-container>
     </div>
     <div fxFlex="40">
         <div style="margin-bottom: 10px;">
@@ -79,17 +92,25 @@
           </mat-form-field>
           <button mat-raised-button color="primary" (click)="loadSalesByProductData()">Apply Filter</button>
         </div>
-        <mat-card>
-            <mat-card-header>
-                <mat-card-title style="font-size: 18px; text-align: center; width: 100%;">Sales by Product</mat-card-title>
-            </mat-card-header>
-            <mat-card-content>
-                <div *ngIf="isSalesByProductLoading" style="display: flex; justify-content: center; align-items: center; min-height: 200px;">
-                    <mat-spinner diameter="50"></mat-spinner>
-                </div>
-                <app-widget-pie *ngIf="!isSalesByProductLoading && (salesByProductData$ | async)" [data]="salesByProductData$ | async"></app-widget-pie>
-            </mat-card-content>
-        </mat-card>
+        <ng-container *ngIf="salesByProductData$ | async as chartWrapper">
+            <mat-card>
+                <mat-card-header>
+                    <mat-card-title style="font-size: 18px; text-align: center; width: 100%;">Sales by Product</mat-card-title>
+                </mat-card-header>
+                <mat-card-content>
+                    <div *ngIf="chartWrapper.isLoading" style="display: flex; justify-content: center; align-items: center; min-height: 200px;">
+                        <mat-spinner diameter="50"></mat-spinner>
+                    </div>
+                    <div *ngIf="chartWrapper.error" class="error-message" style="text-align: center; padding: 20px; color: red;">
+                        Error loading sales by product data.
+                    </div>
+                    <app-widget-pie *ngIf="!chartWrapper.isLoading && !chartWrapper.error && chartWrapper.data" [data]="chartWrapper.data"></app-widget-pie>
+                    <div *ngIf="!chartWrapper.isLoading && !chartWrapper.error && (!chartWrapper.data || chartWrapper.data.length === 0)" style="text-align: center; padding: 20px;">
+                        No sales data available for the selected period.
+                    </div>
+                </mat-card-content>
+            </mat-card>
+        </ng-container>
     </div>
 </div>
 <!-- END NEW CHARTS SECTION -->
@@ -97,15 +118,19 @@
 <!-- COGS vs Revenue Chart -->
 <div fxLayout="row" fxLayoutAlign="start start" fxLayoutGap="20px" style="margin-top: 20px; margin-bottom: 20px;">
     <div fxFlex="100">
-        <mat-card>
-            <mat-card-content>
-                <div *ngIf="isCogsRevenueLoading" style="display: flex; justify-content: center; align-items: center; min-height: 300px;">
-                    <mat-spinner diameter="50"></mat-spinner>
-                </div>
-                <!-- Title for the chart is set within options by DashboardService -->
-                <app-widget-area *ngIf="!isCogsRevenueLoading && (monthlyCogsRevenueChartOptions$ | async)" [chartOptions]="monthlyCogsRevenueChartOptions$ | async"></app-widget-area>
-            </mat-card-content>
-        </mat-card>
+        <ng-container *ngIf="monthlyCogsRevenueChartOptions$ | async as chartWrapper">
+            <mat-card>
+                <mat-card-content>
+                    <div *ngIf="chartWrapper.isLoading" style="display: flex; justify-content: center; align-items: center; min-height: 300px;">
+                        <mat-spinner diameter="50"></mat-spinner>
+                    </div>
+                    <div *ngIf="chartWrapper.error" class="error-message" style="text-align: center; padding: 20px; color: red;">
+                        Error loading COGS vs Revenue data.
+                    </div>
+                    <app-widget-area *ngIf="!chartWrapper.isLoading && !chartWrapper.error && chartWrapper.data" [chartOptions]="chartWrapper.data"></app-widget-area>
+                </mat-card-content>
+            </mat-card>
+        </ng-container>
     </div>
 </div>
 
@@ -113,21 +138,26 @@
 
 <!-- Top 5 Selling Products Chart -->
 <div fxLayout="row" fxLayoutAlign="start start" fxLayoutGap="20px" style="margin-top: 20px; margin-bottom: 20px;">
-    <div fxFlex="100"> {/* Or fxFlex="50" if placing side-by-side with another chart */}
-        <mat-card *ngIf="topSellingProductsChartData$ | async as data">
-            <mat-card-header>
-                <mat-card-title style="font-size: 18px; text-align: center; width: 100%;">Top 5 Selling Products (Last 12 Months)</mat-card-title>
-            </mat-card-header>
-            <mat-card-content>
-                <app-widget-pie [data]="data"></app-widget-pie>
-                <div *ngIf="!data || data.length === 0" style="text-align: center; padding: 20px;">
-                    No sales data available for the last 12 months.
-                </div>
-            </mat-card-content>
-        </mat-card>
-         <div *ngIf="!(topSellingProductsChartData$ | async)" style="text-align: center; padding: 20px;">
-            <mat-spinner diameter="50"></mat-spinner> Loading Top Selling Products...
-        </div>
+    <div fxFlex="100">
+        <ng-container *ngIf="topSellingProductsChartData$ | async as chartWrapper">
+            <mat-card>
+                <mat-card-header>
+                    <mat-card-title style="font-size: 18px; text-align: center; width: 100%;">Top 5 Selling Products (Last 12 Months)</mat-card-title>
+                </mat-card-header>
+                <mat-card-content>
+                     <div *ngIf="chartWrapper.isLoading" style="display: flex; justify-content: center; align-items: center; min-height: 200px;">
+                        <mat-spinner diameter="50"></mat-spinner>
+                    </div>
+                    <div *ngIf="chartWrapper.error" class="error-message" style="text-align: center; padding: 20px; color: red;">
+                        Error loading top selling products.
+                    </div>
+                    <app-widget-pie *ngIf="!chartWrapper.isLoading && !chartWrapper.error && chartWrapper.data && chartWrapper.data.length > 0" [data]="chartWrapper.data"></app-widget-pie>
+                    <div *ngIf="!chartWrapper.isLoading && !chartWrapper.error && (!chartWrapper.data || chartWrapper.data.length === 0)" style="text-align: center; padding: 20px;">
+                        No sales data available for the last 12 months.
+                    </div>
+                </mat-card-content>
+            </mat-card>
+        </ng-container>
     </div>
 </div>
 

@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Firestore, collection, addDoc, doc, updateDoc, collectionData, docData, query, orderBy, runTransaction, serverTimestamp, DocumentReference, Timestamp } from '@angular/fire/firestore';
+import { Firestore, collection, addDoc, doc, updateDoc, collectionData, docData, query, orderBy, runTransaction, serverTimestamp, DocumentReference, Timestamp, deleteDoc } from '@angular/fire/firestore'; // Added deleteDoc
 import { Order, OrderItem } from '../model/order.model';
 import { PackingQueueService } from './packing-queue.service';
 import { PackingItem } from '../model/packing-item.model';
@@ -12,8 +12,52 @@ import { Observable, firstValueFrom, map } from 'rxjs'; // Added map
 export class OrderService {
   constructor(
     public firestore: Firestore,
-    private packingQueueService: PackingQueueService
+    private packingQueueService: PackingQueueService,
+    private firestoreDb: Firestore // Injected Firestore for product lookups
   ) {}
+
+  private async _calculateCogsAndEarnings(items: OrderItem[]): Promise<{ cogs: number; earnings: number }> {
+    let totalCogs = 0;
+    let totalRevenue = 0;
+
+    if (!items || items.length === 0) {
+      return { cogs: 0, earnings: 0 };
+    }
+
+    const productNos = items.map(item => item.product_no).filter(pn => !!pn);
+    if (productNos.length === 0) {
+      items.forEach(item => totalRevenue += (Number(item.item_cost) * Number(item.quantity)));
+      return { cogs: 0, earnings: totalRevenue }; // No product numbers, so COGS is 0
+    }
+
+    // Fetch all relevant products in one go (or batched if too many)
+    // This assumes product_no is unique and directly usable for lookup.
+    // For simplicity, fetching all products if specific filtering is complex or not performant for small datasets.
+    const productsRef = collection(this.firestoreDb, 'products');
+    // A more optimized query would be: query(productsRef, where('product_no', 'in', productNos))
+    // However, 'in' queries are limited to 30 items. If more, batching or fetching all is needed.
+    // For this example, let's assume fetching relevant products or all if the list is small.
+    // This part needs a robust strategy for fetching product cost prices.
+    // Placeholder: fetch all products and map. In a real app, optimize this.
+    const productsSnap = await firstValueFrom(collectionData(query(productsRef), {idField: 'id'}) as Observable<Product[]>);
+    const productCostMap = new Map<string, number>();
+    productsSnap.forEach(p => {
+      if (p.product_no && p.costPrice !== undefined) {
+        productCostMap.set(p.product_no, Number(p.costPrice));
+      }
+    });
+
+    items.forEach(item => {
+      const itemRevenue = Number(item.item_cost) * Number(item.quantity);
+      totalRevenue += itemRevenue;
+      const costPrice = productCostMap.get(item.product_no);
+      if (costPrice !== undefined) {
+        totalCogs += costPrice * Number(item.quantity);
+      }
+    });
+
+    return { cogs: totalCogs, earnings: totalRevenue - totalCogs };
+  }
 
   /**
    * Adds a new order to the system. This includes:
@@ -51,8 +95,8 @@ export class OrderService {
       // Decide if we should proceed if this part fails. For now, we do.
     }
 
-    // Calculate total earnings (extracted method)
-    const totalEarnings = await this._calculateTotalEarnings(itemsForAggregation);
+    // Calculate total earnings
+    const { earnings: totalEarnings } = await this._calculateCogsAndEarnings(itemsForAggregation);
 
     // Prepare and save the main order document
     const ordersCollection = collection(this.firestore, 'orders');
@@ -140,5 +184,11 @@ export class OrderService {
   getOrderById(id: string): Observable<Order> {
     const orderDocRef = doc(this.firestore, 'orders', id);
     return docData(orderDocRef, { idField: 'id' }) as Observable<Order>;
+  }
+
+  /* Delete Order */
+  deleteOrder(collectionName: string, id: string) { // Added collectionName for consistency
+    const orderDocRef = doc(this.firestore, collectionName, id); // Use collectionName
+    return deleteDoc(orderDocRef); // deleteDoc is not imported, need to import it
   }
 }

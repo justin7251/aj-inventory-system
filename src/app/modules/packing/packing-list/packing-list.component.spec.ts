@@ -10,16 +10,14 @@ import { SharedModule } from '../../../shared/shared.module'; // For Material co
 import { Timestamp } from '@angular/fire/firestore';
 
 // Mock PackingQueueService
-const mockPackingQueueService = {
-  getAllPackingItems: jest.fn(),
-  getPendingPackingItems: jest.fn(), // If you switch to this
-  updatePackingItemStatus: jest.fn()
+let mockPackingQueueService: {
+  getAllPackingItems: jasmine.Spy;
+  getPendingPackingItems: jasmine.Spy;
+  updatePackingItemStatus: jasmine.Spy;
 };
 
 // Mock MatSnackBar
-const mockMatSnackBar = {
-  open: jest.fn()
-};
+let mockMatSnackBar: { open: jasmine.Spy };
 
 const mockPackingItems: PackingItem[] = [
   { id: 'item1', orderId: 'order1', productId: 'prod1', productName: 'Product A', quantityToPack: 1, status: 'pending', customerName: 'Cust A', deliveryAddress: 'Addr A', creationDate: Timestamp.now() },
@@ -31,11 +29,20 @@ describe('PackingListComponent', () => {
   let fixture: ComponentFixture<PackingListComponent>;
 
   beforeEach(async () => {
+    mockPackingQueueService = {
+      getAllPackingItems: jasmine.createSpy('getAllPackingItems').and.returnValue(of(mockPackingItems)),
+      getPendingPackingItems: jasmine.createSpy('getPendingPackingItems'),
+      updatePackingItemStatus: jasmine.createSpy('updatePackingItemStatus')
+    };
+    mockMatSnackBar = {
+      open: jasmine.createSpy('open')
+    };
+
     await TestBed.configureTestingModule({
       declarations: [ PackingListComponent ],
       imports: [
-        NoopAnimationsModule, // For Material animations
-        SharedModule          // For MatTable, MatSelect, MatSnackBar etc.
+        NoopAnimationsModule,
+        SharedModule
       ],
       providers: [
         { provide: PackingQueueService, useValue: mockPackingQueueService },
@@ -46,15 +53,6 @@ describe('PackingListComponent', () => {
 
     fixture = TestBed.createComponent(PackingListComponent);
     component = fixture.componentInstance;
-
-    // Reset mocks
-    mockPackingQueueService.getAllPackingItems.mockReset();
-    mockPackingQueueService.updatePackingItemStatus.mockReset();
-    mockMatSnackBar.open.mockReset();
-
-    // Default mock implementation
-    mockPackingQueueService.getAllPackingItems.mockReturnValue(of(mockPackingItems));
-
     fixture.detectChanges(); // ngOnInit will be called, items$ will be set
   });
 
@@ -76,23 +74,23 @@ describe('PackingListComponent', () => {
     const newStatus: PackingStatus = 'packed';
 
     it('should call packingQueueService.updatePackingItemStatus and show success message', fakeAsync(() => {
-      mockPackingQueueService.updatePackingItemStatus.mockResolvedValue(undefined);
+      mockPackingQueueService.updatePackingItemStatus.and.returnValue(Promise.resolve(undefined));
 
       component.updateStatus(testItem, newStatus);
-      tick(); // Resolve promise
+      tick();
 
       expect(mockPackingQueueService.updatePackingItemStatus).toHaveBeenCalledWith(testItem.id, newStatus);
       expect(mockMatSnackBar.open).toHaveBeenCalledWith(
         `Item ${testItem.productName} (Order: ${testItem.orderId}) status updated to ${newStatus}.`,
         'Close',
-        expect.any(Object)
+        jasmine.any(Object)
       );
     }));
 
     it('should show error message if updatePackingItemStatus fails', fakeAsync(() => {
       const error = new Error('Update failed');
-      mockPackingQueueService.updatePackingItemStatus.mockRejectedValue(error);
-      const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+      mockPackingQueueService.updatePackingItemStatus.and.returnValue(Promise.reject(error));
+      spyOn(console, 'error');
 
 
       component.updateStatus(testItem, newStatus);
@@ -102,10 +100,9 @@ describe('PackingListComponent', () => {
       expect(mockMatSnackBar.open).toHaveBeenCalledWith(
         `Failed to update status for item ${testItem.productName}: ${error.message || error}`,
         'Close',
-        expect.any(Object)
+        jasmine.any(Object)
       );
-      expect(consoleErrorSpy).toHaveBeenCalled();
-      consoleErrorSpy.mockRestore();
+      expect(console.error).toHaveBeenCalled();
     }));
 
     it('should show error if item ID is missing', async () => {
@@ -116,7 +113,7 @@ describe('PackingListComponent', () => {
       expect(mockMatSnackBar.open).toHaveBeenCalledWith(
         'Item ID is missing, cannot update status.',
         'Close',
-        expect.any(Object)
+        jasmine.any(Object)
       );
     });
 
@@ -128,7 +125,7 @@ describe('PackingListComponent', () => {
         expect(mockMatSnackBar.open).toHaveBeenCalledWith(
           `Item is already packed.`,
           'Close',
-          expect.any(Object)
+          jasmine.any(Object)
         );
       });
   });
@@ -136,20 +133,5 @@ describe('PackingListComponent', () => {
   it('should have a list of available statuses', () => {
     expect(component.availableStatuses).toEqual(['pending', 'packed', 'shipped', 'on_hold', 'cancelled']);
   });
-
-  // Test ngOnDestroy if there are subscriptions to clean up (currently itemSubscription is commented out)
-  // it('should unsubscribe from itemSubscription on destroy', () => {
-  //   component.ngOnInit(); // To ensure subscription is made if logic changes
-  //   const sub = component['itemSubscription']; // Access private member for test
-  //   if (sub) { // Only if it was initialized
-  //     const unsubscribeSpy = jest.spyOn(sub, 'unsubscribe');
-  //     component.ngOnDestroy();
-  //     expect(unsubscribeSpy).toHaveBeenCalled();
-  //   } else {
-  //     // If no subscription, this test can pass or be adapted
-  //     component.ngOnDestroy(); // Call to ensure no errors
-  //     expect(true).toBe(true); // Placeholder assertion
-  _    //   }
-  // });
 
 });

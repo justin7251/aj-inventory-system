@@ -1,0 +1,13 @@
+.scanner-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+}
+
+zxing-scanner {
+  display: block;
+  width: 100%;
+  max-width: 500px;
+  margin-bottom: 20px;
+}

@@ -1,7 +1,15 @@
 <!-- Title group  -->
 <div class="title-group">
-    <h1 class="mat-h1">Item List</h1>
+  <h1 class="mat-h1">Item List</h1>
+  <div class="button-group">
+    <button mat-raised-button color="primary" (click)="openBarcodeScanner()">
+      Scan Barcode
+    </button>
+    <button mat-raised-button (click)="clearFilter()" *ngIf="filteredTableData.length !== tableData.length">
+      Clear Filter
+    </button>
+  </div>
 </div>
 <div class="mat-elevation-z8">
-    <app-widget-table [tableData]="tableData" [columnHeader]="columnHeader"></app-widget-table>
+  <app-widget-table [tableData]="filteredTableData" [columnHeader]="columnHeader"></app-widget-table>
 </div>

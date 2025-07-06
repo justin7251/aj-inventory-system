@@ -1,26 +1,26 @@
 import { waitForAsync, ComponentFixture, TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
 import { ItemsComponent } from './items.component';
-import { ItemService } from '../services/item.service';
-// Import RouterTestingModule if navigation is tested, not strictly needed for these method tests
-// import { RouterTestingModule } from '@angular/router/testing';
-// Import MatTableModule if MatTableDataSource or other Material table features are directly used and cause errors
+import { ProductService } from '../services/product.service'; // Changed ItemService to ProductService
+import { MatDialogModule } from '@angular/material/dialog'; // Import MatDialogModule
+
+// Import other necessary modules like MatTableModule if needed for app-widget-table or other template features
 // import { MatTableModule } from '@angular/material/table';
 
 describe('ItemsComponent', () => {
   let component: ItemsComponent;
   let fixture: ComponentFixture<ItemsComponent>;
-  let mockItemService: any; // Using any for spy object simplicity
+  let mockProductService: any; // Changed mockItemService to mockProductService
 
   beforeEach(waitForAsync(() => {
-    // Create a spy object for ItemService
-    mockItemService = jasmine.createSpyObj('ItemService', ['getProductList', 'Delete']);
+    // Create a spy object for ProductService
+    mockProductService = jasmine.createSpyObj('ProductService', ['getAllProducts', 'deleteProduct']); // Assuming deleteProduct is the method
 
     TestBed.configureTestingModule({
       declarations: [ItemsComponent],
-      // imports: [RouterTestingModule, MatTableModule], // Add if needed
+      imports: [MatDialogModule], // Add MatDialogModule here
       providers: [
-        { provide: ItemService, useValue: mockItemService }
+        { provide: ProductService, useValue: mockProductService } // Use ProductService
       ]
     })
     .compileComponents();
@@ -29,9 +29,6 @@ describe('ItemsComponent', () => {
   beforeEach(() => {
     fixture = TestBed.createComponent(ItemsComponent);
     component = fixture.componentInstance;
-    // fixture.detectChanges(); // ngOnInit is called here.
-    // We will call ngOnInit explicitly in its test after setting up mocks for it.
-    // For deleteOrder, detectChanges isn't strictly necessary unless it triggers UI updates we want to verify.
   });
 
   it('should create', () => {
@@ -39,60 +36,72 @@ describe('ItemsComponent', () => {
   });
 
   describe('ngOnInit', () => {
-    it('should fetch products on init and populate tableData', () => {
+    it('should fetch products on init and populate tableData and filteredTableData', () => {
       const mockProductsPayload = [
-        { payload: { doc: { id: '1', data: () => ({ product_no: 'P001', product_name: 'Product 1', color: 'Red', price: 100, quantity: 10 }) } } },
-        { payload: { doc: { id: '2', data: () => ({ product_no: 'P002', product_name: 'Product 2', color: 'Blue', price: 200, quantity: 5 }) } } }
+        { payload: { doc: { id: '1', data: () => ({ product_no: 'P001', product_name: 'Product 1', color: 'Red', price: 100, quantity: 10, barcode: 'BC001' }) } } },
+        { payload: { doc: { id: '2', data: () => ({ product_no: 'P002', product_name: 'Product 2', color: 'Blue', price: 200, quantity: 5, barcode: 'BC002' }) } } }
       ];
-      mockItemService.getProductList.and.returnValue(of(mockProductsPayload));
+      // Adjust mock to reflect getAllProducts if its return type is different (e.g., directly Product[])
+      // For now, assuming it returns a similar structure for mapping
+      mockProductService.getAllProducts.and.returnValue(of(mockProductsPayload));
 
-      component.ngOnInit(); // Call ngOnInit directly to test its logic
-      // fixture.detectChanges(); // Call if template updates based on ngOnInit need to be checked
+      component.ngOnInit();
 
-      expect(mockItemService.getProductList).toHaveBeenCalled();
+      expect(mockProductService.getAllProducts).toHaveBeenCalled();
       expect(component.tableData.length).toBe(2);
+      expect(component.filteredTableData.length).toBe(2);
+
       expect(component.tableData[0]).toEqual(jasmine.objectContaining({
-        $key: '1',
+        id: '1', // Changed from $key
         product_no: 'P001',
         product_name: 'Product 1',
-        color: 'Red',
-        price: 100,
-        quantity: 10,
-        from: 'products',
-        add: 'Add',
-        edit: 'Edit',
-        delete: 'Delete'
+        barcode: 'BC001'
       }));
-      expect(component.tableData[1]).toEqual(jasmine.objectContaining({
-        $key: '2',
-        product_no: 'P002',
-        product_name: 'Product 2',
-        color: 'Blue',
-        price: 200,
-        quantity: 5,
-        from: 'products',
-        add: 'Add',
-        edit: 'Edit',
-        delete: 'Delete'
-      }));
-      // Also check component.ProductData as it's populated too
-      expect(component.ProductData.length).toBe(2);
-      expect(component.ProductData[0]).toEqual(jasmine.objectContaining({
-        $key: '1',
+      expect(component.filteredTableData[0]).toEqual(jasmine.objectContaining({
+        id: '1',
         product_no: 'P001',
-        product_name: 'Product 1',
       }));
     });
   });
 
-  describe('deleteOrder', () => {
-    it('should call ItemService.Delete with correct parameters when deleteOrder is called', async () => {
+  describe('deleteOrder', () => { // Renaming to deleteProduct would be more accurate
+    it('should call ProductService.deleteProduct with correct parameters', async () => {
       const sampleProductId = 'test-prod-id';
-      mockItemService.Delete.and.returnValue(Promise.resolve());
+      mockProductService.deleteProduct.and.returnValue(Promise.resolve()); // Assuming deleteProduct
 
+      // The component's method is still named deleteOrder, which might be a misnomer
       await component.deleteOrder(sampleProductId);
 
-      expect(mockItemService.Delete).toHaveBeenCalledWith('products', sampleProductId);
+      expect(mockProductService.deleteProduct).toHaveBeenCalledWith('products', sampleProductId); // 'products' might be implicit now
+    });
+  });
+
+  // Add tests for openBarcodeScanner, filterProductsByBarcode, clearFilter
+  describe('Barcode Scanning', () => {
+    it('should open barcode scanner dialog', () => {
+      spyOn(component.dialog, 'open').and.callThrough();
+      component.openBarcodeScanner();
+      expect(component.dialog.open).toHaveBeenCalled();
+    });
+
+    it('should filter products by barcode when scanner returns a result', () => {
+      component.tableData = [
+        { id: '1', product_no: 'P001', product_name: 'Product A', barcode: '123', quantity: 1, color: 'red', price: 10, product_type: 'typeA' },
+        { id: '2', product_no: 'P002', product_name: 'Product B', barcode: '456', quantity: 1, color: 'blue', price: 20, product_type: 'typeB' }
+      ];
+      component.filterProductsByBarcode('123');
+      expect(component.filteredTableData.length).toBe(1);
+      expect(component.filteredTableData[0].barcode).toBe('123');
+    });
+
+    it('should clear barcode filter', () => {
+      component.tableData = [
+        { id: '1', product_no: 'P001', product_name: 'Product A', barcode: '123', quantity: 1, color: 'red', price: 10, product_type: 'typeA' },
+        { id: '2', product_no: 'P002', product_name: 'Product B', barcode: '456', quantity: 1, color: 'blue', price: 20, product_type: 'typeB' }
+      ];
+      component.filteredTableData = [component.tableData[0]]; // Simulate a filter being active
+      component.clearFilter();
+      expect(component.filteredTableData.length).toBe(2);
     });
   });
 

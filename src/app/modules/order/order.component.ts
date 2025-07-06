@@ -6,8 +6,7 @@ import { MatSort} from '@angular/material/sort';
 
 import {MatDialog, MatDialogRef, MAT_DIALOG_DATA} from '@angular/material/dialog';
 import { ItemDialogComponent } from '../item-dialog/item-dialog.component';
-// User item service for now
-import { ItemService } from '../services/item.service';
+import { OrderService } from '../services/order.service'; // Changed ItemService to OrderService
 
 import { Order } from '../model/order.model';
 
@@ -38,16 +37,16 @@ export class OrderComponent implements OnInit {
 	];
 
 	constructor(
-		public db: ItemService,
+		public orderService: OrderService, // Changed db to orderService
 		public dialog: MatDialog
 	) { 
-		this.db.GetOrdersList()
-			.subscribe(order => {
-		    order.forEach(item => {
-		      let a = item.payload.doc.data();
-		      a['$key'] = (item.payload.doc as any).id;
-		      this.OrderData.push(a as Order)
-		    })
+    // Changed db.GetOrdersList to orderService.getAllOrders
+		this.orderService.getAllOrders()
+			.subscribe(orders => { // Changed order to orders
+        // Assuming getAllOrders returns Order[] directly, or adjust mapping if it's still DocumentChangeAction[]
+        // If it's Order[] directly:
+        this.OrderData = orders;
+
 		    /* Data table */
 		    this.dataSource = new MatTableDataSource(this.OrderData);
 		    /* Pagination */
@@ -71,9 +70,12 @@ export class OrderComponent implements OnInit {
 	DeleteOrder(index: number, e){
 		if(window.confirm('Are you sure?')) {
 		  const data = this.dataSource.data;
+		  // Assuming e is the Order object and has an id property
+		  const orderId = e.id;
 		  data.splice((this.paginator.pageIndex * this.paginator.pageSize) + index, 1);
 		  this.dataSource.data = data;
-		  this.db.Delete('orders', e.$key)
+      // Changed db.Delete to orderService.deleteOrder
+		  this.orderService.deleteOrder('orders', orderId);
 		}
 	}
 

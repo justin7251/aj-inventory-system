@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { ShopifyService } from '../../services/shopify.service'; // Changed import
-import { ItemService } from '../../services/item.service';
+import { OrderService } from '../../services/order.service'; // Changed ItemService to OrderService
 import { Order } from '../../model/order.model';
 
 @Component({
@@ -17,7 +17,7 @@ export class ShopifyConnectorComponent implements OnInit {
 
   constructor(
     private shopifyService: ShopifyService, // Changed service
-    private itemService: ItemService
+    private orderService: OrderService // Changed itemService to orderService
   ) { }
 
   ngOnInit(): void {
@@ -44,11 +44,13 @@ export class ShopifyConnectorComponent implements OnInit {
               if (!order.items) {
                 order.items = []; // Initialize with empty array if null/undefined
               }
-              await this.itemService.addOrder(order);
+              // Changed itemService.addOrder to orderService.createOrder
+              await this.orderService.createOrder(order);
               this.ordersProcessed++;
             } catch (error: any) {
               this.ordersFailed++;
-              const errorMessage = `Failed to process Shopify order ${order.id || order.externalOrderId || 'N/A'}: ${error.message || error}`;
+              // Removed order.externalOrderId as it's not on the Order model
+              const errorMessage = `Failed to process Shopify order ${order.id || 'N/A'}: ${error.message || error}`;
               console.error(errorMessage, error);
               this.errorMessages.push(errorMessage);
             }

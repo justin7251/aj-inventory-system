@@ -5,30 +5,60 @@ import { PackingItem, PackingStatus } from '../model/packing-item.model';
 import { Timestamp } from '@angular/fire/firestore'; // Correct import for Timestamp
 import { Observable, of } from 'rxjs';
 
-// Mocks for Firestore
-const mockFirestore = {
-  // Mock methods used by the service
+// Keep track of original Firestore functions
+const originalFirestore = {
+  collection,
+  addDoc,
+  doc,
+  updateDoc,
+  collectionData,
+  query,
+  where,
+  orderBy,
+  serverTimestamp
 };
 
-// Mock serverTimestamp specifically
-const mockServerTimestamp = () => Timestamp.now(); // Or a fixed date for predictable tests
+// Spy on top-level Firestore functions
+let spiedCollection: jasmine.Spy;
+let spiedAddDoc: jasmine.Spy;
+let spiedDoc: jasmine.Spy;
+let spiedUpdateDoc: jasmine.Spy;
+let spiedCollectionData: jasmine.Spy;
+let spiedQuery: jasmine.Spy;
+let spiedWhere: jasmine.Spy;
+let spiedOrderBy: jasmine.Spy;
+let spiedServerTimestamp: jasmine.Spy;
+
 
 describe('PackingQueueService', () => {
   let service: PackingQueueService;
-  let firestoreMock: any;
+  let firestoreMock: Partial<Firestore>;
+
 
   beforeEach(() => {
-    // Reset mocks for each test
-    firestoreMock = {
-      collection: jest.fn(),
-      addDoc: jest.fn(),
-      doc: jest.fn(),
-      updateDoc: jest.fn(),
-      collectionData: jest.fn(),
-      query: jest.fn(), // query is a top-level import, but often used with collection
-      where: jest.fn(),
-      orderBy: jest.fn(),
-    };
+    // Create spies before each test
+    spiedCollection = jasmine.createSpy('collection').and.returnValue({}); // Mock collection to return a dummy ref
+    spiedAddDoc = jasmine.createSpy('addDoc');
+    spiedDoc = jasmine.createSpy('doc').and.returnValue({}); // Mock doc to return a dummy ref
+    spiedUpdateDoc = jasmine.createSpy('updateDoc');
+    spiedCollectionData = jasmine.createSpy('collectionData');
+    spiedQuery = jasmine.createSpy('query').and.returnValue({}); // Mock query to return a dummy ref
+    spiedWhere = jasmine.createSpy('where');
+    spiedOrderBy = jasmine.createSpy('orderBy');
+    spiedServerTimestamp = jasmine.createSpy('serverTimestamp').and.returnValue(Timestamp.now()); // Or a fixed date
+
+    // Override global Firestore functions with spies
+    (global as any).collection = spiedCollection;
+    (global as any).addDoc = spiedAddDoc;
+    (global as any).doc = spiedDoc;
+    (global as any).updateDoc = spiedUpdateDoc;
+    (global as any).collectionData = spiedCollectionData;
+    (global as any).query = spiedQuery;
+    (global as any).where = spiedWhere;
+    (global as any).orderBy = spiedOrderBy;
+    (global as any).serverTimestamp = spiedServerTimestamp;
+
+    firestoreMock = {}; // No methods needed on Firestore instance itself for these tests
 
     TestBed.configureTestingModule({
       providers: [
@@ -38,43 +68,25 @@ describe('PackingQueueService', () => {
     });
     service = TestBed.inject(PackingQueueService);
 
-    // Mock implementations
-    // It's important that these mocks are consistent with how Firestore SDK v9 works.
-    // `collection` is a top-level import, but PackingQueueService calls it on `this.firestore`.
-    // For v9, collection, doc, query, etc. are top-level functions.
-    // The service constructor receives `firestore: Firestore`.
-    // So, when `collection(this.firestore, 'packingQueue')` is called, `this.firestore` is the injected mock.
-    // This means we don't mock `firestore.collection` but ensure `collection` itself is mocked if used directly.
-    // However, the service uses `collection(this.firestore, 'path')`, so `firestore` is just a handle.
-
-    // For `addDoc(this.packingQueueCollection, ...)`:
-    // this.packingQueueCollection is `collection(this.firestore, 'packingQueue')`.
-    // So, `addDoc` is a top-level function that takes this collection.
-    // We need to mock the globally imported `addDoc`, `updateDoc`, `collectionData`, etc.
-
-    // This is tricky. The service imports these as top-level functions.
-    // A better way for service testing is often to mock the *return values* of these functions
-    // when they are called with specific arguments.
-    // For now, let's assume the service is written to use `this.firestore.addDoc` etc. (which it isn't for v9+)
-    // OR that we mock the global imports, which is harder in Jest without babel-plugin-rewire or similar.
-
-    // Given the current service structure, we'll mock the methods on the `firestoreMock` object
-    // that would be *passed* to the top-level Firestore functions if they were class methods.
-    // This isn't perfectly accurate to v9 but aligns with common AngularFire testing patterns
-    // when full SDK mocking is complex.
-
-    // Let's adjust: `service.packingQueueCollection` is created using `collection(this.firestore, 'packingQueue')`.
-    // The `collection` function itself would need to be mocked if we were testing that part.
-    // But we test the service's methods.
-
-    // Mock `addDoc` (assuming it's called like `addDoc(collectionRef, data)`)
-    // We'll mock the `firestoreMock` as if it *were* the module itself for simplicity here.
-    // This is a common shorthand in tests but not strictly how v9 works.
-    (addDoc as jest.Mock) = jest.fn();
-    (updateDoc as jest.Mock) = jest.fn();
-    (collectionData as jest.Mock) = jest.fn();
-    // `doc` and `collection` are used to create references, they don't directly do I/O for these tests.
+    // Default mock implementations for spies
+    spiedAddDoc.and.returnValue(Promise.resolve({ id: 'mockDocId' } as any));
+    spiedUpdateDoc.and.returnValue(Promise.resolve(undefined));
+    // collectionData is more complex as it returns an Observable, set it per test or provide a generic Observable
   });
+
+  afterEach(() => {
+    // Restore original functions
+    (global as any).collection = originalFirestore.collection;
+    (global as any).addDoc = originalFirestore.addDoc;
+    (global as any).doc = originalFirestore.doc;
+    (global as any).updateDoc = originalFirestore.updateDoc;
+    (global as any).collectionData = originalFirestore.collectionData;
+    (global as any).query = originalFirestore.query;
+    (global as any).where = originalFirestore.where;
+    (global as any).orderBy = originalFirestore.orderBy;
+    (global as any).serverTimestamp = originalFirestore.serverTimestamp;
+  });
+
 
   it('should be created', () => {
     expect(service).toBeTruthy();
@@ -94,18 +106,15 @@ describe('PackingQueueService', () => {
       const expectedDocData = {
         ...newItem,
         status: 'pending',
-        creationDate: expect.anything(), // serverTimestamp() will be resolved by Firestore
-        lastUpdateDate: expect.anything(),
+        creationDate: jasmine.anything(),
+        lastUpdateDate: jasmine.anything(),
       };
-      (addDoc as jest.Mock).mockResolvedValue({ id: 'mockDocId' }); // Mock what addDoc returns
 
       await service.addItemToPackingQueue(newItem);
 
-      // service.packingQueueCollection would be `collection(firestoreMock, 'packingQueue')`
-      // We expect addDoc to be called with a collection reference and the data.
-      // The first argument to addDoc is a CollectionReference. We can use expect.anything() for it
-      // if creating a mock CollectionReference is too complex for this test.
-      expect(addDoc).toHaveBeenCalledWith(expect.anything(), expect.objectContaining(expectedDocData));
+      expect(spiedAddDoc).toHaveBeenCalledWith(jasmine.anything(), jasmine.objectContaining(expectedDocData));
+      // Check that collection was called to create the packingQueueCollection reference
+      expect(spiedCollection).toHaveBeenCalledWith(firestoreMock as Firestore, 'packingQueue');
     });
   });
 
@@ -114,31 +123,29 @@ describe('PackingQueueService', () => {
       const mockItems: PackingItem[] = [
         { id: '1', orderId: 'o1', productName: 'p1', quantityToPack: 1, status: 'pending', customerName: 'c1', deliveryAddress: 'a1', productId: 'pid1', creationDate: Timestamp.now() },
       ];
-      (collectionData as jest.Mock).mockReturnValue(of(mockItems)); // Return an Observable
+      spiedCollectionData.and.returnValue(of(mockItems));
 
       service.getPendingPackingItems().subscribe(items => {
         expect(items).toEqual(mockItems);
       });
 
-      // We need to verify that `query`, `where`, and `orderBy` were used correctly.
-      // This requires mocking them as top-level imports.
-      // For now, we assume collectionData is called and returns the data.
-      // A more thorough test would inspect the query object passed to collectionData.
-      expect(collectionData).toHaveBeenCalledWith(expect.anything(), { idField: 'id' });
-      // Ideally, also check that query was called with `where('status', '==', 'pending')` and `orderBy('creationDate', 'asc')`.
+      expect(spiedCollectionData).toHaveBeenCalledWith(jasmine.anything(), { idField: 'id' });
+      expect(spiedQuery).toHaveBeenCalledWith(jasmine.anything(), spiedWhere('status', '==', 'pending'), spiedOrderBy('creationDate', 'asc'));
+      expect(spiedCollection).toHaveBeenCalledWith(firestoreMock as Firestore, 'packingQueue');
     });
   });
 
   describe('getAllPackingItems', () => {
     it('should call collectionData ordered by creationDate descending', () => {
       const mockItems: PackingItem[] = [ /* ... mock items ... */ ];
-      (collectionData as jest.Mock).mockReturnValue(of(mockItems));
+      spiedCollectionData.and.returnValue(of(mockItems));
 
       service.getAllPackingItems().subscribe(items => {
         expect(items).toEqual(mockItems);
       });
-      expect(collectionData).toHaveBeenCalledWith(expect.anything(), { idField: 'id' });
-      // Ideally, also check `orderBy('creationDate', 'desc')`
+      expect(spiedCollectionData).toHaveBeenCalledWith(jasmine.anything(), { idField: 'id' });
+      expect(spiedQuery).toHaveBeenCalledWith(jasmine.anything(), spiedOrderBy('creationDate', 'desc'));
+      expect(spiedCollection).toHaveBeenCalledWith(firestoreMock as Firestore, 'packingQueue');
     });
   });
 
@@ -148,16 +155,13 @@ describe('PackingQueueService', () => {
       const newStatus: PackingStatus = 'packed';
       const expectedUpdateData = {
         status: newStatus,
-        lastUpdateDate: expect.anything(), // serverTimestamp()
-        packedDate: expect.anything(), // serverTimestamp() for 'packed'
+        lastUpdateDate: jasmine.anything(),
+        packedDate: jasmine.anything(),
       };
-      (updateDoc as jest.Mock).mockResolvedValue(undefined);
 
       await service.updatePackingItemStatus(itemId, newStatus);
-
-      // `doc(this.firestore, 'packingQueue', itemId)` creates the DocumentReference.
-      // `updateDoc` is called with this DocumentReference and the data.
-      expect(updateDoc).toHaveBeenCalledWith(expect.anything(), expect.objectContaining(expectedUpdateData));
+      expect(spiedUpdateDoc).toHaveBeenCalledWith(jasmine.anything(), jasmine.objectContaining(expectedUpdateData));
+      expect(spiedDoc).toHaveBeenCalledWith(firestoreMock as Firestore, 'packingQueue', itemId);
     });
 
     it('should include shippedDate when status is shipped', async () => {
@@ -165,13 +169,12 @@ describe('PackingQueueService', () => {
         const newStatus: PackingStatus = 'shipped';
         const expectedUpdateData = {
           status: newStatus,
-          lastUpdateDate: expect.anything(),
-          shippedDate: expect.anything(),
+          lastUpdateDate: jasmine.anything(),
+          shippedDate: jasmine.anything(),
         };
-        (updateDoc as jest.Mock).mockResolvedValue(undefined);
-
         await service.updatePackingItemStatus(itemId, newStatus);
-        expect(updateDoc).toHaveBeenCalledWith(expect.anything(), expect.objectContaining(expectedUpdateData));
+        expect(spiedUpdateDoc).toHaveBeenCalledWith(jasmine.anything(), jasmine.objectContaining(expectedUpdateData));
+        expect(spiedDoc).toHaveBeenCalledWith(firestoreMock as Firestore, 'packingQueue', itemId);
       });
   });
 
@@ -181,22 +184,12 @@ describe('PackingQueueService', () => {
         const updates: Partial<PackingItem> = { notes: 'Test note', priority: 1 };
         const expectedData = {
             ...updates,
-            lastUpdateDate: expect.anything(),
+            lastUpdateDate: jasmine.anything(),
         };
-        (updateDoc as jest.Mock).mockResolvedValue(undefined);
-
         await service.updatePackingItem(itemId, updates);
-        expect(updateDoc).toHaveBeenCalledWith(expect.anything(), expect.objectContaining(expectedData));
+        expect(spiedUpdateDoc).toHaveBeenCalledWith(jasmine.anything(), jasmine.objectContaining(expectedData));
+        expect(spiedDoc).toHaveBeenCalledWith(firestoreMock as Firestore, 'packingQueue', itemId);
     });
   });
 
 });
-
-// Note: Mocking Firestore v9 top-level functions (addDoc, query, etc.) in Jest
-// usually requires `jest.mock('@angular/fire/firestore', () => ( { ...mocked functions } ));`
-// at the top of the file. The current setup with `(addDoc as jest.Mock) = jest.fn();`
-// inside `beforeEach` is a simpler approach but might not be robust for all scenarios.
-// For these tests, we're focusing on whether the service calls these functions with
-// approximately the right arguments.
-// A full, accurate mock of the Firestore V9 SDK is complex.
-// The `expect.anything()` for collection/document references is a common simplification.

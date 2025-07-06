@@ -162,7 +162,7 @@ export class ShopifyService {
 
     return {
       id: `shopify-${rawOrder.id}`, // Prefix to ensure uniqueness across sources, use Shopify's order ID.
-      externalOrderId: String(rawOrder.id), // Store original Shopify ID
+      // externalOrderId: String(rawOrder.id), // Store original Shopify ID - Removed as not in Order model
       user_id: 'shopify_integration', // Identifier for Shopify orders
       customer_name: customerFullName,
       telephone: Number(rawOrder.shipping_address?.phone?.replace(/\D/g, '')) || 0, // Basic phone number parsing

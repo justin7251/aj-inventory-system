@@ -58,6 +58,14 @@
         </mat-error>
       </mat-form-field>
 
+      <!-- Barcode -->
+      <mat-form-field class="example-full-width">
+        <input matInput placeholder="Barcode" formControlName="barcode">
+      </mat-form-field>
+      <button type="button" mat-stroked-button color="primary" (click)="openBarcodeScanner()" class="scan-button">
+        Scan Barcode
+      </button>
+
       <div class="form-group">
         <label class="error">{{ errorMessage}}</label>
         <label class="success">{{successMessage}}</label>
@@ -66,7 +74,7 @@
       <div class="full-wrapper button-wrapper">
         <div class="button-wrapper">
           <button mat-flat-button color="warn">Submit</button>
-<!--           <button mat-flat-button color="war" (click)="resetForm()">Clear</button> -->
+          <!-- <button mat-flat-button color="war" (click)="resetForm()">Clear</button> -->
         </div>
       </div>
     </div>

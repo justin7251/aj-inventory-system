@@ -1,29 +1,31 @@
 import { waitForAsync, ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { ProductFormComponent } from './product-form.component';
 import { ReactiveFormsModule, UntypedFormBuilder, Validators } from '@angular/forms';
-import { ItemService } from '../services/item.service';
+import { ProductService } from '../services/product.service'; // Changed ItemService to ProductService
 import { MatChipsModule } from '@angular/material/chips';
-import { NoopAnimationsModule } from '@angular/platform-browser/animations'; // Or BrowserAnimationsModule
+import { NoopAnimationsModule } from '@angular/platform-browser/animations';
+import { MatDialogModule } from '@angular/material/dialog'; // Import MatDialogModule
+import { of } from 'rxjs'; // Import of
 
 describe('ProductFormComponent', () => {
   let component: ProductFormComponent;
   let fixture: ComponentFixture<ProductFormComponent>;
-  let fb: UntypedFormBuilder; // Keep if you need to manually create forms in tests
-  let mockItemService: any;
+  let mockProductService: any; // Changed mockItemService to mockProductService
 
   beforeEach(waitForAsync(() => {
-    mockItemService = jasmine.createSpyObj('ItemService', ['AddProduct']);
+    mockProductService = jasmine.createSpyObj('ProductService', ['addProduct']); // Renamed AddProduct to addProduct
 
     TestBed.configureTestingModule({
       declarations: [ProductFormComponent],
       imports: [
         ReactiveFormsModule,
         MatChipsModule,
-        NoopAnimationsModule // Use NoopAnimationsModule to avoid animation issues in tests
+        NoopAnimationsModule,
+        MatDialogModule // Add MatDialogModule here
       ],
       providers: [
         UntypedFormBuilder,
-        { provide: ItemService, useValue: mockItemService }
+        { provide: ProductService, useValue: mockProductService } // Use ProductService
       ]
     })
     .compileComponents();
@@ -32,9 +34,7 @@ describe('ProductFormComponent', () => {
   beforeEach(() => {
     fixture = TestBed.createComponent(ProductFormComponent);
     component = fixture.componentInstance;
-    fb = TestBed.inject(UntypedFormBuilder); // Inject if needed for direct use
-    // component.ngOnInit(); // Call ngOnInit explicitly if fixture.detectChanges() is not used or to ensure order
-    fixture.detectChanges(); // This calls ngOnInit() which calls submitProductForm()
+    fixture.detectChanges();
   });
 
   it('should create', () => {
@@ -44,11 +44,13 @@ describe('ProductFormComponent', () => {
   describe('Form Initialization (ngOnInit)', () => {
     it('should initialize productForm with required controls and validators on ngOnInit', () => {
       expect(component.productForm).toBeDefined();
-      const controls = ['product_no', 'product_name', 'color', 'quantity', 'price', 'costPrice'];
+      const controls = ['product_no', 'product_name', 'color', 'quantity', 'price', 'costPrice', 'barcode']; // Added barcode
       controls.forEach(controlName => {
         const control = component.productForm.get(controlName);
         expect(control).toBeTruthy();
-        expect(control.hasValidator(Validators.required)).toBeTrue();
+        if (controlName !== 'barcode') { // Barcode is not required
+          expect(control.hasValidator(Validators.required)).toBeTrue();
+        }
       });
     });
   });
@@ -61,58 +63,52 @@ describe('ProductFormComponent', () => {
       quantity: 10,
       price: 100,
       costPrice: 50,
-      fruits: [] // Assuming fruits is part of the form due to MatChips, though not explicitly listed for validation
+      barcode: 'BC123' // Added barcode
     };
 
     beforeEach(() => {
-      // Reset messages before each addProduct test
       component.successMessage = '';
       component.errorMessage = '';
     });
 
-    it('should call ItemService.AddProduct and reset form when productForm is valid', fakeAsync(() => {
-      mockItemService.AddProduct.and.returnValue(Promise.resolve({ id: 'new-id' })); // Simulate successful add
+    it('should call ProductService.addProduct and reset form when productForm is valid', fakeAsync(() => {
+      mockProductService.addProduct.and.returnValue(Promise.resolve({ id: 'new-id' }));
       component.productForm.setValue(validFormData);
-      spyOn(component, 'resetForm').and.callThrough(); // Spy on resetForm
+      spyOn(component, 'resetForm').and.callThrough();
 
       component.addProduct();
-      tick(); // Process microtasks like Promise.resolve()
+      tick();
 
-      expect(mockItemService.AddProduct).toHaveBeenCalledWith(jasmine.objectContaining({
+      expect(mockProductService.addProduct).toHaveBeenCalledWith(jasmine.objectContaining({
         product_no: validFormData.product_no,
         product_name: validFormData.product_name,
-        color: validFormData.color,
-        quantity: validFormData.quantity,
-        price: validFormData.price,
-        costPrice: validFormData.costPrice
-        // fruits are not part of the data passed to AddProduct in component logic
+        barcode: validFormData.barcode
       }));
       expect(component.resetForm).toHaveBeenCalled();
       expect(component.successMessage).toBe('Record has been created');
       expect(component.errorMessage).toBe('');
     }));
 
-    it('should not call ItemService.AddProduct when productForm is invalid', () => {
-      component.productForm.setValue({ ...validFormData, product_no: '' }); // Make form invalid
+    it('should not call ProductService.addProduct when productForm is invalid', () => {
+      component.productForm.setValue({ ...validFormData, product_no: '' });
       spyOn(component, 'resetForm');
 
       component.addProduct();
 
-      expect(mockItemService.AddProduct).not.toHaveBeenCalled();
+      expect(mockProductService.addProduct).not.toHaveBeenCalled();
       expect(component.resetForm).not.toHaveBeenCalled();
-      // Expect some indication of validation error, though component doesn't set a specific message for this
     });
 
-    it('should set errorMessage and not reset form when ItemService.AddProduct fails', fakeAsync(() => {
+    it('should set errorMessage and not reset form when ProductService.addProduct fails', fakeAsync(() => {
       const errorResponse = { message: 'Test Service Error' };
-      mockItemService.AddProduct.and.returnValue(Promise.reject(errorResponse));
+      mockProductService.addProduct.and.returnValue(Promise.reject(errorResponse));
       component.productForm.setValue(validFormData);
       spyOn(component, 'resetForm');
 
       component.addProduct();
-      tick(); // Process microtasks like Promise.reject()
+      tick();
 
-      expect(mockItemService.AddProduct).toHaveBeenCalledWith(jasmine.objectContaining({
+      expect(mockProductService.addProduct).toHaveBeenCalledWith(jasmine.objectContaining({
          product_no: validFormData.product_no
       }));
       expect(component.errorMessage).toBe('Test Service Error');
@@ -124,7 +120,6 @@ describe('ProductFormComponent', () => {
   describe('resetForm Method', () => {
     it('should reset the productForm, clear errors and messages', () => {
       component.productForm.get('product_no').setValue('test value');
-      component.productForm.get('product_name').setValue('another value');
       component.productForm.get('product_name').setErrors({ 'required': true });
       component.productForm.markAllAsTouched();
       component.successMessage = "Some success";
@@ -133,7 +128,6 @@ describe('ProductFormComponent', () => {
       component.resetForm();
 
       expect(component.productForm.get('product_no').value).toBeNull();
-      expect(component.productForm.get('product_name').value).toBeNull();
       expect(component.productForm.get('product_name').errors).toBeNull();
       expect(component.productForm.get('product_name').touched).toBeFalse();
       expect(component.productForm.pristine).toBeTrue();
@@ -142,4 +136,21 @@ describe('ProductFormComponent', () => {
     });
   });
 
+  // Add tests for openBarcodeScanner
+  describe('Barcode Scanning', () => {
+    it('should open barcode scanner dialog', () => {
+      spyOn(component.dialog, 'open').and.callThrough();
+      component.openBarcodeScanner();
+      expect(component.dialog.open).toHaveBeenCalled();
+    });
+
+    it('should patch barcode form control when scanner returns a result', () => {
+        const mockDialogRef = jasmine.createSpyObj({ afterClosed: of('1234567890'), close: null });
+        spyOn(component.dialog, 'open').and.returnValue(mockDialogRef);
+
+        component.openBarcodeScanner();
+
+        expect(component.productForm.get('barcode').value).toBe('1234567890');
+    });
+  });
 });

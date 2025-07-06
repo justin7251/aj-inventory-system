@@ -4,32 +4,57 @@ import { ProductService, ProductRestockData } from './product.service';
 import { Product } from '../model/product.model';
 import { of } from 'rxjs';
 
-// Mock top-level Firestore functions
-jest.mock('@angular/fire/firestore', () => {
-  const originalModule = jest.requireActual('@angular/fire/firestore');
-  return {
-    ...originalModule,
-    addDoc: jest.fn(),
-    collection: jest.fn().mockReturnValue({}), // Mock collection default
-    doc: jest.fn().mockReturnValue({}),       // Mock doc default
-    updateDoc: jest.fn(),
-    query: jest.fn(),
-    where: jest.fn(),
-    collectionData: jest.fn(),
-    serverTimestamp: jest.fn(() => 'mocked_server_timestamp'),
-  };
-});
+// Keep track of original Firestore functions
+const originalFirestore = {
+  addDoc,
+  collection,
+  doc,
+  updateDoc,
+  query,
+  where,
+  collectionData,
+  serverTimestamp
+};
+
+// Spy on top-level Firestore functions
+let spiedAddDoc: jasmine.Spy;
+let spiedCollection: jasmine.Spy;
+let spiedDoc: jasmine.Spy;
+let spiedUpdateDoc: jasmine.Spy;
+let spiedQuery: jasmine.Spy;
+let spiedWhere: jasmine.Spy;
+let spiedCollectionData: jasmine.Spy;
+let spiedServerTimestamp: jasmine.Spy;
+
 
 describe('ProductService', () => {
   let service: ProductService;
   let firestoreMock: Partial<Firestore>;
-  let mockedAddDoc: jest.Mock;
-  let mockedUpdateDoc: jest.Mock;
-  let mockedCollectionData: jest.Mock;
-  // let mockedCollection: jest.Mock; // If needed to inspect collection path
+
 
   beforeEach(() => {
-    firestoreMock = {}; // No direct methods on Firestore instance itself are called by ProductService methods
+    // Create spies before each test
+    spiedAddDoc = jasmine.createSpy('addDoc');
+    spiedCollection = jasmine.createSpy('collection').and.returnValue({});
+    spiedDoc = jasmine.createSpy('doc').and.returnValue({});
+    spiedUpdateDoc = jasmine.createSpy('updateDoc');
+    spiedQuery = jasmine.createSpy('query').and.returnValue({});
+    spiedWhere = jasmine.createSpy('where');
+    spiedCollectionData = jasmine.createSpy('collectionData');
+    spiedServerTimestamp = jasmine.createSpy('serverTimestamp').and.returnValue('mocked_server_timestamp');
+
+
+    // Override global Firestore functions with spies
+    (global as any).addDoc = spiedAddDoc;
+    (global as any).collection = spiedCollection;
+    (global as any).doc = spiedDoc;
+    (global as any).updateDoc = spiedUpdateDoc;
+    (global as any).query = spiedQuery;
+    (global as any).where = spiedWhere;
+    (global as any).collectionData = spiedCollectionData;
+    (global as any).serverTimestamp = spiedServerTimestamp;
+
+    firestoreMock = {};
 
     TestBed.configureTestingModule({
       providers: [
@@ -39,20 +64,22 @@ describe('ProductService', () => {
     });
     service = TestBed.inject(ProductService);
 
-    mockedAddDoc = addDoc as jest.Mock;
-    mockedUpdateDoc = updateDoc as jest.Mock;
-    mockedCollectionData = collectionData as jest.Mock;
-    // mockedCollection = collection as jest.Mock;
-
-    // Reset mocks
-    mockedAddDoc.mockReset();
-    mockedUpdateDoc.mockReset();
-    mockedCollectionData.mockReset();
-    // mockedCollection.mockReset();
 
     // Default mock implementations
-    mockedAddDoc.mockResolvedValue({ id: 'newProductId' } as any);
-    mockedUpdateDoc.mockResolvedValue(undefined);
+    spiedAddDoc.and.returnValue(Promise.resolve({ id: 'newProductId' } as any));
+    spiedUpdateDoc.and.returnValue(Promise.resolve(undefined));
+  });
+
+  afterEach(() => {
+    // Restore original functions
+    (global as any).addDoc = originalFirestore.addDoc;
+    (global as any).collection = originalFirestore.collection;
+    (global as any).doc = originalFirestore.doc;
+    (global as any).updateDoc = originalFirestore.updateDoc;
+    (global as any).query = originalFirestore.query;
+    (global as any).where = originalFirestore.where;
+    (global as any).collectionData = originalFirestore.collectionData;
+    (global as any).serverTimestamp = originalFirestore.serverTimestamp;
   });
 
   it('should be created', () => {
@@ -68,27 +95,27 @@ describe('ProductService', () => {
       costPrice: 50,
       color: 'Red',
       product_type: 'A'
-      // created_date will be serverTimestamp
     };
 
     it('should call addDoc with correct product data and server timestamp', async () => {
       await service.addProduct(productData);
-      expect(mockedAddDoc).toHaveBeenCalledTimes(1);
-      expect(mockedAddDoc).toHaveBeenCalledWith(
-        expect.anything(), // Firestore collection reference
+      expect(spiedAddDoc).toHaveBeenCalledTimes(1);
+      expect(spiedAddDoc).toHaveBeenCalledWith(
+        jasmine.anything(),
         {
           ...productData,
-          quantity: 10, // Ensure numbers are not strings
+          quantity: 10,
           price: 100,
           costPrice: 50,
           created_date: 'mocked_server_timestamp'
         }
       );
+      expect(spiedCollection).toHaveBeenCalledWith(firestoreMock as Firestore, 'products');
     });
 
     it('should return the result from addDoc', async () => {
       const expectedResult = { id: 'newProductId' };
-      mockedAddDoc.mockResolvedValue(expectedResult as any);
+      // spiedAddDoc already configured in beforeEach
       const result = await service.addProduct(productData);
       expect(result.id).toBe('newProductId');
     });
@@ -98,8 +125,8 @@ describe('ProductService', () => {
     const restockData: ProductRestockData = {
       product_no: 'P123',
       product_name: 'Test Product Restocked',
-      quantity: 5, // quantity being restocked
-      price: 55,    // new cost price for this batch
+      quantity: 5,
+      price: 55,
       color: 'Red',
       product_type: 'A'
     };
@@ -108,71 +135,74 @@ describe('ProductService', () => {
       id: 'existingProdId',
       product_no: 'P123',
       product_name: 'Test Product',
-      quantity: 10, // current quantity
+      quantity: 10,
       price: 100,
-      costPrice: 50, // old cost price
+      costPrice: 50,
       color: 'Red',
       product_type: 'A'
     };
 
     it('should update existing product quantity and costPrice if product_no exists', async () => {
-      mockedCollectionData.mockReturnValue(of([existingProduct])); // Simulate product found
+      spiedCollectionData.and.returnValue(of([existingProduct]));
 
       await service.updateProductUponRestock(restockData);
 
-      expect(mockedCollectionData).toHaveBeenCalled(); // Verify query was made
-      expect(mockedUpdateDoc).toHaveBeenCalledTimes(1);
-      expect(mockedUpdateDoc).toHaveBeenCalledWith(
-        expect.anything(), // Document reference
+      expect(spiedCollectionData).toHaveBeenCalled();
+      expect(spiedUpdateDoc).toHaveBeenCalledTimes(1);
+      expect(spiedUpdateDoc).toHaveBeenCalledWith(
+        jasmine.anything(),
         {
           quantity: existingProduct.quantity + restockData.quantity,
-          costPrice: restockData.price // new costPrice from restock
+          costPrice: restockData.price
         }
       );
-      expect(mockedAddDoc).not.toHaveBeenCalled();
+      expect(spiedDoc).toHaveBeenCalledWith(firestoreMock as Firestore, 'products', existingProduct.id);
+      expect(spiedAddDoc).not.toHaveBeenCalled();
     });
 
     it('should add a new product if product_no does not exist', async () => {
-      mockedCollectionData.mockReturnValue(of([])); // Simulate product not found
+      spiedCollectionData.and.returnValue(of([]));
 
       await service.updateProductUponRestock(restockData);
 
-      expect(mockedCollectionData).toHaveBeenCalled();
-      expect(mockedAddDoc).toHaveBeenCalledTimes(1);
-      expect(mockedAddDoc).toHaveBeenCalledWith(
-        expect.anything(), // Collection reference
+      expect(spiedCollectionData).toHaveBeenCalled();
+      expect(spiedAddDoc).toHaveBeenCalledTimes(1);
+      expect(spiedAddDoc).toHaveBeenCalledWith(
+        jasmine.anything(),
         {
           product_no: restockData.product_no,
           product_name: restockData.product_name,
           color: restockData.color,
           costPrice: restockData.price,
-          price: (restockData.price * 120 / 100), // Calculated selling price
+          price: (restockData.price * 120 / 100),
           quantity: restockData.quantity,
           created_date: 'mocked_server_timestamp',
           product_type: restockData.product_type || ''
         }
       );
-      expect(mockedUpdateDoc).not.toHaveBeenCalled();
+      expect(spiedCollection).toHaveBeenCalledWith(firestoreMock as Firestore, 'products');
+      expect(spiedUpdateDoc).not.toHaveBeenCalled();
     });
   });
 
   describe('getAllProducts', () => {
     it('should call collectionData for the products collection', () => {
-      mockedCollectionData.mockReturnValue(of([])); // Return empty observable for simplicity
+      spiedCollectionData.and.returnValue(of([]));
       service.getAllProducts();
-      // TODO: Need to mock collection() properly to assert the path 'products'
-      // For now, just ensure collectionData itself is called.
-      expect(mockedCollectionData).toHaveBeenCalledWith(expect.anything(), { idField: 'id' });
+      expect(spiedCollectionData).toHaveBeenCalledWith(jasmine.anything(), { idField: 'id' });
+      expect(spiedQuery).toHaveBeenCalledWith(jasmine.anything()); // Query without where/orderBy
+      expect(spiedCollection).toHaveBeenCalledWith(firestoreMock as Firestore, 'products');
     });
   });
 
   describe('getLowStockProducts', () => {
     it('should call collectionData with a query for low stock', () => {
-      mockedCollectionData.mockReturnValue(of([]));
+      spiedCollectionData.and.returnValue(of([]));
       const threshold = 5;
       service.getLowStockProducts(threshold);
-      // TODO: Need to mock query() and where() to assert the query conditions
-      expect(mockedCollectionData).toHaveBeenCalledWith(expect.anything(), { idField: 'id' });
+      expect(spiedCollectionData).toHaveBeenCalledWith(jasmine.anything(), { idField: 'id' });
+      expect(spiedQuery).toHaveBeenCalledWith(jasmine.anything(), spiedWhere('quantity', '<=', threshold));
+      expect(spiedCollection).toHaveBeenCalledWith(firestoreMock as Firestore, 'products');
     });
   });
 

@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Firestore, collection, addDoc, doc, updateDoc, collectionData, query, where, serverTimestamp, runTransaction, DocumentReference } from '@angular/fire/firestore';
+import { Firestore, collection, addDoc, doc, updateDoc, collectionData, query, where, serverTimestamp, runTransaction, DocumentReference, deleteDoc } from '@angular/fire/firestore'; // Added deleteDoc
 import { Product } from '../model/product.model';
 import { Observable, firstValueFrom, map } from 'rxjs';
 
@@ -73,5 +73,11 @@ export class ProductService {
     const productsCollectionRef = collection(this.firestore, 'products');
     const q = query(productsCollectionRef, where('quantity', '<=', threshold));
     return collectionData(q, { idField: 'id' }) as Observable<Product[]>;
+  }
+
+  /* Delete Product */
+  deleteProduct(collectionName: string, id: string) { // Added collectionName for consistency, though it's always 'products' here
+    const productDocRef = doc(this.firestore, collectionName, id); // Use collectionName
+    return deleteDoc(productDocRef); // deleteDoc is not imported, need to import it
   }
 }

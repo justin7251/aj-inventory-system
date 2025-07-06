@@ -10,17 +10,12 @@ import { Order } from '../../model/order.model';
 import { SharedModule } from '../../../shared/shared.module';
 
 // Mock services
-const mockShopifyService = {
-  fetchNewShopifyOrders: jest.fn()
-};
-
-const mockItemService = {
-  addOrder: jest.fn()
-};
+let mockShopifyService: { fetchNewShopifyOrders: jasmine.Spy };
+let mockItemService: { addOrder: jasmine.Spy };
 
 const mockShopifyOrders: Order[] = [
-  { id: 'shopify1', externalOrderId: 's1', customer_name: 'ShopifyCust1', items: [{product_no: 'sp1', quantity: 1, item_cost: 100}], user_id: '', delivery_address: '', payment_type: '', delivery_cost:0, discount:0, total_cost:0 },
-  { id: 'shopify2', externalOrderId: 's2', customer_name: 'ShopifyCust2', items: [{product_no: 'sp2', quantity: 2, item_cost: 200}], user_id: '', delivery_address: '', payment_type: '', delivery_cost:0, discount:0, total_cost:0 },
+  { id: 'shopify1', customer_name: 'ShopifyCust1', telephone: 1234567890, items: [{product_no: 'sp1', quantity: 1, item_cost: 100}], user_id: '', delivery_address: '', payment_type: '', delivery_cost:0, discount:0, total_cost:0 },
+  { id: 'shopify2', customer_name: 'ShopifyCust2', telephone: 1234567890, items: [{product_no: 'sp2', quantity: 2, item_cost: 200}], user_id: '', delivery_address: '', payment_type: '', delivery_cost:0, discount:0, total_cost:0 },
 ];
 
 describe('ShopifyConnectorComponent', () => {
@@ -28,10 +23,17 @@ describe('ShopifyConnectorComponent', () => {
   let fixture: ComponentFixture<ShopifyConnectorComponent>;
 
   beforeEach(async () => {
+    mockShopifyService = {
+      fetchNewShopifyOrders: jasmine.createSpy('fetchNewShopifyOrders')
+    };
+    mockItemService = {
+      addOrder: jasmine.createSpy('addOrder')
+    };
+
     await TestBed.configureTestingModule({
       declarations: [ ShopifyConnectorComponent ],
       imports: [
-        HttpClientTestingModule, // ShopifyService might inject HttpClient
+        HttpClientTestingModule,
         NoopAnimationsModule,
         SharedModule
       ],
@@ -44,9 +46,6 @@ describe('ShopifyConnectorComponent', () => {
 
     fixture = TestBed.createComponent(ShopifyConnectorComponent);
     component = fixture.componentInstance;
-
-    mockShopifyService.fetchNewShopifyOrders.mockReset();
-    mockItemService.addOrder.mockReset();
   });
 
   it('should create', () => {
@@ -55,8 +54,8 @@ describe('ShopifyConnectorComponent', () => {
 
   describe('syncShopifyOrders', () => {
     it('should fetch orders from ShopifyService and add them using ItemService', fakeAsync(() => {
-      mockShopifyService.fetchNewShopifyOrders.mockReturnValue(of(mockShopifyOrders));
-      mockItemService.addOrder.mockResolvedValue({ id: 'firestoreId' } as any);
+      mockShopifyService.fetchNewShopifyOrders.and.returnValue(of(mockShopifyOrders));
+      mockItemService.addOrder.and.returnValue(Promise.resolve({ id: 'firestoreId' } as any));
 
       component.syncShopifyOrders();
       tick();
@@ -72,8 +71,8 @@ describe('ShopifyConnectorComponent', () => {
 
     it('should handle errors when fetching orders from ShopifyService', fakeAsync(() => {
       const error = new Error('Shopify fetch failed');
-      mockShopifyService.fetchNewShopifyOrders.mockReturnValue(throwError(() => error));
-      const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+      mockShopifyService.fetchNewShopifyOrders.and.returnValue(throwError(() => error));
+      spyOn(console, 'error');
 
       component.syncShopifyOrders();
       tick();
@@ -82,16 +81,18 @@ describe('ShopifyConnectorComponent', () => {
       expect(mockItemService.addOrder).not.toHaveBeenCalled();
       expect(component.errorMessages[0]).toContain('Error fetching Shopify orders: Shopify fetch failed');
       expect(component.isLoading).toBe(false);
-      consoleErrorSpy.mockRestore();
     }));
 
     it('should handle errors when adding an order using ItemService', fakeAsync(() => {
       const processError = new Error('Shopify process failed');
-      mockShopifyService.fetchNewShopifyOrders.mockReturnValue(of(mockShopifyOrders));
-      mockItemService.addOrder
-        .mockResolvedValueOnce({ id: 'fsId1' } as any)
-        .mockRejectedValueOnce(processError);
-      const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+      mockShopifyService.fetchNewShopifyOrders.and.returnValue(of(mockShopifyOrders));
+      mockItemService.addOrder.and.callFake((order: Order) => {
+        if (order.id === mockShopifyOrders[1].id) {
+          return Promise.reject(processError);
+        }
+        return Promise.resolve({ id: 'fsId1' } as any);
+      });
+      spyOn(console, 'error');
 
       component.syncShopifyOrders();
       tick();
@@ -99,13 +100,12 @@ describe('ShopifyConnectorComponent', () => {
       expect(mockItemService.addOrder).toHaveBeenCalledTimes(mockShopifyOrders.length);
       expect(component.ordersProcessed).toBe(1);
       expect(component.ordersFailed).toBe(1);
-      expect(component.errorMessages[0]).toContain(`Failed to process Shopify order ${mockShopifyOrders[1].id || mockShopifyOrders[1].externalOrderId}`);
+      expect(component.errorMessages[0]).toContain(`Failed to process Shopify order ${mockShopifyOrders[1].id}`);
       expect(component.isLoading).toBe(false);
-      consoleErrorSpy.mockRestore();
     }));
 
     it('should correctly display message for no new Shopify orders', fakeAsync(() => {
-        mockShopifyService.fetchNewShopifyOrders.mockReturnValue(of([]));
+        mockShopifyService.fetchNewShopifyOrders.and.returnValue(of([]));
         component.syncShopifyOrders();
         tick();
         expect(component.errorMessages[0]).toBe('No new Shopify orders found or an error occurred while fetching.');

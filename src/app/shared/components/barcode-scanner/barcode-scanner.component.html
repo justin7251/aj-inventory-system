@@ -1,0 +1,11 @@
+<div class="scanner-container">
+  <zxing-scanner
+    [formats]="allowedFormats"
+    (scanSuccess)="onScanSuccess($event)"
+    (scanError)="onScanError($event)"
+    (camerasFound)="onCamerasFound($event)"
+    (camerasNotFound)="onCamerasNotFound($event)"
+    (permissionResponse)="onPermissionResponse($event)"
+  ></zxing-scanner>
+  <button mat-raised-button color="warn" (click)="closeDialog()">Cancel</button>
+</div>

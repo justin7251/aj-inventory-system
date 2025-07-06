@@ -6,36 +6,40 @@ import { Order, OrderItem } from '../model/order.model';
 import { Product } from '../model/product.model';
 import { of } from 'rxjs';
 
-// Mock top-level Firestore functions
-jest.mock('@angular/fire/firestore', () => {
-  const originalModule = jest.requireActual('@angular/fire/firestore');
-  return {
-    ...originalModule,
-    runTransaction: jest.fn(),
-    addDoc: jest.fn(),
-    updateDoc: jest.fn(),
-    doc: jest.fn().mockImplementation((firestore, path, ...pathSegments) => ({ id: pathSegments.length > 0 ? pathSegments[pathSegments.length-1] : path, path: `${path}/${pathSegments.join('/')}` })), // Mock doc to return a basic ref
-    collection: jest.fn().mockImplementation((firestore, path) => ({ id: path, path })), // Mock collection
-    query: jest.fn(),
-    orderBy: jest.fn(),
-    where: jest.fn(), // For product lookups in _calculateTotalEarnings
-    collectionData: jest.fn(), // For product lookups
-    docData: jest.fn(),
-    serverTimestamp: jest.fn(() => 'mocked_server_timestamp'), // Using string for simplicity in mock
-  };
-});
+// Keep track of original Firestore functions
+const originalFirestore = {
+  runTransaction,
+  addDoc,
+  updateDoc,
+  doc,
+  collection,
+  query,
+  orderBy,
+  where, // Added where back
+  collectionData,
+  docData,
+  serverTimestamp
+};
+
+// Spy on top-level Firestore functions
+let spiedRunTransaction: jasmine.Spy;
+let spiedAddDoc: jasmine.Spy;
+let spiedUpdateDoc: jasmine.Spy;
+let spiedDoc: jasmine.Spy;
+let spiedCollection: jasmine.Spy;
+let spiedQuery: jasmine.Spy;
+let spiedOrderBy: jasmine.Spy;
+let spiedWhere: jasmine.Spy;
+let spiedCollectionData: jasmine.Spy;
+let spiedDocData: jasmine.Spy;
+let spiedServerTimestamp: jasmine.Spy;
+
 
 describe('OrderService', () => {
   let service: OrderService;
   let firestoreMock: Partial<Firestore>;
   let packingQueueServiceMock: Partial<PackingQueueService>;
 
-  let mockedRunTransaction: jest.Mock;
-  let mockedAddDoc: jest.Mock;
-  let mockedUpdateDoc: jest.Mock;
-  let mockedCollectionData: jest.Mock;
-  let mockedDocData: jest.Mock;
-  let mockedDoc: jest.Mock;
 
   const mockProduct: Product = {
     id: 'prod123',
@@ -49,9 +53,35 @@ describe('OrderService', () => {
   };
 
   beforeEach(() => {
-    firestoreMock = {}; // No direct methods on Firestore instance itself
+    // Create spies before each test
+    spiedRunTransaction = jasmine.createSpy('runTransaction');
+    spiedAddDoc = jasmine.createSpy('addDoc');
+    spiedUpdateDoc = jasmine.createSpy('updateDoc');
+    spiedDoc = jasmine.createSpy('doc').and.callFake((firestore, path, ...pathSegments) => ({ id: pathSegments.length > 0 ? pathSegments[pathSegments.length - 1] : path, path: `${path}/${pathSegments.join('/')}` }));
+    spiedCollection = jasmine.createSpy('collection').and.callFake((firestore, path) => ({ id: path, path }));
+    spiedQuery = jasmine.createSpy('query');
+    spiedOrderBy = jasmine.createSpy('orderBy');
+    spiedWhere = jasmine.createSpy('where');
+    spiedCollectionData = jasmine.createSpy('collectionData');
+    spiedDocData = jasmine.createSpy('docData');
+    spiedServerTimestamp = jasmine.createSpy('serverTimestamp').and.returnValue('mocked_server_timestamp');
+
+    // Override global Firestore functions with spies
+    (global as any).runTransaction = spiedRunTransaction;
+    (global as any).addDoc = spiedAddDoc;
+    (global as any).updateDoc = spiedUpdateDoc;
+    (global as any).doc = spiedDoc;
+    (global as any).collection = spiedCollection;
+    (global as any).query = spiedQuery;
+    (global as any).orderBy = spiedOrderBy;
+    (global as any).where = spiedWhere;
+    (global as any).collectionData = spiedCollectionData;
+    (global as any).docData = spiedDocData;
+    (global as any).serverTimestamp = spiedServerTimestamp;
+
+    firestoreMock = {};
     packingQueueServiceMock = {
-      addItemToPackingQueue: jest.fn().mockResolvedValue({ id: 'packingItemId' } as any),
+      addItemToPackingQueue: jasmine.createSpy('addItemToPackingQueue').and.returnValue(Promise.resolve({ id: 'packingItemId' } as any)),
     };
 
     TestBed.configureTestingModule({
@@ -63,36 +93,35 @@ describe('OrderService', () => {
     });
     service = TestBed.inject(OrderService);
 
-    mockedRunTransaction = runTransaction as jest.Mock;
-    mockedAddDoc = addDoc as jest.Mock;
-    mockedUpdateDoc = updateDoc as jest.Mock;
-    mockedCollectionData = collectionData as jest.Mock;
-    mockedDocData = docData as jest.Mock;
-    mockedDoc = doc as jest.Mock;
-
-    // Reset mocks
-    mockedRunTransaction.mockReset();
-    mockedAddDoc.mockReset();
-    mockedUpdateDoc.mockReset();
-    mockedCollectionData.mockReset();
-    mockedDocData.mockReset();
-    mockedDoc.mockReset();
-    (packingQueueServiceMock.addItemToPackingQueue as jest.Mock).mockClear();
 
     // Default mock implementations
-    // Transaction mock
-    mockedRunTransaction.mockImplementation(async (firestore, transactionExecutor) => {
+    spiedRunTransaction.and.callFake(async (firestore, transactionExecutor) => {
       const mockTransaction = {
-        get: jest.fn().mockResolvedValue({ exists: () => false, data: () => ({ total: 0, count: 0, last5: [] }) }),
-        set: jest.fn(),
-        update: jest.fn(),
+        get: jasmine.createSpy('get').and.returnValue(Promise.resolve({ exists: () => false, data: () => ({ total: 0, count: 0, last5: [] }) })),
+        set: jasmine.createSpy('set'),
+        update: jasmine.createSpy('update'),
       };
       await transactionExecutor(mockTransaction);
       return Promise.resolve();
     });
 
-    mockedAddDoc.mockResolvedValue({ id: 'newOrderId' } as DocumentReference<Order>);
-    mockedCollectionData.mockReturnValue(of([mockProduct])); // For _calculateTotalEarnings product lookup
+    spiedAddDoc.and.returnValue(Promise.resolve({ id: 'newOrderId' } as DocumentReference<Order>));
+    spiedCollectionData.and.returnValue(of([mockProduct]));
+  });
+
+  afterEach(() => {
+    // Restore original functions
+    (global as any).runTransaction = originalFirestore.runTransaction;
+    (global as any).addDoc = originalFirestore.addDoc;
+    (global as any).updateDoc = originalFirestore.updateDoc;
+    (global as any).doc = originalFirestore.doc;
+    (global as any).collection = originalFirestore.collection;
+    (global as any).query = originalFirestore.query;
+    (global as any).orderBy = originalFirestore.orderBy;
+    (global as any).where = originalFirestore.where;
+    (global as any).collectionData = originalFirestore.collectionData;
+    (global as any).docData = originalFirestore.docData;
+    (global as any).serverTimestamp = originalFirestore.serverTimestamp;
   });
 
   it('should be created', () => {
@@ -109,55 +138,47 @@ describe('OrderService', () => {
     it('should run two transactions for aggregation, add order doc, and add to packing queue', async () => {
       await service.createOrder(orderData);
 
-      expect(mockedRunTransaction).toHaveBeenCalledTimes(2); // One for total/count, one for last5
-      expect(mockedAddDoc).toHaveBeenCalledTimes(1); // For the order itself
+      expect(spiedRunTransaction).toHaveBeenCalledTimes(2);
+      expect(spiedAddDoc).toHaveBeenCalledTimes(1);
       expect(packingQueueServiceMock.addItemToPackingQueue).toHaveBeenCalledTimes(orderData.items.length);
-      expect(packingQueueServiceMock.addItemToPackingQueue).toHaveBeenCalledWith(expect.objectContaining({
+      expect(packingQueueServiceMock.addItemToPackingQueue).toHaveBeenCalledWith(jasmine.objectContaining({
         orderId: 'newOrderId',
         productId: orderItem.product_no,
       }));
     });
 
     it('should calculate totalEarnings correctly', async () => {
-      // item_cost (selling for line) = 200, quantity = 2, product.costPrice = 50
-      // Expected earning = 200 - (2 * 50) = 100
       const expectedEarnings = 100;
       await service.createOrder(orderData);
-      expect(mockedAddDoc).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ totalEarnings: expectedEarnings }));
-      expect(mockedCollectionData).toHaveBeenCalled(); // Ensure product lookup happened
+      expect(spiedAddDoc).toHaveBeenCalledWith(jasmine.anything(), jasmine.objectContaining({ totalEarnings: expectedEarnings }));
+      expect(spiedCollectionData).toHaveBeenCalled();
     });
 
     it('should correctly update aggregation document (total/count in 1st trans, last5 in 2nd)', async () => {
       const mockAggDocRef = { id: 'orders', path: 'aggregation/orders' };
-      mockedDoc.mockImplementation((fs, path, id) => {
+      spiedDoc.and.callFake((fs, path, id) => {
         if (path === 'aggregation' && id === 'orders') return mockAggDocRef;
-        return { id: id || path, path: id ? `${path}/${id}`: path };
+        return { id: id || path, path: id ? `${path}/${id}` : path };
       });
 
-      const existingAggData = { total: 1000, count: 5, last5: [{id: 'old1', total_cost: 100}] };
-      const mockTransactionGet = jest.fn()
-        .mockResolvedValueOnce({ exists: () => true, data: () => existingAggData }) // For 1st transaction
-        .mockResolvedValueOnce({ exists: () => true, data: () => ({ // For 2nd transaction (after 1st update)
+      const existingAggData = { total: 1000, count: 5, last5: [{ id: 'old1', total_cost: 100 }] };
+      const mockTransactionGet = jasmine.createSpy('get')
+        .and.returnValue(Promise.resolve({ exists: () => true, data: () => existingAggData })) // For 1st transaction
+        .and.returnValue(Promise.resolve({ // For 2nd transaction
+            exists: () => true, data: () => ({
             ...existingAggData,
             total: existingAggData.total + orderData.total_cost,
             count: existingAggData.count + 1
-        })});
+        })}));
 
-      mockedRunTransaction.mockImplementation(async (firestore, transactionExecutor) => {
-        const mockTransaction = { get: mockTransactionGet, set: jest.fn(), update: jest.fn() };
+
+      spiedRunTransaction.and.callFake(async (firestore, transactionExecutor) => {
+        const mockTransaction = { get: mockTransactionGet, set: jasmine.createSpy('set'), update: jasmine.createSpy('update') };
         await transactionExecutor(mockTransaction);
       });
 
       await service.createOrder(orderData);
-
-      const firstTransactionUpdateCall = (mockedRunTransaction.mock.calls[0][1] as any).toString().includes('total') && (mockedRunTransaction.mock.calls[0][1] as any).toString().includes('count');
-      // This is a brittle check. Better to inspect mockTransaction.update inside the implementation.
-      // For now, we assume the first transaction updates total & count, second updates last5.
-
-      // Check that the second transaction attempts to update last5
-      // This requires a more detailed mock of runTransaction to capture what's passed to transaction.update
-      // For simplicity, we're relying on the two separate calls to runTransaction.
-      expect(mockedRunTransaction).toHaveBeenCalledTimes(2);
+      expect(spiedRunTransaction).toHaveBeenCalledTimes(2);
     });
 
   });
@@ -167,25 +188,25 @@ describe('OrderService', () => {
       const orderId = 'orderToUpdate';
       const dataToUpdate = { customer_name: 'Updated Name' };
       await service.updateOrder(orderId, dataToUpdate);
-      expect(mockedUpdateDoc).toHaveBeenCalledWith(expect.objectContaining({id: orderId}), dataToUpdate);
+      expect(spiedUpdateDoc).toHaveBeenCalledWith(jasmine.objectContaining({ id: orderId }), dataToUpdate);
     });
   });
 
   describe('getAllOrders', () => {
     it('should call collectionData, ordering by created_date', () => {
-      mockedCollectionData.mockReturnValue(of([]));
+      spiedCollectionData.and.returnValue(of([]));
       service.getAllOrders();
-      expect(mockedCollectionData).toHaveBeenCalledWith(expect.anything(), { idField: 'id' });
-      expect(query).toHaveBeenCalledWith(expect.anything(), orderBy('created_date'));
+      expect(spiedCollectionData).toHaveBeenCalledWith(jasmine.anything(), { idField: 'id' });
+      expect(spiedQuery).toHaveBeenCalledWith(jasmine.anything(), spiedOrderBy('created_date'));
     });
   });
 
   describe('getOrderById', () => {
     it('should call docData with the correct document path', () => {
       const orderId = 'singleOrderId';
-      mockedDocData.mockReturnValue(of({}));
+      spiedDocData.and.returnValue(of({}));
       service.getOrderById(orderId);
-      expect(mockedDocData).toHaveBeenCalledWith(expect.objectContaining({id: orderId}), { idField: 'id' });
+      expect(spiedDocData).toHaveBeenCalledWith(jasmine.objectContaining({ id: orderId }), { idField: 'id' });
     });
   });
 

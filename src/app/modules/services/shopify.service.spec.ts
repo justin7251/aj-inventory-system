@@ -115,7 +115,7 @@ describe('ShopifyService', () => {
 
     it('should use hardcoded mock orders if mockDataUrl and endpoint are not configured (or simulate API call)', (done) => {
       environment.shopifyApiConfig = { mockDataUrl: '', endpoint: '', apiKey: '', password: '' };
-      const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+      const consoleErrorSpy = spyOn(console, 'error').and.callThrough();
 
       service.fetchNewShopifyOrders().subscribe((orders: Order[]) => {
         // Current service logic returns of([]) if no mockDataUrl and no endpoint.
@@ -125,7 +125,6 @@ describe('ShopifyService', () => {
         expect(consoleErrorSpy).toHaveBeenCalledWith('ShopifyService: No API endpoint or mock data URL configured. Returning empty array.');
         done();
       });
-      consoleErrorSpy.mockRestore();
     });
 
     it('should handle HTTP errors when fetching from mockDataUrl by returning an empty array', (done) => {
@@ -148,7 +147,7 @@ describe('ShopifyService', () => {
             apiKey: 'key',
             password: 'pass'
         };
-        const consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+        const consoleWarnSpy = spyOn(console, 'warn').and.callThrough();
 
         service.fetchNewShopifyOrders().subscribe((orders: Order[]) => {
             expect(consoleWarnSpy).toHaveBeenCalledWith('ShopifyService: Actual API endpoint call is not implemented yet. Returning mock data.');
@@ -156,7 +155,6 @@ describe('ShopifyService', () => {
             expect(orders[0].id).toBe('shopify-1001'); // From hardcoded data
             done();
         });
-        consoleWarnSpy.mockRestore();
     });
   });
 

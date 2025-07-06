@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { EbayService } from '../../services/ebay.service';
-import { ItemService } from '../../services/item.service';
+import { OrderService } from '../../services/order.service'; // Changed ItemService to OrderService
 import { Order } from '../../model/order.model'; // Ensure this path is correct
 
 @Component({
@@ -17,7 +17,7 @@ export class EbayConnectorComponent implements OnInit {
 
   constructor(
     private ebayService: EbayService,
-    private itemService: ItemService
+    private orderService: OrderService // Changed itemService to orderService
   ) { }
 
   ngOnInit(): void {
@@ -45,7 +45,8 @@ export class EbayConnectorComponent implements OnInit {
               if (!order.items) {
                 order.items = []; // Initialize with empty array if null/undefined
               }
-              await this.itemService.addOrder(order);
+              // Changed itemService.addOrder to orderService.createOrder
+              await this.orderService.createOrder(order);
               this.ordersProcessed++;
             } catch (error: any) {
               this.ordersFailed++;

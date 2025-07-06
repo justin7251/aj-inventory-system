@@ -10,17 +10,12 @@ import { Order } from '../../model/order.model';
 import { SharedModule } from '../../../shared/shared.module'; // For Material components used in template
 
 // Mock services
-const mockEbayService = {
-  fetchNewEbayOrders: jest.fn()
-};
-
-const mockItemService = {
-  addOrder: jest.fn()
-};
+let mockEbayService: { fetchNewEbayOrders: jasmine.Spy };
+let mockItemService: { addOrder: jasmine.Spy };
 
 const mockOrders: Order[] = [
-  { id: 'ebay1', customer_name: 'Cust1', items: [{product_no: 'p1', quantity: 1, item_cost: 10}], user_id: '', delivery_address: '', payment_type: '', delivery_cost:0, discount:0, total_cost:0 },
-  { id: 'ebay2', customer_name: 'Cust2', items: [{product_no: 'p2', quantity: 2, item_cost: 20}], user_id: '', delivery_address: '', payment_type: '', delivery_cost:0, discount:0, total_cost:0 },
+  { id: 'ebay1', customer_name: 'Cust1', telephone: 1234567890, items: [{product_no: 'p1', quantity: 1, item_cost: 10}], user_id: '', delivery_address: '', payment_type: '', delivery_cost:0, discount:0, total_cost:0 },
+  { id: 'ebay2', customer_name: 'Cust2', telephone: 1234567890, items: [{product_no: 'p2', quantity: 2, item_cost: 20}], user_id: '', delivery_address: '', payment_type: '', delivery_cost:0, discount:0, total_cost:0 },
 ];
 
 describe('EbayConnectorComponent', () => {
@@ -28,12 +23,20 @@ describe('EbayConnectorComponent', () => {
   let fixture: ComponentFixture<EbayConnectorComponent>;
 
   beforeEach(async () => {
+    // Initialize spies for each test
+    mockEbayService = {
+      fetchNewEbayOrders: jasmine.createSpy('fetchNewEbayOrders')
+    };
+    mockItemService = {
+      addOrder: jasmine.createSpy('addOrder')
+    };
+
     await TestBed.configureTestingModule({
       declarations: [ EbayConnectorComponent ],
       imports: [
-        HttpClientTestingModule, // EbayService might inject HttpClient
-        NoopAnimationsModule,    // To handle Material animations
-        SharedModule             // Import SharedModule that exports Material modules
+        HttpClientTestingModule,
+        NoopAnimationsModule,
+        SharedModule
       ],
       providers: [
         { provide: EbayService, useValue: mockEbayService },
@@ -44,10 +47,6 @@ describe('EbayConnectorComponent', () => {
 
     fixture = TestBed.createComponent(EbayConnectorComponent);
     component = fixture.componentInstance;
-
-    // Reset mocks before each test
-    mockEbayService.fetchNewEbayOrders.mockReset();
-    mockItemService.addOrder.mockReset();
   });
 
   it('should create', () => {
@@ -56,11 +55,11 @@ describe('EbayConnectorComponent', () => {
 
   describe('syncEbayOrders', () => {
     it('should fetch orders from EbayService and add them using ItemService', fakeAsync(() => {
-      mockEbayService.fetchNewEbayOrders.mockReturnValue(of(mockOrders));
-      mockItemService.addOrder.mockResolvedValue({ id: 'firestoreId' } as any);
+      mockEbayService.fetchNewEbayOrders.and.returnValue(of(mockOrders));
+      mockItemService.addOrder.and.returnValue(Promise.resolve({ id: 'firestoreId' } as any));
 
       component.syncEbayOrders();
-      tick(); // Process Observables and Promises
+      tick();
 
       expect(mockEbayService.fetchNewEbayOrders).toHaveBeenCalledTimes(1);
       expect(mockItemService.addOrder).toHaveBeenCalledTimes(mockOrders.length);
@@ -74,8 +73,8 @@ describe('EbayConnectorComponent', () => {
 
     it('should handle errors when fetching orders from EbayService', fakeAsync(() => {
       const error = new Error('Failed to fetch');
-      mockEbayService.fetchNewEbayOrders.mockReturnValue(throwError(() => error));
-      const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+      mockEbayService.fetchNewEbayOrders.and.returnValue(throwError(() => error));
+      spyOn(console, 'error'); // Suppress console.error output for this test
 
       component.syncEbayOrders();
       tick();
@@ -83,22 +82,22 @@ describe('EbayConnectorComponent', () => {
       expect(mockEbayService.fetchNewEbayOrders).toHaveBeenCalledTimes(1);
       expect(mockItemService.addOrder).not.toHaveBeenCalled();
       expect(component.ordersProcessed).toBe(0);
-      expect(component.ordersFailed).toBe(0); // No orders were attempted
+      expect(component.ordersFailed).toBe(0);
       expect(component.errorMessages.length).toBeGreaterThan(0);
       expect(component.errorMessages[0]).toContain('Failed to fetch');
       expect(component.isLoading).toBe(false);
-
-      consoleErrorSpy.mockRestore();
     }));
 
     it('should handle errors when adding an order using ItemService', fakeAsync(() => {
       const processError = new Error('Failed to process');
-      mockEbayService.fetchNewEbayOrders.mockReturnValue(of(mockOrders));
-      // First order succeeds, second fails
-      mockItemService.addOrder
-        .mockResolvedValueOnce({ id: 'firestoreId1' } as any)
-        .mockRejectedValueOnce(processError);
-      const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+      mockEbayService.fetchNewEbayOrders.and.returnValue(of(mockOrders));
+      mockItemService.addOrder.and.callFake((order: Order) => {
+        if (order.id === mockOrders[1].id) {
+          return Promise.reject(processError);
+        }
+        return Promise.resolve({ id: 'firestoreId1' } as any);
+      });
+      spyOn(console, 'error'); // Suppress console.error output
 
       component.syncEbayOrders();
       tick();
@@ -109,12 +108,10 @@ describe('EbayConnectorComponent', () => {
       expect(component.errorMessages.length).toBeGreaterThan(0);
       expect(component.errorMessages[0]).toContain(`Failed to process order ${mockOrders[1].id}`);
       expect(component.isLoading).toBe(false);
-
-      consoleErrorSpy.mockRestore();
     }));
 
     it('should handle empty order array from EbayService', fakeAsync(() => {
-        mockEbayService.fetchNewEbayOrders.mockReturnValue(of([]));
+        mockEbayService.fetchNewEbayOrders.and.returnValue(of([]));
 
         component.syncEbayOrders();
         tick();
@@ -129,18 +126,18 @@ describe('EbayConnectorComponent', () => {
 
       it('should ensure order.items is initialized if null/undefined before calling addOrder', fakeAsync(() => {
         const orderWithNullItems: Order = {
-            id: 'ebayNull', customer_name: 'CustNull', items: null as any, // Test case
+            id: 'ebayNull', customer_name: 'CustNull', telephone: 1234567890, items: null as any,
             user_id: '', delivery_address: '', payment_type: '', delivery_cost:0, discount:0, total_cost:0
         };
-        mockEbayService.fetchNewEbayOrders.mockReturnValue(of([orderWithNullItems]));
-        mockItemService.addOrder.mockResolvedValue({ id: 'firestoreId' } as any);
+        mockEbayService.fetchNewEbayOrders.and.returnValue(of([orderWithNullItems]));
+        mockItemService.addOrder.and.returnValue(Promise.resolve({ id: 'firestoreId' } as any));
 
         component.syncEbayOrders();
         tick();
 
-        expect(mockItemService.addOrder).toHaveBeenCalledWith(expect.objectContaining({
+        expect(mockItemService.addOrder).toHaveBeenCalledWith(jasmine.objectContaining({
             id: 'ebayNull',
-            items: [] // Should be initialized to empty array
+            items: []
         }));
         expect(component.ordersProcessed).toBe(1);
       }));

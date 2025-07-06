@@ -113,8 +113,8 @@ describe('EbayService', () => {
       environment.ebayApiConfig.endpoint = ''; // Ensure endpoint is empty
       environment.ebayApiConfig.mockDataUrl = ''; // Ensure mockDataUrl is empty
 
-      const consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
-      const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+      const consoleWarnSpy = spyOn(console, 'warn').and.callThrough();
+      const consoleErrorSpy = spyOn(console, 'error').and.callThrough();
 
 
       service.fetchNewEbayOrders().subscribe((orders: Order[]) => {
@@ -127,8 +127,6 @@ describe('EbayService', () => {
         expect(consoleErrorSpy).toHaveBeenCalledWith('EbayService: No API endpoint or mock data URL configured. Returning empty array.');
         done();
       });
-      consoleWarnSpy.mockRestore();
-      consoleErrorSpy.mockRestore();
     });
 
     it('should handle HTTP errors when fetching from mockDataUrl by returning an empty array', (done) => {
@@ -150,7 +148,7 @@ describe('EbayService', () => {
             endpoint: 'https://api.ebay.com/real/orders',
             apiKey: 'test-key'
         };
-        const consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+        const consoleWarnSpy = spyOn(console, 'warn').and.callThrough();
 
         // The service currently logs a warning and returns hardcoded data if endpoint is set but not mockDataUrl.
         // This test verifies that behavior.
@@ -160,7 +158,6 @@ describe('EbayService', () => {
             expect(orders[0].id).toMatch(/^EBAY-ORDER-\d{3}$/);
             done();
         });
-        consoleWarnSpy.mockRestore();
         // If the service were to make an actual HTTP call:
         // const req = httpMock.expectOne('https://api.ebay.com/real/orders');
         // expect(req.request.method).toBe('GET');

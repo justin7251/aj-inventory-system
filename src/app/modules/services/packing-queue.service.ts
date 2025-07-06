@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Firestore, collection, addDoc, doc, updateDoc, collectionData, query, where, orderBy, serverTimestamp, Timestamp } from '@angular/fire/firestore';
+import { Firestore, collection, addDoc, doc, updateDoc, collectionData, query, where, orderBy, serverTimestamp, Timestamp, DocumentReference } from '@angular/fire/firestore'; // Added DocumentReference
 import { Observable } from 'rxjs';
 import { PackingItem, PackingStatus } from '../model/packing-item.model';
 

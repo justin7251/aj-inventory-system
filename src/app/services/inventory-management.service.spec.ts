@@ -185,7 +185,8 @@ describe('InventoryManagementService', () => {
       // Setup: Make TEST001 need reordering, TEST002 not need reordering.
       // TEST001: CurrentStock = 12, Safety=10, Available=2. Velocity=0.5. DaysOut=4. LeadTime=10. Needs reorder.
       // Final Qty = 20 (due to MOQ).
-      const products = service.products.getValue();
+      // @ts-ignore
+      const products = service.products.getValue(); // Keep this for setup, but avoid reading private props in assertions
       const test001Index = products.findIndex(p => p.SKU === 'TEST001');
       products[test001Index].currentStock = {'WHS-A': 12};
       // @ts-ignore

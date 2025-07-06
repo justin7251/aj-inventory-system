@@ -27,6 +27,9 @@
     "@angular/router": "^20.0.2",
     "@firebase/firestore": "^4.7.17",
     "@swimlane/ngx-charts": "^23.0.0-alpha.0",
+    "@zxing/browser": "^0.1.5",
+    "@zxing/library": "^0.21.3",
+    "@zxing/ngx-scanner": "^20.0.0",
     "bootstrap": "^5.3.7",
     "firebase": "^11.9.1",
     "font-awesome": "^4.7.0",
@@ -58,6 +61,7 @@
     "karma-coverage-istanbul-reporter": "~3.0.2",
     "karma-jasmine": "~4.0.0",
     "karma-jasmine-html-reporter": "^1.7.0",
+    "karma-webpack": "^5.0.1",
     "protractor": "^7.0.0",
     "ts-node": "~10.9.0"
   },

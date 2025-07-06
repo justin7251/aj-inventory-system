@@ -1,8 +1,8 @@
 import { Component, OnInit } from '@angular/core';
-import { ItemService } from '../services/item.service';
+import { ProductService } from '../services/product.service'; // Changed ItemService to ProductService
 import { Product } from '../model/product.model';
-
-import { MatTableDataSource } from '@angular/material/table';
+import { MatDialog } from '@angular/material/dialog';
+import { BarcodeScannerComponent } from '../../shared/components/barcode-scanner/barcode-scanner.component';
 
 @Component({
   selector: 'app-items',
@@ -10,47 +10,66 @@ import { MatTableDataSource } from '@angular/material/table';
   styleUrls: ['./items.component.scss']
 })
 export class ItemsComponent implements OnInit {
-  // // product: Product[];
-  tableData: any = [];
-  ProductData = [];
-  displayedColumns: any[] = [
-		'product_no',
-		'product_name',
-		'quantity',
-		'color', 
+  tableData: Product[] = [];
+  filteredTableData: Product[] = [];
+  displayedColumns: string[] = [
+    'product_no',
+    'product_name',
+    'quantity',
+    'color',
     'price',
+    'barcode', // Added barcode column
     'add',
     'edit',
     'delete'
-	];
-  constructor(private itemService: ItemService) { }
-  
+  ];
+
+  constructor(private productService: ProductService, public dialog: MatDialog) { } // Changed itemService to productService
+
   ngOnInit() {
-    const obj = {};
-    const data = [];
-    this.itemService.getProductList().subscribe(products => {
-      products.forEach(item => {
-        let a = item.payload.doc.data();
-        a['$key'] = (item.payload.doc as any).id;
-        a['from'] = 'products';
-        a['add'] = 'Add';
-        a['edit'] = 'Edit';
-        a['delete'] = 'Delete';
-        this.tableData.push(a as Product);
-      });
+    // Changed itemService.getProductList to productService.getAllProducts
+    this.productService.getAllProducts().subscribe(products => {
+      // Adjusted mapping assuming getAllProducts returns Product[] directly
+      this.tableData = products.map(product => product);
+      this.filteredTableData = [...this.tableData]; // Initialize filtered data
     });
   }
+
+  openBarcodeScanner(): void {
+    const dialogRef = this.dialog.open(BarcodeScannerComponent, {
+      width: '500px'
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.filterProductsByBarcode(result);
+      }
+    });
+  }
+
+  filterProductsByBarcode(barcode: string): void {
+    if (!barcode) {
+      this.filteredTableData = [...this.tableData];
+      return;
+    }
+    this.filteredTableData = this.tableData.filter(product => product.barcode === barcode);
+  }
   
-  create(product: Product){
-    this.itemService.AddProduct(product);
+  clearFilter(): void {
+    this.filteredTableData = [...this.tableData];
+  }
+
+  create(product: Product){ // This method seems unused, consider removing or implementing with ProductService
+    // this.productService.addProduct(product); // Example if create is needed
+    console.warn('ItemsComponent.create method called but not fully implemented with ProductService');
   }
   
   // update(product: Product) {
-    //   this.itemService.updatePolicy(policy);
+    //   this.productService.updateProduct(product.id, product); // Example
     // }
     
-  deleteOrder(id: string) {
-    this.itemService.Delete('products', id);
+  deleteOrder(id: string) { // Should be deleteProduct
+    this.productService.deleteProduct('products', id); // Changed itemService.Delete to productService.deleteProduct
   }
     
   columnHeader = {

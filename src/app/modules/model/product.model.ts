@@ -9,6 +9,7 @@ export interface Product {
    product_type: string; // Assuming product_type is generally required
    price: number;
    costPrice?: number;
+   barcode?: string;
    // Dates can be Timestamps from Firestore or Date objects when manipulated
    update_date?: Date | Timestamp | string;
    created_date?: Date | Timestamp | string;

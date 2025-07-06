@@ -236,13 +236,8 @@ export class DashboardService {
           }
           return { ...order, calculatedCogs };
         });
-
-        // This part remains the same, using ordersWithCogs
-        if ('chart' in ordersWithCogsOrOptions && ordersWithCogsOrOptions.chart) {
-            return ordersWithCogsOrOptions as Highcharts.Options;
-        }
-
-        const ordersWithCogs = ordersWithCogsOrOptions as OrderWithCogs[];
+        // Corrected: Use the `ordersWithCogs` calculated in this scope.
+        // const ordersWithCogs = ordersWithCogsOrOptions as OrderWithCogs[]; // This line was problematic
         const monthlyData: { [monthKey: string]: { revenue: number; cogs: number } } = {};
         const monthYearFormat = new Intl.DateTimeFormat('en-US', { month: 'short', year: '2-digit' });
 

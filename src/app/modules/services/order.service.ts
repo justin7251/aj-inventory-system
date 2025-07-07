@@ -4,7 +4,7 @@ import { Order, OrderItem } from '../model/order.model';
 import { PackingQueueService } from './packing-queue.service';
 import { PackingItem } from '../model/packing-item.model';
 import { Product } from '../model/product.model'; // Needed for earnings calculation
-import { Observable, firstValueFrom, map } from 'rxjs'; // Added map
+import { Observable, firstValueFrom, map, shareReplay } from 'rxjs'; // Added map and shareReplay
 
 @Injectable({
   providedIn: 'root'
@@ -16,7 +16,33 @@ export class OrderService {
     private firestoreDb: Firestore // Injected Firestore for product lookups
   ) {}
 
-  private async _calculateCogsAndEarnings(items: OrderItem[]): Promise<{ cogs: number; earnings: number }> {
+  private productCostMap$: Observable<Map<string, number>>;
+
+  /**
+   * Fetches all products from Firestore and creates a map of product_no to costPrice.
+   * This observable is shared and replayed to avoid multiple Firestore reads for the same data
+   * within a short period. Uses firstValueFrom to return a Promise for easier use in async functions.
+   */
+  public getProductCostMap(): Promise<Map<string, number>> {
+    if (!this.productCostMap$) {
+      const productsRef = collection(this.firestoreDb, 'products');
+      this.productCostMap$ = (collectionData(query(productsRef), { idField: 'id' }) as Observable<Product[]>).pipe(
+        map(products => {
+          const map = new Map<string, number>();
+          products.forEach(p => {
+            if (p.product_no && p.costPrice !== undefined) {
+              map.set(p.product_no, Number(p.costPrice));
+            }
+          });
+          return map;
+        }),
+        shareReplay(1) // Cache the last emitted value and replay it for new subscribers
+      );
+    }
+    return firstValueFrom(this.productCostMap$); // Return a promise
+  }
+
+  private async _calculateCogsAndEarnings(items: OrderItem[], productCostMap: Map<string, number>): Promise<{ cogs: number; earnings: number }> {
     let totalCogs = 0;
     let totalRevenue = 0;
 
@@ -24,35 +50,15 @@ export class OrderService {
       return { cogs: 0, earnings: 0 };
     }
 
-    const productNos = items.map(item => item.product_no).filter(pn => !!pn);
-    if (productNos.length === 0) {
-      items.forEach(item => totalRevenue += (Number(item.item_cost) * Number(item.quantity)));
-      return { cogs: 0, earnings: totalRevenue }; // No product numbers, so COGS is 0
-    }
-
-    // Fetch all relevant products in one go (or batched if too many)
-    // This assumes product_no is unique and directly usable for lookup.
-    // For simplicity, fetching all products if specific filtering is complex or not performant for small datasets.
-    const productsRef = collection(this.firestoreDb, 'products');
-    // A more optimized query would be: query(productsRef, where('product_no', 'in', productNos))
-    // However, 'in' queries are limited to 30 items. If more, batching or fetching all is needed.
-    // For this example, let's assume fetching relevant products or all if the list is small.
-    // This part needs a robust strategy for fetching product cost prices.
-    // Placeholder: fetch all products and map. In a real app, optimize this.
-    const productsSnap = await firstValueFrom(collectionData(query(productsRef), {idField: 'id'}) as Observable<Product[]>);
-    const productCostMap = new Map<string, number>();
-    productsSnap.forEach(p => {
-      if (p.product_no && p.costPrice !== undefined) {
-        productCostMap.set(p.product_no, Number(p.costPrice));
-      }
-    });
-
     items.forEach(item => {
       const itemRevenue = Number(item.item_cost) * Number(item.quantity);
       totalRevenue += itemRevenue;
       const costPrice = productCostMap.get(item.product_no);
       if (costPrice !== undefined) {
         totalCogs += costPrice * Number(item.quantity);
+      } else {
+        // Optional: Log or handle missing cost price for a product in an order
+        console.warn(`Cost price not found for product_no: ${item.product_no}. COGS for this item will be 0.`);
       }
     });
 
@@ -95,8 +101,11 @@ export class OrderService {
       // Decide if we should proceed if this part fails. For now, we do.
     }
 
+    // Fetch product cost map
+    const productCostMap = await this.getProductCostMap();
+
     // Calculate total earnings
-    const { earnings: totalEarnings } = await this._calculateCogsAndEarnings(itemsForAggregation);
+    const { earnings: totalEarnings } = await this._calculateCogsAndEarnings(itemsForAggregation, productCostMap);
 
     // Prepare and save the main order document
     const ordersCollection = collection(this.firestore, 'orders');

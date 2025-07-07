@@ -2,7 +2,8 @@ import { Injectable } from '@angular/core';
 import { OrderService } from './services/order.service';
 import { Order, OrderItem } from './model/order.model';
 import { Product } from './model/product.model';
-import { Observable, map, of, switchMap, forkJoin, from, catchError, startWith } from 'rxjs';
+import { ProfitAnalyticsOrderDetail, ProfitAnalyticsItemDetail, MonthlyProfitSummary } from './model/analytics.model'; // Import new models
+import { Observable, map, of, switchMap, forkJoin, from, catchError, startWith, combineLatest } from 'rxjs'; // Added combineLatest
 import { Timestamp, Firestore, collection, query, where, getDocs } from '@angular/fire/firestore';
 import * as Highcharts from 'highcharts';
 
@@ -93,6 +94,61 @@ export class DashboardService {
           isLoading: false,
           error: true
         });
+      })
+    );
+  }
+
+  public getMonthlyProfitSummaryData(): Observable<ChartData<MonthlyProfitSummary[]>> {
+    return this.getProfitMarginAnalyticsData().pipe(
+      map(analyticsChartData => {
+        if (analyticsChartData.error || !analyticsChartData.data) {
+          return { isLoading: false, error: analyticsChartData.error, data: [] };
+        }
+
+        const monthlyAggregates: { [monthKey: string]: { totalRevenue: number; totalCOGS: number; totalGrossProfit: number; totalOrders: number } } = {};
+        const monthYearFormat = new Intl.DateTimeFormat('en-US', { month: 'short', year: 'numeric' }); // e.g., Jan 2023
+
+        analyticsChartData.data.forEach(orderDetail => {
+          const orderDate = this.safeGetDate(orderDetail.orderDate);
+          if (orderDate) {
+            const monthKey = monthYearFormat.format(orderDate);
+            if (!monthlyAggregates[monthKey]) {
+              monthlyAggregates[monthKey] = { totalRevenue: 0, totalCOGS: 0, totalGrossProfit: 0, totalOrders: 0 };
+            }
+            monthlyAggregates[monthKey].totalRevenue += orderDetail.totalRevenue;
+            monthlyAggregates[monthKey].totalCOGS += orderDetail.totalCOGS;
+            monthlyAggregates[monthKey].totalGrossProfit += orderDetail.totalGrossProfit;
+            monthlyAggregates[monthKey].totalOrders += 1;
+          }
+        });
+
+        const summary: MonthlyProfitSummary[] = Object.keys(monthlyAggregates).map(monthKey => {
+          const aggregate = monthlyAggregates[monthKey];
+          let overallProfitMargin = 0;
+          if (aggregate.totalRevenue > 0) {
+            overallProfitMargin = (aggregate.totalGrossProfit / aggregate.totalRevenue) * 100;
+          } else if (aggregate.totalGrossProfit < 0) {
+            overallProfitMargin = -Infinity; // Or other appropriate value for 0 revenue with loss
+          }
+          return {
+            monthYear: monthKey,
+            totalRevenue: aggregate.totalRevenue,
+            totalCOGS: aggregate.totalCOGS,
+            totalGrossProfit: aggregate.totalGrossProfit,
+            overallProfitMargin: overallProfitMargin,
+            totalOrders: aggregate.totalOrders,
+          };
+        });
+
+        // Sort by date for chronological display, assuming monthKey can be parsed back to Date
+        summary.sort((a, b) => new Date(a.monthYear).getTime() - new Date(b.monthYear).getTime());
+
+        return { isLoading: false, data: summary };
+      }),
+      startWith({ isLoading: true, data: [] } as ChartData<MonthlyProfitSummary[]>), // Handled by getProfitMarginAnalyticsData, but good for safety
+      catchError(error => { // This specific catchError might be redundant if getProfitMarginAnalyticsData handles it well
+        console.error('Error processing monthly profit summary:', error);
+        return of({ isLoading: false, error: true, data: [] } as ChartData<MonthlyProfitSummary[]>);
       })
     );
   }
@@ -514,6 +570,77 @@ export class DashboardService {
       catchError(error => {
         console.error('Error fetching top selling products data:', error);
         return of({ isLoading: false, error: true, data: [] } as SalesByProductData);
+      })
+    );
+  }
+
+  public getProfitMarginAnalyticsData(): Observable<ChartData<ProfitAnalyticsOrderDetail[]>> {
+    return combineLatest([
+      this.orderService.getAllOrders(),
+      from(this.orderService.getProductCostMap()) // Convert Promise to Observable
+    ]).pipe(
+      map(([orders, productCostMap]) => {
+        const analyticsDetails: ProfitAnalyticsOrderDetail[] = orders.map(order => {
+          const itemsDetails: ProfitAnalyticsItemDetail[] = (order.items || []).map(item => {
+            const costPricePerUnit = productCostMap.get(item.product_no) || 0;
+            const sellingPricePerUnit = Number(item.item_cost) || 0; // Already per unit
+            const quantity = Number(item.quantity) || 0;
+
+            let grossProfitPerUnit = 0;
+            let profitMarginPercentage = 0;
+
+            if (sellingPricePerUnit > 0) { // Avoid division by zero for margin
+              grossProfitPerUnit = sellingPricePerUnit - costPricePerUnit;
+              profitMarginPercentage = (grossProfitPerUnit / sellingPricePerUnit) * 100;
+            } else if (costPricePerUnit > 0) { // Negative profit if selling price is 0 but cost exists
+              grossProfitPerUnit = -costPricePerUnit;
+              profitMarginPercentage = -Infinity; // Or handle as per business logic for $0 selling price
+            }
+
+
+            return {
+              SKU: item.product_no,
+              productName: item.product_name,
+              quantity: quantity,
+              sellingPricePerUnit: sellingPricePerUnit,
+              costPricePerUnit: costPricePerUnit,
+              grossProfitPerUnit: grossProfitPerUnit,
+              profitMarginPercentage: profitMarginPercentage,
+              totalRevenueForItem: sellingPricePerUnit * quantity,
+              totalCostForItem: costPricePerUnit * quantity,
+              totalProfitForItem: grossProfitPerUnit * quantity,
+            };
+          });
+
+          const totalRevenue = Number(order.total_cost) || 0;
+          // totalEarnings is already Gross Profit (Revenue - COGS)
+          const totalGrossProfit = Number(order.totalEarnings) || 0;
+          const totalCOGS = totalRevenue - totalGrossProfit;
+
+          let overallOrderProfitMargin = 0;
+          if (totalRevenue > 0) { // Avoid division by zero
+            overallOrderProfitMargin = (totalGrossProfit / totalRevenue) * 100;
+          } else if (totalGrossProfit < 0) { // If revenue is 0 but there's a loss
+            overallOrderProfitMargin = -Infinity;
+          }
+
+          return {
+            orderId: order.id,
+            orderDate: order.created_date,
+            customerName: order.customer_name,
+            totalRevenue: totalRevenue,
+            totalCOGS: totalCOGS,
+            totalGrossProfit: totalGrossProfit,
+            overallOrderProfitMargin: overallOrderProfitMargin,
+            items: itemsDetails,
+          };
+        });
+        return { isLoading: false, data: analyticsDetails };
+      }),
+      startWith({ isLoading: true, data: [] } as ChartData<ProfitAnalyticsOrderDetail[]>),
+      catchError(error => {
+        console.error('Error fetching profit margin analytics data:', error);
+        return of({ isLoading: false, error: true, data: [] } as ChartData<ProfitAnalyticsOrderDetail[]>);
       })
     );
   }

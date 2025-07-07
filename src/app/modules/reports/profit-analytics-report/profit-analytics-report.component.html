@@ -1,0 +1,115 @@
+<div class="container-fluid page">
+  <div class="page-header">
+    <h1>Profit Margin Analytics Report</h1>
+  </div>
+
+  <!-- Monthly Summary Section -->
+  <div class="page-content">
+    <h2>Monthly Profit Summary</h2>
+    <ng-container *ngIf="monthlySummary$ | async as summaryData">
+      <div *ngIf="summaryData.isLoading" class="loading-indicator">
+        <p>Loading monthly summary...</p> <!-- Replace with mat-progress-bar if available -->
+      </div>
+      <div *ngIf="summaryData.error" class="error-message">
+        <p>Error loading monthly summary. Please try again later.</p>
+      </div>
+      <div *ngIf="!summaryData.isLoading && !summaryData.error && summaryData.data?.length === 0" class="empty-state">
+        <p>No monthly summary data available.</p>
+      </div>
+      <div *ngIf="!summaryData.isLoading && !summaryData.error && summaryData.data && summaryData.data.length > 0" class="table-responsive">
+        <table class="table table-striped table-hover">
+          <thead>
+            <tr>
+              <th>Month-Year</th>
+              <th class="text-right">Total Revenue</th>
+              <th class="text-right">Total COGS</th>
+              <th class="text-right">Total Gross Profit</th>
+              <th class="text-right">Total Orders</th>
+              <th class="text-right">Overall Profit Margin</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let month of summaryData.data">
+              <td>{{ month.monthYear }}</td>
+              <td class="text-right">{{ month.totalRevenue | currency:'USD':'symbol':'1.2-2' }}</td>
+              <td class="text-right">{{ month.totalCOGS | currency:'USD':'symbol':'1.2-2' }}</td>
+              <td class="text-right">{{ month.totalGrossProfit | currency:'USD':'symbol':'1.2-2' }}</td>
+              <td class="text-right">{{ month.totalOrders }}</td>
+              <td class="text-right" [class.text-danger]="month.overallProfitMargin < 0">
+                {{ month.overallProfitMargin | number:'1.2-2' }}%
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </ng-container>
+  </div>
+
+  <!-- Detailed Order Analytics Section -->
+  <div class="page-content mt-4">
+    <h2>Detailed Order Profitability</h2>
+    <ng-container *ngIf="detailedOrders$ | async as ordersData">
+      <div *ngIf="ordersData.isLoading" class="loading-indicator">
+        <p>Loading detailed order data...</p> <!-- Replace with mat-progress-bar if available -->
+      </div>
+      <div *ngIf="ordersData.error" class="error-message">
+        <p>Error loading detailed order data. Please try again later.</p>
+      </div>
+      <div *ngIf="!ordersData.isLoading && !ordersData.error && ordersData.data?.length === 0" class="empty-state">
+        <p>No detailed order data available.</p>
+      </div>
+      <div *ngIf="!ordersData.isLoading && !ordersData.error && ordersData.data && ordersData.data.length > 0">
+        <div *ngFor="let order of ordersData.data" class="card mb-3">
+          <div class="card-header d-flex justify-content-between align-items-center" (click)="toggleOrderItems(order.orderId)" style="cursor: pointer;">
+            <span>
+              <strong>Order ID:</strong> {{ order.orderId }} |
+              <strong>Date:</strong> {{ order.orderDate | date:'mediumDate' }} |
+              <strong>Customer:</strong> {{ order.customerName || 'N/A' }}
+            </span>
+            <button class="btn btn-sm btn-link">{{ isOrderExpanded(order.orderId) ? 'Collapse' : 'Expand' }}</button>
+          </div>
+          <div class="card-body">
+            <p><strong>Total Revenue:</strong> {{ order.totalRevenue | currency:'USD':'symbol':'1.2-2' }}</p>
+            <p><strong>Total COGS:</strong> {{ order.totalCOGS | currency:'USD':'symbol':'1.2-2' }}</p>
+            <p><strong>Total Gross Profit:</strong> <span [class.text-danger]="order.totalGrossProfit < 0">{{ order.totalGrossProfit | currency:'USD':'symbol':'1.2-2' }}</span></p>
+            <p><strong>Overall Order Profit Margin:</strong> <span [class.text-danger]="order.overallOrderProfitMargin < 0">{{ order.overallOrderProfitMargin | number:'1.2-2' }}%</span></p>
+
+            <div *ngIf="isOrderExpanded(order.orderId)" class="mt-3 table-responsive">
+              <h5>Order Items:</h5>
+              <table class="table table-sm table-bordered">
+                <thead>
+                  <tr>
+                    <th>SKU</th>
+                    <th>Product Name</th>
+                    <th class="text-right">Qty</th>
+                    <th class="text-right">Selling Price/Unit</th>
+                    <th class="text-right">Cost Price/Unit</th>
+                    <th class="text-right">GP/Unit</th>
+                    <th class="text-right">Margin %</th>
+                    <th class="text-right">Total Item Revenue</th>
+                    <th class="text-right">Total Item Cost</th>
+                    <th class="text-right">Total Item Profit</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let item of order.items">
+                    <td>{{ item.SKU }}</td>
+                    <td>{{ item.productName || 'N/A' }}</td>
+                    <td class="text-right">{{ item.quantity }}</td>
+                    <td class="text-right">{{ item.sellingPricePerUnit | currency:'USD':'symbol':'1.2-2' }}</td>
+                    <td class="text-right">{{ item.costPricePerUnit | currency:'USD':'symbol':'1.2-2' }}</td>
+                    <td class="text-right" [class.text-danger]="item.grossProfitPerUnit < 0">{{ item.grossProfitPerUnit | currency:'USD':'symbol':'1.2-2' }}</td>
+                    <td class="text-right" [class.text-danger]="item.profitMarginPercentage < 0">{{ item.profitMarginPercentage | number:'1.2-2' }}%</td>
+                    <td class="text-right">{{ item.totalRevenueForItem | currency:'USD':'symbol':'1.2-2' }}</td>
+                    <td class="text-right">{{ item.totalCostForItem | currency:'USD':'symbol':'1.2-2' }}</td>
+                    <td class="text-right" [class.text-danger]="item.totalProfitForItem < 0">{{ item.totalProfitForItem | currency:'USD':'symbol':'1.2-2' }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </ng-container>
+  </div>
+</div>

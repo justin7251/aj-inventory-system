@@ -1,0 +1,46 @@
+<div class="connector-container">
+  <h2>Amazon Integration</h2>
+
+  <div class="sync-section">
+    <button (click)="syncAmazonOrders()" [disabled]="isLoading" mat-raised-button color="primary">
+      <mat-icon>sync</mat-icon>
+      {{ isLoading ? 'Syncing Orders...' : 'Sync Amazon Orders' }}
+    </button>
+    <!-- Add buttons for product sync and inventory update if needed -->
+    <!--
+    <button (click)="syncAmazonProducts()" [disabled]="isLoading" mat-raised-button>
+      Sync Products
+    </button>
+    <button (click)="updateAmazonInventory()" [disabled]="isLoading" mat-raised-button>
+      Update Inventory
+    </button>
+    -->
+  </div>
+
+  <mat-progress-bar mode="indeterminate" *ngIf="isLoading"></mat-progress-bar>
+
+  <div class="sync-info" *ngIf="lastSyncTime">
+    <p>Last sync attempt: {{ lastSyncTime | date:'medium' }}</p>
+    <p>Orders Processed: {{ ordersProcessed }}</p>,
+    <p>Orders Failed: {{ ordersFailed }}</p>
+  </div>
+
+  <div *ngIf="errorMessages.length > 0" class="error-messages">
+    <h4>Sync Errors:</h4>
+    <ul>
+      <li *ngFor="let msg of errorMessages">{{ msg }}</li>
+    </ul>
+  </div>
+
+  <div class="integration-details">
+    <h3>Configuration (Placeholder)</h3>
+    <p>
+      Amazon integration allows you to sync orders from your Amazon Seller Central account.
+      Future enhancements will include product listing synchronization and inventory updates.
+    </p>
+    <p>
+      <em>Note: This integration currently uses mock data. Full API connectivity is pending.</em>
+    </p>
+    <!-- Placeholder for Amazon specific settings or status -->
+  </div>
+</div>

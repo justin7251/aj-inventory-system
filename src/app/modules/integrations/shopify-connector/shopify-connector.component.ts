@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
-import { ShopifyService } from '../../services/shopify.service'; // Changed import
-import { OrderService } from '../../services/order.service'; // Changed ItemService to OrderService
+import { ShopifyService } from '../../modules/services/shopify.service'; // Changed import
+import { OrderService } from '../../modules/services/order.service'; // Changed ItemService to OrderService
 import { Order } from '../../model/order.model';
 
 @Component({

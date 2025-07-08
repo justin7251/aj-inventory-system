@@ -1,0 +1,177 @@
+<div class="connector-container">
+  <h2>Shippo Multi-Carrier Shipping</h2>
+
+  <!-- Error Messages -->
+  <div *ngIf="errorMessages.length > 0" class="error-messages alert alert-danger">
+    <h4>Errors:</h4>
+    <ul>
+      <li *ngFor="let msg of errorMessages">{{ msg }}</li>
+    </ul>
+  </div>
+
+  <!-- Shipment Details & Rates Section -->
+  <mat-card class="mb-3">
+    <mat-card-header>
+      <mat-card-title>1. Define Shipment & Get Rates</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <div class="row">
+        <!-- Address From -->
+        <div class="col-md-6" [formGroup]="addressFromForm">
+          <h5>Address From:</h5>
+          <mat-form-field class="w-100"><input matInput placeholder="Name" formControlName="name"></mat-form-field>
+          <mat-form-field class="w-100"><input matInput placeholder="Street 1" formControlName="street1"></mat-form-field>
+          <mat-form-field class="w-100"><input matInput placeholder="City" formControlName="city"></mat-form-field>
+          <mat-form-field class="w-100"><input matInput placeholder="State (e.g., CA)" formControlName="state"></mat-form-field>
+          <mat-form-field class="w-100"><input matInput placeholder="ZIP Code" formControlName="zip"></mat-form-field>
+          <mat-form-field class="w-100"><input matInput placeholder="Country (e.g., US)" formControlName="country"></mat-form-field>
+          <mat-form-field class="w-100"><input matInput placeholder="Phone" formControlName="phone"></mat-form-field>
+        </div>
+        <!-- Address To -->
+        <div class="col-md-6" [formGroup]="addressToForm">
+          <h5>Address To:</h5>
+          <mat-form-field class="w-100"><input matInput placeholder="Name" formControlName="name"></mat-form-field>
+          <mat-form-field class="w-100"><input matInput placeholder="Street 1" formControlName="street1"></mat-form-field>
+          <mat-form-field class="w-100"><input matInput placeholder="City" formControlName="city"></mat-form-field>
+          <mat-form-field class="w-100"><input matInput placeholder="State (e.g., CA)" formControlName="state"></mat-form-field>
+          <mat-form-field class="w-100"><input matInput placeholder="ZIP Code" formControlName="zip"></mat-form-field>
+          <mat-form-field class="w-100"><input matInput placeholder="Country (e.g., US)" formControlName="country"></mat-form-field>
+          <mat-form-field class="w-100"><input matInput placeholder="Phone" formControlName="phone"></mat-form-field>
+        </div>
+      </div>
+      <hr>
+      <!-- Parcel Details -->
+      <div [formGroup]="parcelForm">
+        <h5>Parcel Details:</h5>
+        <div class="row">
+          <div class="col-md-3"><mat-form-field class="w-100"><input matInput type="text" placeholder="Length" formControlName="length"></mat-form-field></div>
+          <div class="col-md-3"><mat-form-field class="w-100"><input matInput type="text" placeholder="Width" formControlName="width"></mat-form-field></div>
+          <div class="col-md-3"><mat-form-field class="w-100"><input matInput type="text" placeholder="Height" formControlName="height"></mat-form-field></div>
+          <div class="col-md-3">
+            <mat-form-field class="w-100">
+              <mat-label>Distance Unit</mat-label>
+              <mat-select formControlName="distance_unit">
+                <mat-option value="in">in</mat-option>
+                <mat-option value="cm">cm</mat-option>
+              </mat-select>
+            </mat-form-field>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-md-6"><mat-form-field class="w-100"><input matInput type="text" placeholder="Weight" formControlName="weight"></mat-form-field></div>
+          <div class="col-md-6">
+            <mat-form-field class="w-100">
+              <mat-label>Mass Unit</mat-label>
+              <mat-select formControlName="mass_unit">
+                <mat-option value="lb">lb</mat-option>
+                <mat-option value="oz">oz</mat-option>
+                <mat-option value="kg">kg</mat-option>
+                <mat-option value="g">g</mat-option>
+              </mat-select>
+            </mat-form-field>
+          </div>
+        </div>
+      </div>
+      <button mat-raised-button color="primary" (click)="getShipmentRates()" [disabled]="isLoadingRates || addressFromForm.invalid || addressToForm.invalid || parcelForm.invalid">
+        <mat-icon>calculate</mat-icon>
+        {{ isLoadingRates ? 'Calculating...' : 'Get Shippo Rates' }}
+      </button>
+    </mat-card-content>
+    <mat-card-actions *ngIf="isLoadingRates">
+      <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+    </mat-card-actions>
+    <div *ngIf="rates.length > 0 && !isLoadingRates" class="mt-3 results-section">
+      <h4>Available Rates (Mock):</h4>
+      <mat-radio-group [(ngModel)]="selectedRateId" (ngModelChange)="selectRate($event)">
+        <ul class="list-group">
+          <li *ngFor="let rate of rates" class="list-group-item d-flex align-items-center">
+            <mat-radio-button [value]="rate.object_id" class="mr-2"></mat-radio-button>
+            <img *ngIf="rate.provider_image_75" [src]="rate.provider_image_75" [alt]="rate.provider" class="carrier-logo mr-2">
+            {{ rate.provider }} {{ rate.servicelevel.name }}: {{ rate.amount | currency:rate.currency }}
+            <span *ngIf="rate.estimated_days"> (Est. {{ rate.estimated_days }} days)</span>
+          </li>
+        </ul>
+      </mat-radio-group>
+    </div>
+  </mat-card>
+
+  <!-- Create Label Section -->
+  <mat-card class="mb-3" *ngIf="rates.length > 0">
+    <mat-card-header>
+      <mat-card-title>2. Create Shipping Label</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <p *ngIf="!selectedRateId" class="text-muted">Select a rate above to create a label.</p>
+      <button mat-raised-button color="accent" (click)="createLabel()" [disabled]="isLoadingLabel || !selectedRateId">
+        <mat-icon>receipt_long</mat-icon>
+        {{ isLoadingLabel ? 'Creating...' : 'Create Shippo Label' }}
+      </button>
+    </mat-card-content>
+    <mat-card-actions *ngIf="isLoadingLabel">
+      <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+    </mat-card-actions>
+    <div *ngIf="transactionInfo && !isLoadingLabel" class="mt-3 results-section">
+      <h4>Label Transaction (Mock):</h4>
+      <p>Status: <strong>{{ transactionInfo.status }}</strong></p>
+      <p>Tracking Number: <strong>{{ transactionInfo.tracking_number }}</strong></p>
+      <p><a [href]="transactionInfo.label_url" target="_blank" mat-stroked-button>Download Label (Mock URL)</a></p>
+      <p *ngIf="transactionInfo.tracking_url_provider"><a [href]="transactionInfo.tracking_url_provider" target="_blank" mat-stroked-button>Track via Provider (Mock URL)</a></p>
+      <ul *ngIf="transactionInfo.messages && transactionInfo.messages.length > 0">
+        <li *ngFor="let message of transactionInfo.messages">{{message.text}}</li>
+      </ul>
+    </div>
+  </mat-card>
+
+  <!-- Track Package Section -->
+  <mat-card>
+    <mat-card-header>
+      <mat-card-title>Track Package via Shippo</mat-card-title>
+    </mat-card-header>
+    <mat-card-content [formGroup]="trackingForm">
+      <div class="row">
+        <div class="col-md-6">
+          <mat-form-field class="w-100">
+            <mat-label>Carrier Token</mat-label>
+            <mat-select formControlName="carrierToken">
+              <mat-option *ngFor="let carrier of shippoCarriers" [value]="carrier.token">
+                {{carrier.name}} ({{carrier.token}})
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
+        <div class="col-md-6">
+          <mat-form-field class="w-100">
+            <mat-label>Tracking Number</mat-label>
+            <input matInput formControlName="trackingNumber">
+          </mat-form-field>
+        </div>
+      </div>
+      <button mat-raised-button color="warn" (click)="trackPackage()" [disabled]="isLoadingTracking || trackingForm.invalid">
+        <mat-icon>pin_drop</mat-icon>
+        {{ isLoadingTracking ? 'Tracking...' : 'Track via Shippo' }}
+      </button>
+    </mat-card-content>
+    <mat-card-actions *ngIf="isLoadingTracking">
+      <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+    </mat-card-actions>
+    <div *ngIf="trackingInfo && !isLoadingTracking" class="mt-3 results-section">
+      <h4>Tracking Information for {{ trackingInfo.tracking_number }} (Mock):</h4>
+      <p>Carrier: {{ trackingInfo.carrier }}</p>
+      <p>Status: {{ getTrackingStatus(trackingInfo) }}</p>
+      <p *ngIf="trackingInfo.eta">Estimated Delivery: {{ trackingInfo.eta | date:'medium' }}</p>
+      <div *ngIf="trackingInfo.tracking_history && trackingInfo.tracking_history.length > 0">
+        <h5>History:</h5>
+        <ul>
+          <li *ngFor="let event of trackingInfo.tracking_history">
+            {{event.status_details}} on {{event.status_date | date:'medium'}}
+            <span *ngIf="event.location?.city"> at {{event.location.city}}, {{event.location.state}}</span>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </mat-card>
+
+  <div class="integration-details mt-4">
+    <p><em>Note: This Shippo integration uses mock data. Full API connectivity is pending. Address validation and customs declarations for international shipping are not yet implemented in this mock.</em></p>
+  </div>
+</div>

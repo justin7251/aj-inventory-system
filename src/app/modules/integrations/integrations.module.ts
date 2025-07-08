@@ -1,42 +1,54 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Routes } from '@angular/router';
-import { HttpClientModule } from '@angular/common/http'; // Needed for EbayService
+import { HttpClientModule } from '@angular/common/http';
+import { ReactiveFormsModule } from '@angular/forms'; // Import ReactiveFormsModule
 
+import { SharedModule } from '../../shared/shared.module';
+
+import { IntegrationsLandingComponent } from './integrations-landing/integrations-landing.component';
 import { EbayConnectorComponent } from './ebay-connector/ebay-connector.component';
-import { ShopifyConnectorComponent } from './shopify-connector/shopify-connector.component'; // Import new component
-import { IntegrationsLandingComponent } from './integrations-landing/integrations-landing.component'; // Import landing component
-import { SharedModule } from '../../shared/shared.module'; // For UI components like buttons
+import { ShopifyConnectorComponent } from './shopify-connector/shopify-connector.component';
+import { AmazonConnectorComponent } from './amazon-connector/amazon-connector.component';
+import { QuickbooksConnectorComponent } from './quickbooks-connector/quickbooks-connector.component';
+import { XeroConnectorComponent } from './xero-connector/xero-connector.component';
+import { FedexConnectorComponent } from './fedex-connector/fedex-connector.component';
+import { UpsConnectorComponent } from './ups-connector/ups-connector.component';
+import { ShippoConnectorComponent } from './shippo-connector/shippo-connector.component';
 
 const routes: Routes = [
-  {
-    path: '', // Default route for this module, now the landing page
-    component: IntegrationsLandingComponent
-  },
-  {
-    path: 'ebay', // Route for eBay connector
-    component: EbayConnectorComponent
-  },
-  {
-    path: 'shopify', // Route for Shopify connector
-    component: ShopifyConnectorComponent
-  }
+  { path: '', component: IntegrationsLandingComponent },
+  { path: 'ebay', component: EbayConnectorComponent },
+  { path: 'shopify', component: ShopifyConnectorComponent },
+  { path: 'amazon', component: AmazonConnectorComponent },
+  { path: 'quickbooks', component: QuickbooksConnectorComponent },
+  { path: 'xero', component: XeroConnectorComponent },
+  { path: 'fedex', component: FedexConnectorComponent },
+  { path: 'ups', component: UpsConnectorComponent },
+  { path: 'shippo', component: ShippoConnectorComponent },
 ];
 
 @NgModule({
   declarations: [
+    IntegrationsLandingComponent,
     EbayConnectorComponent,
-    ShopifyConnectorComponent, // Declare new component
-    IntegrationsLandingComponent // Declare landing component
+    ShopifyConnectorComponent,
+    AmazonConnectorComponent,
+    QuickbooksConnectorComponent,
+    XeroConnectorComponent,
+    FedexConnectorComponent,
+    UpsConnectorComponent,
+    ShippoConnectorComponent
   ],
   imports: [
     CommonModule,
     RouterModule.forChild(routes),
-    HttpClientModule, // Make sure HttpClientModule is available for EbayService
-    SharedModule      // Import SharedModule for Material components or other UI elements
+    HttpClientModule, // For services that use HttpClient
+    ReactiveFormsModule, // Add for form functionalities in new components
+    SharedModule      // For Material components and other shared UI elements
   ],
   providers: [
-    // EbayService and ItemService are already providedIn: 'root'
+    // Services are typically providedIn: 'root'
   ]
 })
 export class IntegrationsModule { }

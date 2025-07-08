@@ -1,0 +1,102 @@
+.connector-container {
+  padding: 20px;
+  max-width: 900px;
+  margin: auto;
+}
+
+.sync-section {
+  margin-bottom: 20px;
+  display: flex;
+  gap: 10px; /* Space between buttons */
+}
+
+.sync-section button mat-icon {
+  margin-right: 8px;
+}
+
+mat-progress-bar {
+  margin-bottom: 20px;
+}
+
+.sync-info {
+  margin-top: 15px;
+  padding: 10px;
+  background-color: #f0f0f0;
+  border-radius: 4px;
+  border: 1px solid #e0e0e0;
+  font-size: 0.9em;
+}
+
+.success-messages, .error-messages {
+  margin-top: 15px;
+  padding: 10px;
+  border-radius: 4px;
+}
+
+.success-messages {
+  background-color: #e8f5e9; /* Light green */
+  border: 1px solid #a5d6a7;
+  color: #2e7d32; /* Darker green */
+}
+
+.error-messages {
+  background-color: #ffebee; /* Light red */
+  border: 1px solid #ef9a9a;
+  color: #c62828; /* Darker red */
+}
+
+.success-messages h4, .error-messages h4 {
+  margin-top: 0;
+}
+
+.success-messages ul, .error-messages ul {
+  padding-left: 20px;
+  margin-bottom: 0;
+}
+
+.integration-details {
+  margin-top: 20px;
+  padding: 15px;
+  background-color: #e3f2fd; /* Light blue */
+  border: 1px solid #90caf9;
+  border-radius: 4px;
+}
+
+.integration-details h3 {
+  margin-top: 0;
+  color: #0d47a1; /* Dark blue */
+}
+
+/* Basic styling for list groups if bootstrap is not fully available */
+.list-group {
+  padding-left: 0;
+  margin-bottom: 20px;
+}
+
+.list-group-item {
+  position: relative;
+  display: block;
+  padding: 0.75rem 1.25rem;
+  background-color: #fff;
+  border: 1px solid rgba(0,0,0,.125);
+}
+
+.list-group-item:first-child {
+  border-top-left-radius: .25rem;
+  border-top-right-radius: .25rem;
+}
+
+.list-group-item:last-child {
+  border-bottom-right-radius: .25rem;
+  border-bottom-left-radius: .25rem;
+  margin-bottom: 0;
+  border-bottom-width: 1px;
+}
+
+.list-group-item + .list-group-item {
+  border-top-width: 0;
+}
+
+.mr-2 {
+  margin-right: 0.5rem; /* For spacing between buttons if not using flex gap effectively */
+}

@@ -1,15 +1,27 @@
 <div class="container mt-4">
   <mat-card>
     <mat-card-header>
-      <mat-card-title>eBay Order Synchronization</mat-card-title>
-      <mat-card-subtitle>Fetch new orders from eBay and add them to the system.</mat-card-subtitle>
+      <mat-card-title>eBay Integration Management</mat-card-title>
+      <mat-card-subtitle>Manage orders, products, and inventory with eBay.</mat-card-subtitle>
     </mat-card-header>
     <mat-card-content>
-      <button mat-raised-button color="primary" (click)="syncEbayOrders()" [disabled]="isLoading">
-        <mat-icon *ngIf="!isLoading">sync</mat-icon>
-        <mat-progress-spinner *ngIf="isLoading" mode="indeterminate" diameter="20" class="mr-2"></mat-progress-spinner>
-        {{ isLoading ? 'Syncing...' : 'Sync New eBay Orders' }}
-      </button>
+      <div class="button-group">
+        <button mat-raised-button color="primary" (click)="syncEbayOrders()" [disabled]="isLoading" class="mr-2">
+          <mat-icon *ngIf="!isLoading">sync</mat-icon>
+          <mat-progress-spinner *ngIf="isLoading" mode="indeterminate" diameter="20" class="button-spinner"></mat-progress-spinner>
+          {{ isLoading ? 'Syncing...' : 'Sync eBay Orders' }}
+        </button>
+        <button mat-raised-button (click)="syncEbayProducts()" [disabled]="isLoading" class="mr-2">
+          <mat-icon *ngIf="!isLoading">cloud_upload</mat-icon>
+          <mat-progress-spinner *ngIf="isLoading" mode="indeterminate" diameter="20" class="button-spinner"></mat-progress-spinner>
+          {{ isLoading ? 'Syncing...' : 'Sync eBay Products' }}
+        </button>
+        <button mat-raised-button (click)="updateEbayInventory()" [disabled]="isLoading">
+          <mat-icon *ngIf="!isLoading">inventory_2</mat-icon>
+          <mat-progress-spinner *ngIf="isLoading" mode="indeterminate" diameter="20" class="button-spinner"></mat-progress-spinner>
+          {{ isLoading ? 'Updating...' : 'Update eBay Inventory' }}
+        </button>
+      </div>
 
       <div *ngIf="lastSyncTime" class="mt-3">
         <p><strong>Last Sync Attempt:</strong> {{ lastSyncTime | date:'medium' }}</p>

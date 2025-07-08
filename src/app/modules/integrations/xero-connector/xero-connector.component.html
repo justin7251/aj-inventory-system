@@ -1,0 +1,61 @@
+<div class="connector-container">
+  <h2>Xero Integration</h2>
+
+  <div class="sync-section">
+    <button (click)="syncDataToXero()" [disabled]="isLoading" mat-raised-button color="primary" class="mr-2">
+      <mat-icon>sync</mat-icon>
+      {{ isLoading ? 'Syncing Data...' : 'Sync Data to Xero' }}
+    </button>
+    <button (click)="fetchInvoicesFromXero()" [disabled]="isLoading" mat-raised-button>
+      <mat-icon>cloud_download</mat-icon>
+      {{ isLoading ? 'Fetching Invoices...' : 'Fetch Invoices from Xero' }}
+    </button>
+  </div>
+
+  <mat-progress-bar mode="indeterminate" *ngIf="isLoading"></mat-progress-bar>
+
+  <div class="sync-info" *ngIf="lastSyncTime && !isLoading">
+    <p>Last sync/fetch attempt: {{ lastSyncTime | date:'medium' }}</p>
+  </div>
+
+  <div *ngIf="successMessages.length > 0 && !isLoading" class="success-messages">
+    <h4>Sync/Fetch Report:</h4>
+    <ul>
+      <li *ngFor="let msg of successMessages">{{ msg }}</li>
+    </ul>
+  </div>
+
+  <div *ngIf="errorMessages.length > 0 && !isLoading" class="error-messages">
+    <h4>Errors:</h4>
+    <ul>
+      <li *ngFor="let msg of errorMessages">{{ msg }}</li>
+    </ul>
+  </div>
+
+  <div *ngIf="xeroInvoices.length > 0 && !isLoading" class="mt-4">
+    <h3>Fetched Xero Invoices (Mock Data)</h3>
+    <ul class="list-group">
+      <li *ngFor="let invoice of xeroInvoices" class="list-group-item">
+        ID: {{invoice.InvoiceID || 'N/A'}}, Num: {{invoice.InvoiceNumber || 'N/A'}}, Contact: {{invoice.Contact?.Name}}, Total: {{invoice.Total | currency}}, Status: {{invoice.Status}}
+        <div *ngIf="invoice.LineItems && invoice.LineItems.length > 0">
+          Items:
+          <ul>
+            <li *ngFor="let item of invoice.LineItems">
+              {{item.Description || 'Unknown Item'}}: {{item.LineAmount | currency}} (Qty: {{item.Quantity || 1}})
+            </li>
+          </ul>
+        </div>
+      </li>
+    </ul>
+  </div>
+
+  <div class="integration-details mt-4">
+    <h3>Configuration (Placeholder)</h3>
+    <p>
+      Xero integration enables syncing invoices, payments, and contacts/customers between your application and Xero.
+    </p>
+    <p>
+      <em>Note: This integration currently uses mock data and simulates API calls. Full API connectivity is pending.</em>
+    </p>
+  </div>
+</div>

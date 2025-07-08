@@ -8,7 +8,7 @@
       <p>Select an integration to manage:</p>
       <mat-nav-list>
         <a mat-list-item *ngFor="let integration of integrations" [routerLink]="integration.path" routerLinkActive="active-link">
-          <mat-icon matListItemIcon>storefront</mat-icon> <!-- Or a more specific icon -->
+          <mat-icon matListItemIcon>{{ integration.icon || 'settings_input_component' }}</mat-icon> <!-- Use integration specific icon or a default -->
           <div matListItemTitle>{{ integration.name }}</div>
           <div matListItemLine>{{ integration.description }}</div>
         </a>

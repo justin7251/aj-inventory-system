@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
-import { EbayService } from '../../services/ebay.service';
-import { OrderService } from '../../services/order.service'; // Changed ItemService to OrderService
+import { EbayService } from '../../modules/services/ebay.service'; // Corrected path
+import { OrderService } from '../../modules/services/order.service'; // Path was already corrected
 import { Order } from '../../model/order.model'; // Ensure this path is correct
 
 @Component({
@@ -66,6 +66,51 @@ export class EbayConnectorComponent implements OnInit {
         this.errorMessages.push(`Error fetching eBay orders: ${error.message || error}`);
         this.isLoading = false;
         this.lastSyncTime = new Date();
+      }
+    );
+  }
+
+  // Placeholder methods for other eBay functionalities
+  syncEbayProducts(): void {
+    this.isLoading = true;
+    this.errorMessages = []; // Clear previous errors
+    // Potentially add specific product processing counters if needed
+    this.ebayService.syncProductListings([] /* pass actual products from your app here */).subscribe(
+      (success) => {
+        if (success) {
+          // Handle success - maybe a success message or update UI
+          // e.g., this.productSyncSuccessMessage = "Products synced successfully!";
+          console.log('Ebay products synced successfully.');
+        } else {
+          this.errorMessages.push('Failed to sync eBay products.');
+        }
+        this.isLoading = false;
+      },
+      (error: any) => {
+        this.errorMessages.push(`Error syncing eBay products: ${error.message || error}`);
+        this.isLoading = false;
+      }
+    );
+  }
+
+  updateEbayInventory(): void {
+    this.isLoading = true;
+    this.errorMessages = []; // Clear previous errors
+    // Potentially add specific inventory update counters if needed
+    this.ebayService.updateInventory([] /* pass actual inventory updates from your app here */).subscribe(
+      (success) => {
+        if (success) {
+          // Handle success - maybe a success message or update UI
+          // e.g., this.inventoryUpdateMessage = "Inventory updated successfully!";
+          console.log('Ebay inventory updated successfully.');
+        } else {
+          this.errorMessages.push('Failed to update eBay inventory.');
+        }
+        this.isLoading = false;
+      },
+      (error: any) => {
+        this.errorMessages.push(`Error updating eBay inventory: ${error.message || error}`);
+        this.isLoading = false;
       }
     );
   }

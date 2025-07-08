@@ -78,6 +78,28 @@ export class EbayService {
   }
 
   /**
+   * Placeholder for syncing product listings with eBay.
+   * @param products - The products to sync.
+   * @returns An Observable indicating success or failure.
+   */
+  syncProductListings(products: any[]): Observable<boolean> {
+    console.warn('EbayService: syncProductListings is not implemented yet.');
+    // TODO: Implement actual API call to eBay Trading API or similar for listings
+    return of(true); // Placeholder success
+  }
+
+  /**
+   * Placeholder for updating inventory levels on eBay.
+   * @param inventoryUpdates - The inventory updates (e.g., SKU and new quantity).
+   * @returns An Observable indicating success or failure.
+   */
+  updateInventory(inventoryUpdates: any[]): Observable<boolean> {
+    console.warn('EbayService: updateInventory is not implemented yet.');
+    // TODO: Implement actual API call to eBay Inventory API or Trading API for inventory
+    return of(true); // Placeholder success
+  }
+
+  /**
    * Transforms a raw order object from the eBay API format to the application's Order model.
    * @param rawOrder The raw order data from eBay.
    * @returns An Order object.

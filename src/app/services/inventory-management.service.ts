@@ -20,10 +20,16 @@ export class InventoryManagementService {
 
   // --- Mock Data Store ---
   // In a real app, these would come from a backend API / database (e.g., Firestore)
+  private warehouses = new BehaviorSubject<Warehouse[]>([
+    { warehouseId: 'WHS-A', locationName: 'Main Warehouse', address: '123 Main St' },
+    { warehouseId: 'WHS-B', locationName: 'Secondary Warehouse', address: '456 Secondary Ave' },
+    { warehouseId: 'WHS-C', locationName: 'East Coast Hub', address: '789 East Coast Rd' },
+  ]);
   private products = new BehaviorSubject<Product[]>([
     // Sample Product
     { SKU: 'TSHIRT-BLK-M', name: 'Black T-Shirt, Medium', currentStock: { 'WHS-A': 50, 'WHS-B': 30 }, safetyStockQuantity: 10, preferredSupplierId: 'SUPPLIER-001' },
-    { SKU: 'MUG-COFFEE-XL', name: 'XL Coffee Mug', currentStock: { 'WHS-A': 100 }, safetyStockQuantity: 20, preferredSupplierId: 'SUPPLIER-002' },
+    { SKU: 'MUG-COFFEE-XL', name: 'XL Coffee Mug', currentStock: { 'WHS-A': 100, 'WHS-C': 75 }, safetyStockQuantity: 20, preferredSupplierId: 'SUPPLIER-002' },
+    { SKU: 'STICKER-LOGO', name: 'Logo Sticker Pack', currentStock: { 'WHS-A': 200, 'WHS-B': 150, 'WHS-C': 100 }, safetyStockQuantity: 50, preferredSupplierId: 'SUPPLIER-001' },
   ]);
   private salesOrders = new BehaviorSubject<SalesOrder[]>([
     // Sample Sales Data (ensure dates are useful for velocity calculation)
@@ -48,10 +54,39 @@ export class InventoryManagementService {
   supplierProductInfos$: Observable<SupplierProductInfo[]> = this.supplierProductInfos.asObservable();
   suppliers$: Observable<Supplier[]> = this.suppliers.asObservable();
   purchaseOrders$: Observable<PurchaseOrder[]> = this.purchaseOrders.asObservable();
+  warehouses$: Observable<Warehouse[]> = this.warehouses.asObservable(); // New Observable for warehouses
 
   constructor() { }
 
   // --- Core Logic Functions ---
+
+  /**
+   * Retrieves a product by its SKU.
+   */
+  getProductBySKU(sku: string, productsData?: Product[]): Observable<Product | undefined> {
+    return (productsData ? of(productsData) : this.products$).pipe(
+      map(products => products.find(p => p.SKU === sku))
+    );
+  }
+
+  /**
+   * Retrieves the current stock levels for a given SKU across all warehouses.
+   * Returns an empty object if the product or stock info is not found.
+   */
+  getProductStockByWarehouse(sku: string, productsData?: Product[]): Observable<{ [warehouseId: string]: number }> {
+    return this.getProductBySKU(sku, productsData).pipe(
+      map(product => product ? product.currentStock : {})
+    );
+  }
+
+  /**
+   * Retrieves a warehouse by its ID.
+   */
+  getWarehouseById(warehouseId: string, warehousesData?: Warehouse[]): Observable<Warehouse | undefined> {
+    return (warehousesData ? of(warehousesData) : this.warehouses$).pipe(
+      map(warehouses => warehouses.find(w => w.warehouseId === warehouseId))
+    );
+  }
 
   /**
    * Calculates average daily sales velocity for a given SKU.

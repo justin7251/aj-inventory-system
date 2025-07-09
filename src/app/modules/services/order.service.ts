@@ -2,9 +2,12 @@ import { Injectable } from '@angular/core';
 import { Firestore, collection, addDoc, doc, updateDoc, collectionData, docData, query, orderBy, runTransaction, serverTimestamp, DocumentReference, Timestamp, deleteDoc } from '@angular/fire/firestore'; // Added deleteDoc
 import { Order, OrderItem } from '../model/order.model';
 import { PackingQueueService } from './packing-queue.service';
-import { PackingItem } from '../model/packing-item.model';
-import { Product } from '../model/product.model'; // Needed for earnings calculation
-import { Observable, firstValueFrom, map, shareReplay } from 'rxjs'; // Added map and shareReplay
+import { PackingItem, PackingStatus } from '../model/packing-item.model'; // Added PackingStatus
+import { Product as AppProduct } from '../model/product.model'; // Renamed to avoid clash
+import { Observable, firstValueFrom, map, shareReplay, of } from 'rxjs'; // Added map, shareReplay, of
+import { InventoryManagementService } from '../../services/inventory-management.service'; // Added
+import { Product as InventoryProduct } from '../../models/inventory.models'; // Added to clarify product source for stock
+
 
 @Injectable({
   providedIn: 'root'
@@ -13,7 +16,8 @@ export class OrderService {
   constructor(
     public firestore: Firestore,
     private packingQueueService: PackingQueueService,
-    private firestoreDb: Firestore // Injected Firestore for product lookups
+    private firestoreDb: Firestore, // Injected Firestore for product lookups
+    private inventoryService: InventoryManagementService // Added
   ) {}
 
   private productCostMap$: Observable<Map<string, number>>;
@@ -152,27 +156,96 @@ export class OrderService {
       }
     }
 
-    // Add items to packing queue
+    // Add items to packing queue - NEW LOGIC
     if (newOrderRef.id && itemsForAggregation.length > 0) {
       for (const orderItem of itemsForAggregation) {
-        if (!orderItem.product_no || typeof orderItem.quantity !== 'number') {
-          console.warn('Skipping packing item due to missing product_no or quantity:', orderItem);
+        if (!orderItem.product_no || typeof orderItem.quantity !== 'number' || orderItem.quantity <= 0) {
+          console.warn('Skipping order item due to missing product_no, invalid quantity, or zero quantity:', orderItem);
           continue;
         }
-        const packingItemData: Omit<PackingItem, 'id' | 'creationDate' | 'lastUpdateDate'> = {
-          orderId: newOrderRef.id,
-          externalOrderId: orderData.id,
-          productId: orderItem.product_no,
-          productName: orderItem.product_name || 'N/A',
-          quantityToPack: orderItem.quantity,
-          status: 'pending',
-          customerName: orderData.customer_name,
-          deliveryAddress: orderData.delivery_address,
-        };
+
+        const sku = orderItem.product_no;
+        const quantityOrdered = Number(orderItem.quantity);
+        let remainingQuantityToFulfill = quantityOrdered;
+        const assignedPackingItems: Omit<PackingItem, 'id' | 'creationDate' | 'lastUpdateDate'>[] = [];
+
         try {
-          await this.packingQueueService.addItemToPackingQueue(packingItemData);
-        } catch (packError) {
-          console.error(`Failed to add item ${orderItem.product_no} to packing queue for order ${newOrderRef.id}:`, packError);
+          const stockByWarehouse = await firstValueFrom(this.inventoryService.getProductStockByWarehouse(sku));
+          const availableWarehouses = Object.keys(stockByWarehouse).filter(whId => stockByWarehouse[whId] > 0);
+
+          if (!availableWarehouses.length) {
+            console.warn(`No stock found for SKU ${sku} in any warehouse. Item cannot be fulfilled.`);
+            // TODO: Handle unfulfillable items - e.g., add to a backorder list or notify
+            continue;
+          }
+
+          // Attempt Single Warehouse Fulfillment
+          for (const warehouseId of availableWarehouses) {
+            if (stockByWarehouse[warehouseId] >= remainingQuantityToFulfill) {
+              assignedPackingItems.push({
+                orderId: newOrderRef.id,
+                externalOrderId: orderData.id,
+                productId: sku,
+                productName: orderItem.product_name || 'N/A',
+                quantityToPack: remainingQuantityToFulfill,
+                warehouseId: warehouseId, // Assigned warehouse
+                status: 'pending' as PackingStatus,
+                customerName: orderData.customer_name,
+                deliveryAddress: orderData.delivery_address,
+              });
+              remainingQuantityToFulfill = 0;
+              break;
+            }
+          }
+
+          // Attempt Multi-Warehouse Fulfillment (if not fully assigned)
+          if (remainingQuantityToFulfill > 0) {
+            assignedPackingItems.length = 0; // Clear previous attempts if any, start fresh for split
+            remainingQuantityToFulfill = quantityOrdered; // Reset for split logic
+
+            for (const warehouseId of availableWarehouses) { // Could sort warehouses by preference here
+              const stockInWarehouse = stockByWarehouse[warehouseId];
+              if (stockInWarehouse > 0 && remainingQuantityToFulfill > 0) {
+                const quantityFromThisWarehouse = Math.min(remainingQuantityToFulfill, stockInWarehouse);
+
+                assignedPackingItems.push({
+                  orderId: newOrderRef.id,
+                  externalOrderId: orderData.id,
+                  productId: sku,
+                  productName: orderItem.product_name || 'N/A',
+                  quantityToPack: quantityFromThisWarehouse,
+                  warehouseId: warehouseId, // Assigned warehouse
+                  status: 'pending' as PackingStatus,
+                  customerName: orderData.customer_name,
+                  deliveryAddress: orderData.delivery_address,
+                });
+                remainingQuantityToFulfill -= quantityFromThisWarehouse;
+                if (remainingQuantityToFulfill === 0) break;
+              }
+            }
+          }
+
+          // Add assigned packing items to the queue
+          if (assignedPackingItems.length > 0) {
+            for (const packingItemData of assignedPackingItems) {
+              try {
+                await this.packingQueueService.addItemToPackingQueue(packingItemData);
+              } catch (packError) {
+                console.error(`Failed to add packing item for SKU ${sku} from warehouse ${packingItemData.warehouseId} to packing queue for order ${newOrderRef.id}:`, packError);
+              }
+            }
+          } else if (quantityOrdered > 0 && remainingQuantityToFulfill === quantityOrdered) {
+             // This means an item was in the order, but we couldn't assign any part of it.
+             console.warn(`Could not fulfill any quantity of SKU ${sku} for order ${newOrderRef.id}. Original quantity: ${quantityOrdered}. Check stock levels.`);
+          } else if (remainingQuantityToFulfill > 0) {
+            // This means some quantity was fulfilled, but not all.
+            console.warn(`Partially fulfilled SKU ${sku} for order ${newOrderRef.id}. Unable to fulfill ${remainingQuantityToFulfill} units.`);
+            // TODO: Handle partially unfulfillable items
+          }
+
+        } catch (error) {
+          console.error(`Error processing order item ${sku} for order ${newOrderRef.id}:`, error);
+          // TODO: Decide if this should halt processing for the whole order or just this item
         }
       }
     }

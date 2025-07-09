@@ -11,6 +11,7 @@ export interface PackingItem {
   productSku?: string; // Optional: SKU from the external system / product master
   productName: string;
   quantityToPack: number;
+  warehouseId: string; // << NEW FIELD: ID of the warehouse to fulfill from
 
   status: PackingStatus;
   priority?: number; // Optional: for prioritizing packing

@@ -156,54 +156,74 @@ export class OrderService {
       }
     }
 
-    // Add items to packing queue - NEW LOGIC
+    // ** Automated Order Routing and Packing Item Generation **
+    // For each item in the order, determine warehouse(s) for fulfillment based on stock availability.
+    // This logic splits items across warehouses if necessary.
     if (newOrderRef.id && itemsForAggregation.length > 0) {
       for (const orderItem of itemsForAggregation) {
+        // Basic validation for the order item
         if (!orderItem.product_no || typeof orderItem.quantity !== 'number' || orderItem.quantity <= 0) {
-          console.warn('Skipping order item due to missing product_no, invalid quantity, or zero quantity:', orderItem);
+          console.warn(`Skipping order item due to missing product_no, invalid/zero quantity:`, orderItem);
           continue;
         }
 
         const sku = orderItem.product_no;
         const quantityOrdered = Number(orderItem.quantity);
         let remainingQuantityToFulfill = quantityOrdered;
+        // Stores data for PackingItem(s) to be created for this order item
         const assignedPackingItems: Omit<PackingItem, 'id' | 'creationDate' | 'lastUpdateDate'>[] = [];
 
         try {
+          // 1. Fetch current stock levels for the SKU across all warehouses.
           const stockByWarehouse = await firstValueFrom(this.inventoryService.getProductStockByWarehouse(sku));
+
+          // TODO: Future Enhancement - Implement warehouse prioritization.
+          // Before attempting fulfillment, sort `availableWarehouses` based on criteria like:
+          // - Proximity to customer (requires customer location data and geocoding/zone logic).
+          // - Current stock levels (e.g., prioritize warehouses with more stock to fulfill completely).
+          // - Predefined warehouse preference list.
+          // Example:
+          // const sortedWarehouses = availableWarehouses.sort((whA, whB) => stockByWarehouse[whB] - stockByWarehouse[whA]);
+          // Then use `sortedWarehouses` in the loops below.
           const availableWarehouses = Object.keys(stockByWarehouse).filter(whId => stockByWarehouse[whId] > 0);
 
           if (!availableWarehouses.length) {
-            console.warn(`No stock found for SKU ${sku} in any warehouse. Item cannot be fulfilled.`);
-            // TODO: Handle unfulfillable items - e.g., add to a backorder list or notify
+            console.warn(`ROUTING: No stock found for SKU ${sku} (Order: ${newOrderRef.id}) in any warehouse. Item cannot be fulfilled at this time.`);
+            // TODO: Implement robust handling for unfulfillable items:
+            // - Add to a backorder list/system.
+            // - Notify customer service or inventory managers.
+            // - Potentially flag the order as partially unfulfillable.
             continue;
           }
 
-          // Attempt Single Warehouse Fulfillment
+          // 2. Attempt to fulfill the entire item quantity from a single warehouse first.
+          // This minimizes splits for individual items if possible.
           for (const warehouseId of availableWarehouses) {
             if (stockByWarehouse[warehouseId] >= remainingQuantityToFulfill) {
               assignedPackingItems.push({
                 orderId: newOrderRef.id,
-                externalOrderId: orderData.id,
+                externalOrderId: orderData.id, // External order ID, if available
                 productId: sku,
-                productName: orderItem.product_name || 'N/A',
+                productName: orderItem.product_name || 'N/A', // Fallback if product_name is missing
                 quantityToPack: remainingQuantityToFulfill,
-                warehouseId: warehouseId, // Assigned warehouse
+                warehouseId: warehouseId, // Assigned warehouse for this packing item
                 status: 'pending' as PackingStatus,
                 customerName: orderData.customer_name,
                 deliveryAddress: orderData.delivery_address,
               });
-              remainingQuantityToFulfill = 0;
-              break;
+              remainingQuantityToFulfill = 0; // Item fully assigned
+              console.log(`ROUTING: SKU ${sku} (Qty: ${quantityOrdered}) fully assigned to single warehouse ${warehouseId} for order ${newOrderRef.id}.`);
+              break; // Move to the next order item
             }
           }
 
-          // Attempt Multi-Warehouse Fulfillment (if not fully assigned)
+          // 3. If not fully assigned, attempt multi-warehouse fulfillment (split item across warehouses).
           if (remainingQuantityToFulfill > 0) {
-            assignedPackingItems.length = 0; // Clear previous attempts if any, start fresh for split
-            remainingQuantityToFulfill = quantityOrdered; // Reset for split logic
+            console.log(`ROUTING: SKU ${sku} (Order: ${newOrderRef.id}) requires splitting. Remaining to fulfill: ${remainingQuantityToFulfill}.`);
+            assignedPackingItems.length = 0; // Clear any prior (failed) single-warehouse assignment for this item
+            remainingQuantityToFulfill = quantityOrdered; // Reset quantity for fresh split logic
 
-            for (const warehouseId of availableWarehouses) { // Could sort warehouses by preference here
+            for (const warehouseId of availableWarehouses) {
               const stockInWarehouse = stockByWarehouse[warehouseId];
               if (stockInWarehouse > 0 && remainingQuantityToFulfill > 0) {
                 const quantityFromThisWarehouse = Math.min(remainingQuantityToFulfill, stockInWarehouse);
@@ -214,38 +234,49 @@ export class OrderService {
                   productId: sku,
                   productName: orderItem.product_name || 'N/A',
                   quantityToPack: quantityFromThisWarehouse,
-                  warehouseId: warehouseId, // Assigned warehouse
+                  warehouseId: warehouseId, // Assigned warehouse for this portion
                   status: 'pending' as PackingStatus,
                   customerName: orderData.customer_name,
                   deliveryAddress: orderData.delivery_address,
                 });
                 remainingQuantityToFulfill -= quantityFromThisWarehouse;
-                if (remainingQuantityToFulfill === 0) break;
+                console.log(`ROUTING: SKU ${sku} (Order: ${newOrderRef.id}) assigned ${quantityFromThisWarehouse} units from warehouse ${warehouseId}. Remaining: ${remainingQuantityToFulfill}.`);
+                if (remainingQuantityToFulfill === 0) {
+                  break; // Item fully split and assigned
+                }
               }
             }
           }
 
-          // Add assigned packing items to the queue
+          // 4. Add all generated packing items for this order item to the PackingQueueService.
           if (assignedPackingItems.length > 0) {
             for (const packingItemData of assignedPackingItems) {
               try {
                 await this.packingQueueService.addItemToPackingQueue(packingItemData);
+                console.log(`ROUTING: Packing item for SKU ${packingItemData.productId} (Qty: ${packingItemData.quantityToPack}) from WHS ${packingItemData.warehouseId} added to queue for order ${newOrderRef.id}.`);
               } catch (packError) {
-                console.error(`Failed to add packing item for SKU ${sku} from warehouse ${packingItemData.warehouseId} to packing queue for order ${newOrderRef.id}:`, packError);
+                console.error(`ROUTING ERROR: Failed to add packing item for SKU ${sku} from warehouse ${packingItemData.warehouseId} (Order: ${newOrderRef.id}):`, packError);
               }
             }
           } else if (quantityOrdered > 0 && remainingQuantityToFulfill === quantityOrdered) {
-             // This means an item was in the order, but we couldn't assign any part of it.
-             console.warn(`Could not fulfill any quantity of SKU ${sku} for order ${newOrderRef.id}. Original quantity: ${quantityOrdered}. Check stock levels.`);
-          } else if (remainingQuantityToFulfill > 0) {
-            // This means some quantity was fulfilled, but not all.
-            console.warn(`Partially fulfilled SKU ${sku} for order ${newOrderRef.id}. Unable to fulfill ${remainingQuantityToFulfill} units.`);
-            // TODO: Handle partially unfulfillable items
+             // This means an item was in the order, but we couldn't assign any part of it (e.g. no stock was found after all checks).
+             console.warn(`ROUTING: Could not fulfill ANY quantity of SKU ${sku} for order ${newOrderRef.id}. Original quantity: ${quantityOrdered}. This may indicate an earlier stock check issue or logic error.`);
+          }
+
+          // 5. Handle any remaining unfulfillable quantity for this item.
+          if (remainingQuantityToFulfill > 0) {
+            console.warn(`ROUTING: Partially fulfilled SKU ${sku} for order ${newOrderRef.id}. Unable to fulfill ${remainingQuantityToFulfill} units. This quantity will not be packed.`);
+            // TODO: Implement robust handling for partially unfulfillable items (similar to fully unfulfillable items):
+            // - Add the unfulfillable portion to a backorder.
+            // - Notify relevant parties.
           }
 
         } catch (error) {
-          console.error(`Error processing order item ${sku} for order ${newOrderRef.id}:`, error);
-          // TODO: Decide if this should halt processing for the whole order or just this item
+          console.error(`ROUTING CRITICAL: Error processing order item ${sku} for order ${newOrderRef.id}:`, error);
+          // TODO: Decide on error handling strategy:
+          // - Halt processing for the entire order?
+          // - Skip this item and continue with others?
+          // - Log and attempt to create a "problem order" record.
         }
       }
     }

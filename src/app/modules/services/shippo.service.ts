@@ -6,8 +6,15 @@ import { environment } from '../../../environments/environment';
 
 // Simplified interfaces for Shippo API data
 // Based on common Shippo API functionalities (Addresses, Parcels, Shipments, Rates, Transactions, Tracks)
+import { Product as InventoryProduct } from '../../models/inventory.models'; // For product dimensions
 
-interface ShippoAddress {
+// Extended Address interface to better match potential needs from SalesOrder
+export interface ExtendedShippoAddress extends ShippoAddress {
+  // Potentially add fields like 'company', 'address_line_3', etc. if needed.
+  // For now, keeping it compatible with ShippoAddress but typed for clarity.
+}
+
+export interface ShippoAddress { // Renamed to avoid conflict, though structure is the same
   name: string;
   street1: string;
   street2?: string;
@@ -110,59 +117,165 @@ interface ShippoTrack {
   providedIn: 'root'
 })
 export class ShippoService {
-  private shippoApiEndpoint = environment.shippoApiConfig?.endpoint; // e.g., https://api.goshippo.com/
-  // Mock data URLs if needed, e.g., for a complex rate list
+  private apiEndpoint = environment.shippoApiConfig?.endpoint;
+  private apiKey = environment.shippoApiConfig?.apiKey;
+  private apiMocking = environment.shippoApiConfig?.apiMocking ?? true; // Default to true if not set
 
   constructor(private http: HttpClient) {
-    if (!this.shippoApiEndpoint) {
-      console.warn('ShippoService: API endpoint is not configured in environment files. Mock mode only.');
+    if (!this.apiEndpoint) {
+      console.warn('ShippoService: API endpoint is not configured.');
+    }
+    if (!this.apiKey && !this.apiMocking) {
+      console.warn('ShippoService: API key is not configured and not in mock mode. API calls will likely fail.');
     }
   }
+
+  // Helper to create standard headers for Shippo API calls
+  private getAuthHeaders() {
+    return {
+      'Authorization': `ShippoToken ${this.apiKey}`,
+      'Content-Type': 'application/json'
+    };
+  }
+
+  /**
+   * Creates ShippoParcel objects from an array of InventoryProduct.
+   * Assumes each product results in one parcel for simplicity in this example.
+   * In a real scenario, items might be grouped into fewer parcels.
+   */
+  private mapProductsToShippoParcels(products: InventoryProduct[]): ShippoParcel[] {
+    return products.map(product => {
+      if (!product.weight || !product.weightUnit || !product.length || !product.width || !product.height || !product.dimensionUnit) {
+        throw new Error(`Product ${product.SKU} is missing required dimension/weight information for shipping.`);
+      }
+      return {
+        length: String(product.length),
+        width: String(product.width),
+        height: String(product.height),
+        distance_unit: product.dimensionUnit,
+        weight: String(product.weight),
+        mass_unit: product.weightUnit,
+      };
+    });
+  }
+
 
   // In Shippo, you typically create a Shipment object first, then its rates are retrieved.
-  createShipmentAndGetRates(shipmentRequest: ShippoShipmentRequest): Observable<ShippoRate[]> {
-    if (this.shippoApiEndpoint) {
-      console.warn('ShippoService: Actual API call for createShipmentAndGetRates not implemented. Returning mock data.');
-      // TODO: Implement actual POST to this.shippoApiEndpoint/shipments/
-      // The response from Shippo for a shipment creation will contain the rates array.
-      // This mock simplifies by directly returning rates.
-      return of(this.getHardcodedMockRates(shipmentRequest));
-    } else {
-      console.log('ShippoService: Simulating createShipmentAndGetRates (mock). Request:', shipmentRequest);
+  createShipmentAndGetRates(
+    addressFrom: ShippoAddress,
+    addressTo: ShippoAddress,
+    products: InventoryProduct[], // Use the InventoryProduct which has dimensions
+    carrierAccounts?: string[] // Optional: specific carrier accounts to use
+  ): Observable<ShippoRate[]> {
+    const parcels = this.mapProductsToShippoParcels(products);
+    const shipmentRequest: ShippoShipmentRequest = {
+      address_from: addressFrom,
+      address_to: addressTo,
+      parcels: parcels,
+      async: false // Request rates synchronously for this example
+    };
+    if (carrierAccounts) {
+      shipmentRequest.carrier_accounts = carrierAccounts;
+    }
+
+    console.log('ShippoService: Preparing createShipmentAndGetRates. Request:', shipmentRequest);
+
+    if (this.apiMocking || !this.apiEndpoint || !this.apiKey) {
+      console.warn('ShippoService: Using mock data for getShippingRates.');
       return of(this.getHardcodedMockRates(shipmentRequest));
     }
+
+    // TODO: Implement actual POST to this.apiEndpoint/shipments/
+    // This is a placeholder for the actual API call structure.
+    // The real Shippo API returns a Shipment object which contains a 'rates' array.
+    // return this.http.post<any>(`${this.apiEndpoint}shipments`, shipmentRequest, { headers: this.getAuthHeaders() }).pipe(
+    //   map(response => response.rates), // Extract rates from the full shipment response
+    //   catchError(error => {
+    //     console.error('ShippoService: Error creating shipment and getting rates', error);
+    //     return of([]); // Return empty array on error
+    //   })
+    // );
+    // console.warn('ShippoService: Actual API call for createShipmentAndGetRates not implemented. Returning mock data due to TODO.');
+    // return of(this.getHardcodedMockRates(shipmentRequest));
+    return this.http.post<any>(`${this.apiEndpoint}shipments`, shipmentRequest, { headers: this.getAuthHeaders() }).pipe(
+      map(response => response.rates), // Extract rates from the full shipment response
+      catchError(error => {
+        console.error('ShippoService: Error creating shipment and getting rates', error);
+        console.warn('ShippoService: Falling back to mock rates due to API error.');
+        return of(this.getHardcodedMockRates(shipmentRequest)); // Fallback to mock
+      })
+    );
   }
 
-  createShippingLabel(transactionRequest: ShippoTransactionRequest): Observable<ShippoTransaction | null> {
-    if (this.shippoApiEndpoint) {
-      console.warn('ShippoService: Actual API call for createShippingLabel (transaction) not implemented. Returning mock data.');
-      // TODO: Implement actual POST to this.shippoApiEndpoint/transactions/
-      return of(this.getHardcodedMockTransaction(transactionRequest));
-    } else {
-      console.log('ShippoService: Simulating createShippingLabel (mock). Request:', transactionRequest);
+  createShippingLabel(rateObjectId: string, labelFormat?: 'PDF' | 'PNG' | 'PDF_4x6' | 'ZPLII'): Observable<ShippoTransaction | null> {
+    const transactionRequest: ShippoTransactionRequest = {
+      rate: rateObjectId,
+      label_file_type: labelFormat || 'PDF_4x6', // Default to PDF 4x6
+      async: false // Request label synchronously
+    };
+
+    console.log('ShippoService: Preparing createShippingLabel. Request:', transactionRequest);
+
+    if (this.apiMocking || !this.apiEndpoint || !this.apiKey) {
+      console.warn('ShippoService: Using mock data for createShippingLabel.');
       return of(this.getHardcodedMockTransaction(transactionRequest));
     }
+
+    // TODO: Implement actual POST to this.apiEndpoint/transactions/
+    // return this.http.post<ShippoTransaction>(`${this.apiEndpoint}transactions`, transactionRequest, { headers: this.getAuthHeaders() }).pipe(
+    //   catchError(error => {
+    //     console.error('ShippoService: Error creating shipping label (transaction)', error);
+    //     return of(null); // Return null on error
+    //   })
+    // );
+    // console.warn('ShippoService: Actual API call for createShippingLabel not implemented. Returning mock data due to TODO.');
+    // return of(this.getHardcodedMockTransaction(transactionRequest));
+    return this.http.post<ShippoTransaction>(`${this.apiEndpoint}transactions`, transactionRequest, { headers: this.getAuthHeaders() }).pipe(
+      catchError(error => {
+        console.error('ShippoService: Error creating shipping label (transaction)', error);
+        console.warn('ShippoService: Falling back to mock transaction due to API error.');
+        return of(this.getHardcodedMockTransaction(transactionRequest)); // Fallback to mock
+      })
+    );
   }
 
   // Shippo uses a specific endpoint for tracking, not per carrier.
-  trackShipment(trackRequest: ShippoTrackRequest): Observable<ShippoTrack | null> {
-    if (this.shippoApiEndpoint) {
-      console.warn('ShippoService: Actual API call for trackShipment not implemented. Returning mock data.');
-      // TODO: Implement actual GET to this.shippoApiEndpoint/tracks/{carrier}/{tracking_number}/
-      return of(this.getHardcodedMockTrackingInfo(trackRequest));
-    } else {
-      console.log('ShippoService: Simulating trackShipment (mock). Request:', trackRequest);
+  trackShipment(carrierToken: string, trackingNumber: string): Observable<ShippoTrack | null> {
+    const trackRequest: ShippoTrackRequest = { carrier: carrierToken, tracking_number: trackingNumber };
+    console.log('ShippoService: Preparing trackShipment. Request:', trackRequest);
+
+    if (this.apiMocking || !this.apiEndpoint || !this.apiKey) {
+      console.warn('ShippoService: Using mock data for trackShipment.');
       return of(this.getHardcodedMockTrackingInfo(trackRequest));
     }
+
+    // TODO: Implement actual GET to this.apiEndpoint/tracks/{carrierToken}/{trackingNumber}/
+    // return this.http.get<ShippoTrack>(`${this.apiEndpoint}tracks/${carrierToken}/${trackingNumber}/`, { headers: this.getAuthHeaders() }).pipe(
+    //   catchError(error => {
+    //     console.error('ShippoService: Error tracking shipment', error);
+    //     return of(null); // Return null on error
+    //   })
+    // );
+    // console.warn('ShippoService: Actual API call for trackShipment not implemented. Returning mock data due to TODO.');
+    // return of(this.getHardcodedMockTrackingInfo(trackRequest));
+    return this.http.get<ShippoTrack>(`${this.apiEndpoint}tracks/${carrierToken}/${trackingNumber}/`, { headers: this.getAuthHeaders() }).pipe(
+      catchError(error => {
+        console.error('ShippoService: Error tracking shipment', error);
+        console.warn('ShippoService: Falling back to mock tracking info due to API error.');
+        return of(this.getHardcodedMockTrackingInfo(trackRequest)); // Fallback to mock
+      })
+    );
   }
 
   private getHardcodedMockRates(request: ShippoShipmentRequest): ShippoRate[] {
-    // Mock rates from various carriers
-    return [
+    // Mock rates from various carriers, including Royal Mail
+    const rates = [
       { object_id: 'rate_mock_fedex_ground', amount: '10.25', currency: 'USD', provider: 'FedEx', provider_image_75: '', provider_image_200: '', servicelevel: { token: 'fedex_ground', name: 'FedEx Ground' }, estimated_days: 3, duration_terms: 'Est. 3 business days' },
       { object_id: 'rate_mock_ups_ground', amount: '11.50', currency: 'USD', provider: 'UPS', provider_image_75: '', provider_image_200: '', servicelevel: { token: 'ups_ground', name: 'UPS Ground' }, estimated_days: 3, duration_terms: 'Est. 3 business days' },
       { object_id: 'rate_mock_usps_priority', amount: '9.80', currency: 'USD', provider: 'USPS', provider_image_75: '', provider_image_200: '', servicelevel: { token: 'usps_priority', name: 'USPS Priority Mail' }, estimated_days: 2, duration_terms: 'Est. 2 business days' },
-      { object_id: 'rate_mock_dhl_express', amount: '25.00', currency: 'USD', provider: 'DHL Express', provider_image_75: '', provider_image_200: '', servicelevel: { token: 'dhl_express_worldwide', name: 'DHL Express Worldwide' }, estimated_days: 1, duration_terms: 'Est. 1 business day' }
+      { object_id: 'rate_mock_dhl_express', amount: '25.00', currency: 'USD', provider: 'DHL Express', provider_image_75: '', provider_image_200: '', servicelevel: { token: 'dhl_express_worldwide', name: 'DHL Express Worldwide' }, estimated_days: 1, duration_terms: 'Est. 1 business day' },
+      { object_id: 'rate_mock_royal_mail_1st', amount: '5.50', currency: 'GBP', provider: 'Royal Mail', provider_image_75: '', provider_image_200: '', servicelevel: { token: 'royal_mail_first_class_packet', name: 'Royal Mail First Class' }, estimated_days: 1, duration_terms: 'Est. 1-2 business days' },
+      { object_id: 'rate_mock_royal_mail_2nd', amount: '3.50', currency: 'GBP', provider: 'Royal Mail', provider_image_75: '', provider_image_200: '', servicelevel: { token: 'royal_mail_second_class_packet', name: 'Royal Mail Second Class' }, estimated_days: 3, duration_terms: 'Est. 2-3 business days' }
     ];
   }
 

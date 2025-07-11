@@ -27,9 +27,18 @@ export class InventoryManagementService {
   ]);
   private products = new BehaviorSubject<Product[]>([
     // Sample Product
-    { SKU: 'TSHIRT-BLK-M', name: 'Black T-Shirt, Medium', currentStock: { 'WHS-A': 50, 'WHS-B': 30 }, safetyStockQuantity: 10, preferredSupplierId: 'SUPPLIER-001' },
-    { SKU: 'MUG-COFFEE-XL', name: 'XL Coffee Mug', currentStock: { 'WHS-A': 100, 'WHS-C': 75 }, safetyStockQuantity: 20, preferredSupplierId: 'SUPPLIER-002' },
-    { SKU: 'STICKER-LOGO', name: 'Logo Sticker Pack', currentStock: { 'WHS-A': 200, 'WHS-B': 150, 'WHS-C': 100 }, safetyStockQuantity: 50, preferredSupplierId: 'SUPPLIER-001' },
+    {
+      SKU: 'TSHIRT-BLK-M', name: 'Black T-Shirt, Medium', currentStock: { 'WHS-A': 50, 'WHS-B': 30 }, safetyStockQuantity: 10, preferredSupplierId: 'SUPPLIER-001',
+      weight: 0.2, weightUnit: 'kg', length: 30, width: 20, height: 2, dimensionUnit: 'cm'
+    },
+    {
+      SKU: 'MUG-COFFEE-XL', name: 'XL Coffee Mug', currentStock: { 'WHS-A': 100, 'WHS-C': 75 }, safetyStockQuantity: 20, preferredSupplierId: 'SUPPLIER-002',
+      weight: 0.5, weightUnit: 'kg', length: 15, width: 10, height: 10, dimensionUnit: 'cm'
+    },
+    {
+      SKU: 'STICKER-LOGO', name: 'Logo Sticker Pack', currentStock: { 'WHS-A': 200, 'WHS-B': 150, 'WHS-C': 100 }, safetyStockQuantity: 50, preferredSupplierId: 'SUPPLIER-001',
+      weight: 0.05, weightUnit: 'kg', length: 10, width: 10, height: 0.1, dimensionUnit: 'cm'
+    },
   ]);
   private salesOrders = new BehaviorSubject<SalesOrder[]>([
     // Sample Sales Data (ensure dates are useful for velocity calculation)

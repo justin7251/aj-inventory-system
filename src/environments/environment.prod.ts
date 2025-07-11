@@ -20,5 +20,20 @@ export const environment = {
     mockDataUrl: '', // No mock data in production
     apiKey: 'YOUR_SHOPIFY_API_ACCESS_TOKEN_HERE', // Or API Key for public apps
     password: 'YOUR_SHOPIFY_APP_PASSWORD_OR_API_SECRET_HERE' // If using private app or specific auth
+  },
+  shippoApiConfig: {
+    endpoint: 'https://api.goshippo.com/', // Real Shippo API endpoint
+    mockDataUrl: '',
+    apiKey: 'YOUR_SHIPPO_LIVE_API_KEY_HERE', // Placeholder for actual LIVE Shippo API key
+    apiMocking: false // In production, this should ideally be false to use live API
+  },
+  upsApiConfig: {
+    endpoint: 'https://onlinetools.ups.com/api/', // UPS Production endpoint
+    mockDataUrl: '',
+    apiKey: 'YOUR_UPS_LIVE_API_KEY_HERE', // Placeholder for UPS Access Key / API Key
+    username: 'YOUR_UPS_USERNAME',
+    password: 'YOUR_UPS_PASSWORD',
+    accountNumber: 'YOUR_UPS_ACCOUNT_NUMBER',
+    apiMocking: false // In production, this should ideally be false
   }
 };

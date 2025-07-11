@@ -7,6 +7,14 @@ export interface Product {
   preferredSupplierId: string; // Foreign Key to Supplier
   // Fields for multi-warehouse inventory sync (can be added later)
   // e.g., lastSyncTimestamp?: Date;
+
+  // Shipping related fields
+  weight?: number; // e.g., 0.5
+  weightUnit?: 'kg' | 'lb' | 'oz' | 'g'; // Kilograms or Pounds
+  length?: number; // e.g., 10
+  width?: number; // e.g., 10
+  height?: number; // e.g., 10
+  dimensionUnit?: 'cm' | 'in'; // Centimeters or Inches
 }
 
 export interface Warehouse {
@@ -28,6 +36,16 @@ export interface SalesOrder {
   customerLocation?: string; // For order routing
   // Fields for sales velocity calculation
   // e.g., channel?: 'online' | 'store' | 'ebay';
+
+  // Shipping related fields
+  shippingCarrier?: string; // e.g., 'Shippo', 'UPS', 'RoyalMail', 'FedEx'
+  shippingServiceLevel?: string; // e.g., 'ups_ground', 'royal_mail_first_class', 'shippo_fedex_ground'
+  shippingCost?: number;
+  trackingNumber?: string;
+  shippoTransactionId?: string; // If Shippo is used for label generation
+  labelUrl?: string; // URL to the label if hosted by provider (e.g., Shippo)
+  labelData?: string; // Base64 encoded label data if generated directly or not URL-addressable
+  estimatedDeliveryDate?: Date;
 }
 
 export interface Supplier {

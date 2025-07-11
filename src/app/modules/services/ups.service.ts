@@ -98,46 +98,144 @@ interface UPSTrackingResponse {
   providedIn: 'root'
 })
 export class UPSService {
-  private upsApiEndpoint = environment.upsApiConfig?.endpoint;
-  // Mock data URLs could be added here
+  private apiEndpoint = environment.upsApiConfig?.endpoint;
+  private apiKey = environment.upsApiConfig?.apiKey;
+  private username = environment.upsApiConfig?.username;
+  private password = environment.upsApiConfig?.password;
+  private accountNumber = environment.upsApiConfig?.accountNumber;
+  private apiMocking = environment.upsApiConfig?.apiMocking ?? true;
 
   constructor(private http: HttpClient) {
-    if (!this.upsApiEndpoint) {
-      console.warn('UPSService: API endpoint is not configured in environment files.');
+    if (!this.apiEndpoint) {
+      console.warn('UPSService: API endpoint is not configured.');
     }
+    if ((!this.apiKey || !this.username || !this.password || !this.accountNumber) && !this.apiMocking) {
+      console.warn('UPSService: Full API credentials are not configured and not in mock mode. API calls will likely fail.');
+    }
+  }
+
+  // UPS API typically requires more complex authentication, often involving an access token
+  // This is a simplified placeholder for headers. Real implementation needs to follow UPS auth guide.
+  private getAuthHeaders() {
+    // This is NOT a standard UPS auth header. UPS usually involves exchanging credentials for a token.
+    // For a real app, implement proper UPS OAuth or Access Key authentication.
+    // For testing with some UPS APIs, a simple API key in the header might be used, or user/pass.
+    // Refer to the specific UPS API documentation (Rating, Shipping, Tracking).
+    return {
+      'Authorization': `Bearer ${this.apiKey}`, // This is a guess; actual auth is more complex
+      'Content-Type': 'application/json',
+      'transId': crypto.randomUUID(), // Example transaction ID
+      'transactionSrc': 'testing' // Example source
+      // May also need Username, Password, AccessLicenseNumber depending on the API and auth method
+    };
   }
 
   getShippingRates(rateRequest: UPSRateRequest): Observable<UPSRateResponse[]> {
-    if (this.upsApiEndpoint) {
-      console.warn('UPSService: Actual API call for getShippingRates not implemented. Returning mock data.');
-      // TODO: Implement actual POST to this.upsApiEndpoint/rating/Rate (or similar, depends on API version)
-      return of(this.getHardcodedMockRates(rateRequest));
-    } else {
-      console.log('UPSService: Simulating getShippingRates (mock). Request:', rateRequest);
+    console.log('UPSService: Preparing getShippingRates. Request:', rateRequest);
+    if (this.apiMocking || !this.apiEndpoint || !this.apiKey) {
+      console.warn('UPSService: Using mock data for getShippingRates.');
       return of(this.getHardcodedMockRates(rateRequest));
     }
+
+    // TODO: Implement actual POST to this.apiEndpoint/rating/... (endpoint varies per API version, e.g., /Rate)
+    // The request body and auth will be specific to the UPS Rating API.
+    // This is a placeholder for the actual API call structure.
+    // return this.http.post<any>(`${this.apiEndpoint}rating/v1/Rate`, { RateRequest: rateRequest }, { headers: this.getAuthHeaders() }).pipe(
+    //   map(response => response.RateResponse.RatedShipment), // Path to rates may vary
+    //   catchError(error => {
+    //     console.error('UPSService: Error getting shipping rates', error);
+    //     console.warn('UPSService: Falling back to mock rates due to API error.');
+    //     return of(this.getHardcodedMockRates(rateRequest)); // Fallback to mock
+    //   })
+    // );
+    // console.warn('UPSService: Actual API call for getShippingRates not implemented. Returning mock data due to TODO.');
+    // return of(this.getHardcodedMockRates(rateRequest));
+    // Placeholder - actual UPS Rating API call
+    return this.http.post<any>(`${this.apiEndpoint}rating/v1/Rate`, { RateRequest: rateRequest }, { headers: this.getAuthHeaders() }).pipe(
+      map(response => response.RateResponse.RatedShipment), // Path to rates may vary based on actual UPS API response
+      catchError(error => {
+        console.error('UPSService: Error getting shipping rates from API', error);
+        console.warn('UPSService: Falling back to mock rates due to API error.');
+        return of(this.getHardcodedMockRates(rateRequest)); // Fallback to mock
+      })
+    );
   }
 
   createShippingLabel(labelRequest: UPSLabelRequest): Observable<UPSLabelResponse | null> {
-    if (this.upsApiEndpoint) {
-      console.warn('UPSService: Actual API call for createShippingLabel not implemented. Returning mock data.');
-      // TODO: Implement actual POST to this.upsApiEndpoint/shipping/Ship (or similar)
-      return of(this.getHardcodedMockLabel(labelRequest));
-    } else {
-      console.log('UPSService: Simulating createShippingLabel (mock). Request:', labelRequest);
+    console.log('UPSService: Preparing createShippingLabel. Request:', labelRequest);
+    if (this.apiMocking || !this.apiEndpoint || !this.apiKey) {
+      console.warn('UPSService: Using mock data for createShippingLabel.');
       return of(this.getHardcodedMockLabel(labelRequest));
     }
+
+    // TODO: Implement actual POST to this.apiEndpoint/shipping/... (e.g., /Ship)
+    // The request body and auth will be specific to the UPS Shipping API.
+    // return this.http.post<UPSLabelResponse>(`${this.apiEndpoint}shipping/v1/shipments`, labelRequest, { headers: this.getAuthHeaders() }).pipe(
+    //   catchError(error => {
+    //     console.error('UPSService: Error creating shipping label', error);
+    //     console.warn('UPSService: Falling back to mock label due to API error.');
+    //     return of(this.getHardcodedMockLabel(labelRequest)); // Fallback to mock
+    //   })
+    // );
+    // console.warn('UPSService: Actual API call for createShippingLabel not implemented. Returning mock data due to TODO.');
+    // return of(this.getHardcodedMockLabel(labelRequest));
+    // Placeholder - actual UPS Shipping API call
+    return this.http.post<UPSLabelResponse>(`${this.apiEndpoint}shipping/v1/shipments`, labelRequest, { headers: this.getAuthHeaders() }).pipe(
+      catchError(error => {
+        console.error('UPSService: Error creating shipping label from API', error);
+        console.warn('UPSService: Falling back to mock label due to API error.');
+        return of(this.getHardcodedMockLabel(labelRequest)); // Fallback to mock
+      })
+    );
   }
 
-  trackShipment(trackingRequest: UPSTrackingRequest): Observable<UPSTrackingResponse | null> {
-    if (this.upsApiEndpoint) {
-      console.warn('UPSService: Actual API call for trackShipment not implemented. Returning mock data.');
-      // TODO: Implement actual GET or POST to this.upsApiEndpoint/tracking/Track (or similar)
-      return of(this.getHardcodedMockTrackingInfo(trackingRequest.trackingNumber));
-    } else {
-      console.log('UPSService: Simulating trackShipment (mock). Request:', trackingRequest);
-      return of(this.getHardcodedMockTrackingInfo(trackingRequest.trackingNumber));
+  trackShipment(trackingNumber: string): Observable<UPSTrackingResponse | null> {
+    // UPS Tracking API might use GET or POST depending on version/details
+    // For GET: /track/v1/details/{trackingNumber}
+    // For POST: /track/v1/details with body { "trackingNumber": "..." }
+    const trackRequestPayload: UPSTrackingRequest = { trackingNumber };
+    console.log('UPSService: Preparing trackShipment. Tracking Number:', trackingNumber);
+
+    if (this.apiMocking || !this.apiEndpoint || !this.apiKey) {
+      console.warn('UPSService: Using mock data for trackShipment.');
+      return of(this.getHardcodedMockTrackingInfo(trackingNumber));
     }
+
+    // TODO: Implement actual GET or POST to this.apiEndpoint/track/...
+    // Example for GET:
+    // return this.http.get<UPSTrackingResponse>(`${this.apiEndpoint}track/v1/details/${trackingNumber}`, { headers: this.getAuthHeaders() }).pipe(
+    //   catchError(error => {
+    //     console.error('UPSService: Error tracking shipment', error);
+    //     console.warn('UPSService: Falling back to mock tracking info due to API error.');
+    //     return of(this.getHardcodedMockTrackingInfo(trackingNumber)); // Fallback to mock
+    //   })
+    // );
+    // Example for POST:
+    // return this.http.post<UPSTrackingResponse>(`${this.apiEndpoint}track/v1/details`, trackRequestPayload, { headers: this.getAuthHeaders() }).pipe(
+    //   catchError(error => {
+    //     console.error('UPSService: Error tracking shipment (POST)', error);
+    //     console.warn('UPSService: Falling back to mock tracking info due to API error.');
+    //     return of(this.getHardcodedMockTrackingInfo(trackingNumber)); // Fallback to mock
+    //   })
+    // );
+    // console.warn('UPSService: Actual API call for trackShipment not implemented. Returning mock data due to TODO.');
+    // return of(this.getHardcodedMockTrackingInfo(trackingNumber));
+    // Placeholder - actual UPS Tracking API call (using GET example)
+    return this.http.get<UPSTrackingResponse>(`${this.apiEndpoint}track/v1/details/${trackingNumber}`, { headers: this.getAuthHeaders() }).pipe(
+      catchError(error => {
+        console.error('UPSService: Error tracking shipment from API', error);
+        console.warn('UPSService: Falling back to mock tracking info due to API error.');
+        return of(this.getHardcodedMockTrackingInfo(trackingNumber)); // Fallback to mock
+      })
+    );
+    // If using POST for tracking:
+    // return this.http.post<UPSTrackingResponse>(`${this.apiEndpoint}track/v1/details`, trackRequestPayload, { headers: this.getAuthHeaders() }).pipe(
+    //   catchError(error => {
+    //     console.error('UPSService: Error tracking shipment (POST) from API', error);
+    //     console.warn('UPSService: Falling back to mock tracking info due to API error.');
+    //     return of(this.getHardcodedMockTrackingInfo(trackingNumber)); // Fallback to mock
+    //   })
+    // );
   }
 
   private getHardcodedMockRates(request: UPSRateRequest): UPSRateResponse[] {

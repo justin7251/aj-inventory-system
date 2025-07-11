@@ -24,6 +24,22 @@ export const environment = {
     mockDataUrl: '/assets/mock-shopify-orders.json', // Path to local mock data
     apiKey: '', // Placeholder for Shopify Access Token / API Key
     password: '' // Placeholder for Shopify App Password (if using Basic Auth for private app)
+  },
+  shippoApiConfig: {
+    endpoint: 'https://api.goshippo.com/', // Real Shippo API endpoint
+    mockDataUrl: '', // No mock data for Shippo in this example, service will have hardcoded mocks
+    apiKey: 'YOUR_SHIPPO_API_KEY_HERE', // Placeholder for actual Shippo API key (e.g., shippo_live_xxxxxxxx or shippo_test_xxxxxxx)
+    apiMocking: true // To explicitly control if service should use mock or attempt real call
+  },
+  upsApiConfig: {
+    endpoint: 'https://wwwcie.ups.com/api/', // UPS Customer Integration Environment (CIE) for testing
+    // endpoint: 'https://onlinetools.ups.com/api/', // UPS Production endpoint
+    mockDataUrl: '', // Service will have hardcoded mocks
+    apiKey: 'YOUR_UPS_API_KEY_HERE', // Placeholder for UPS Access Key / API Key
+    username: 'YOUR_UPS_USERNAME', // Placeholder for UPS Account Username
+    password: 'YOUR_UPS_PASSWORD', // Placeholder for UPS Account Password
+    accountNumber: 'YOUR_UPS_ACCOUNT_NUMBER', // Placeholder for UPS Shipper Number
+    apiMocking: true // To explicitly control if service should use mock or attempt real call
   }
 };
 

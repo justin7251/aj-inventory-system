@@ -17,9 +17,7 @@ import * as Highcharts from 'highcharts';
 })
 export class DashboardComponent implements OnInit, OnDestroy {
 
-  bigChart: any[] = []; // Assuming this remains static or handled differently
-  cards: any[] = [];    // Assuming this remains static or handled differently
-  pieChart: any[] = []; // Assuming this remains static or handled differently
+  cards$: Observable<number[]>;
 
   orderSummaryData$: Observable<OrderSummaryData>;
   monthlySalesChartOptions$: Observable<HighchartsChartOptionsData>;
@@ -35,9 +33,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   ) { }
   
   ngOnInit() {
-    this.bigChart = this.dashboardService.bigChart();
-    this.cards = this.dashboardService.cards();
-    this.pieChart = this.dashboardService.pieChart(); // This is the generic one
+    this.cards$ = this.dashboardService.cards();
 
     this.orderSummaryData$ = this.dashboardService.getOrderSummaryData();
     this.monthlySalesChartOptions$ = this.dashboardService.getMonthlySalesAndOrdersData();

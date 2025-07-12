@@ -461,75 +461,24 @@ export class DashboardService {
   // For a production application, this data would typically be fetched from a backend
   // or derived from actual application data.
 
-  /**
-   * @returns Static data for a multi-series area chart.
-   * TODO: Replace with actual data source if this chart is intended for production use.
-   */
-  bigChart() {
-    return [{
-        name: 'Asia',
-        data: [502, 635, 809, 947, 1402, 3634, 5268]
-    }, {
-        name: 'Africa',
-        data: [106, 107, 111, 133, 221, 767, 1766]
-    }, {
-        name: 'Europe',
-        data: [163, 203, 276, 408, 547, 729, 628]
-    }, {
-        name: 'America',
-        data: [18, 31, 54, 156, 339, 818, 1201]
-    }, {
-        name: 'Oceania',
-        data: [2, 2, 2, 6, 13, 30, 46]
-    }];
+
+  cards(): Observable<number[]> {
+    return this.orderService.getAllOrders().pipe(
+      map(orders => {
+        const sales = orders.map(order => order.total_cost || 0);
+        // Assuming "purchases" refers to the cost of goods for the orders, which can be calculated
+        // if COGS data is available. For now, we'll use a placeholder for purchases.
+        // This can be replaced with actual purchase data calculation.
+        const purchases = orders.map(order => (order.total_cost || 0) * 0.6); // Example: 60% of sale price
+        return sales;
+      }),
+      catchError(error => {
+        console.error('Error fetching card data:', error);
+        return of([0, 0, 0, 0]); // Return empty/default data on error
+      })
+    );
   }
 
-  /**
-   * @returns Static data array for widget cards.
-   * TODO: Replace with actual data source or calculations if these cards are intended for production use.
-   * Note: The dashboard currently uses this for "Sales" and "Purchase" cards,
-   * while "New Users" and "Users retention" have different hardcoded data.
-   */
-  cards() {
-    return [71, 78, 39, 66];
-  }
-
-  /**
-   * @returns Static data for a generic pie chart (browser usage).
-   * TODO: Replace with actual, relevant data if this chart is intended for production use.
-   */
-  pieChart() {
-    return [{
-        name: 'Chrome',
-        y: 61.41,
-        sliced: true,
-        selected: true
-    }, {
-        name: 'Internet Explorer',
-        y: 11.84
-    }, {
-        name: 'Firefox',
-        y: 10.85
-    }, {
-        name: 'Edge',
-        y: 4.67
-    }, {
-        name: 'Safari',
-        y: 4.18
-    }, {
-        name: 'Sogou Explorer',
-        y: 1.64
-    }, {
-        name: 'Opera',
-        y: 1.6
-    }, {
-        name: 'QQ',
-        y: 1.2
-    }, {
-        name: 'Other',
-        y: 2.61
-    }];
-  }
 
   public getTopSellingProductsData(): Observable<SalesByProductData> {
     return this.orderService.getAllOrders().pipe(

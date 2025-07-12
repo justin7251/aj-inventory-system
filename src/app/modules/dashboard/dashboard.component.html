@@ -54,10 +54,10 @@
         <app-widget-card label="Users retention" total="5k" percentage="40" [data]="[1, 7, 10, 21]"></app-widget-card>
     </mat-card>
     <mat-card fxFlex="23">
-        <app-widget-card label="Sales" total="2k" percentage="30" [data]="cards"></app-widget-card>
+        <app-widget-card label="Sales" total="2k" percentage="30" [data]="cards$ | async"></app-widget-card>
     </mat-card>
     <mat-card fxFlex="23">
-        <app-widget-card label="Purchase" total="2k" percentage="20" [data]="cards"></app-widget-card>
+        <app-widget-card label="Purchase" total="2k" percentage="20" [data]="cards$ | async"></app-widget-card>
     </mat-card>
 </div>
 

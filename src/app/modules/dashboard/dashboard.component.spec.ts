@@ -14,14 +14,12 @@ describe('DashboardComponent', () => {
   let mockFirestore: any;
 
   beforeEach(waitForAsync(() => {
-    mockDashboardService = jasmine.createSpyObj('DashboardService', ['getMonthlySalesAndOrdersData', 'getMonthlyCogsAndRevenue', 'getSalesByProductData', 'bigChart', 'cards', 'pieChart']);
+    mockDashboardService = jasmine.createSpyObj('DashboardService', ['getMonthlySalesAndOrdersData', 'getMonthlyCogsAndRevenue', 'getSalesByProductData', 'cards']);
     // Setup default return values for DashboardService methods
     mockDashboardService.getMonthlySalesAndOrdersData.and.returnValue(of({}));
     mockDashboardService.getMonthlyCogsAndRevenue.and.returnValue(of({}));
     mockDashboardService.getSalesByProductData.and.returnValue(of([]));
-    mockDashboardService.bigChart.and.returnValue([]);
-    mockDashboardService.cards.and.returnValue([]);
-    mockDashboardService.pieChart.and.returnValue([]);
+    mockDashboardService.cards.and.returnValue(of([]));
 
 
     mockItemService = jasmine.createSpyObj('ItemService', ['GetOrdersList']);

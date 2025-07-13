@@ -60,17 +60,14 @@ export class EbayService {
         })
       );
     } else if (this.ebayApiEndpoint) {
-      // Placeholder for actual API call
-      console.warn('EbayService: Actual API endpoint call is not implemented yet. Returning mock data.');
-      return of(this.getHardcodedMockOrders().map(rawOrder => this.transformRawOrderToAppOrder(rawOrder)));
-      // Example: return this.http.get<RawEbayOrder[]>(`${this.ebayApiEndpoint}/new-orders`)
-      //   .pipe(
-      //     map(rawOrders => rawOrders.map(rawOrder => this.transformRawOrderToAppOrder(rawOrder))),
-      //     catchError(error => {
-      //       console.error('Error fetching eBay orders from API:', error);
-      //       return of([]);
-      //     })
-      //   );
+      return this.http.get<RawEbayOrder[]>(`${this.ebayApiEndpoint}/new-orders`)
+        .pipe(
+          map(rawOrders => rawOrders.map(rawOrder => this.transformRawOrderToAppOrder(rawOrder))),
+          catchError(error => {
+            console.error('Error fetching eBay orders from API:', error);
+            return of([]);
+          })
+        );
     } else {
       console.error('EbayService: No API endpoint or mock data URL configured. Returning empty array.');
       return of([]);
@@ -83,9 +80,13 @@ export class EbayService {
    * @returns An Observable indicating success or failure.
    */
   syncProductListings(products: any[]): Observable<boolean> {
-    console.warn('EbayService: syncProductListings is not implemented yet.');
-    // TODO: Implement actual API call to eBay Trading API or similar for listings
-    return of(true); // Placeholder success
+    return this.http.post<any>(`${this.ebayApiEndpoint}/products`, { products }).pipe(
+      map(() => true),
+      catchError(error => {
+        console.error('Error syncing product listings with eBay:', error);
+        return of(false);
+      })
+    );
   }
 
   /**
@@ -94,9 +95,13 @@ export class EbayService {
    * @returns An Observable indicating success or failure.
    */
   updateInventory(inventoryUpdates: any[]): Observable<boolean> {
-    console.warn('EbayService: updateInventory is not implemented yet.');
-    // TODO: Implement actual API call to eBay Inventory API or Trading API for inventory
-    return of(true); // Placeholder success
+    return this.http.post<any>(`${this.ebayApiEndpoint}/inventory`, { inventoryUpdates }).pipe(
+      map(() => true),
+      catchError(error => {
+        console.error('Error updating inventory on eBay:', error);
+        return of(false);
+      })
+    );
   }
 
   /**

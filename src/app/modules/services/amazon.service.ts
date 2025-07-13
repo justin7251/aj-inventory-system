@@ -80,7 +80,7 @@ export class AmazonService {
       );
     } else if (this.amazonApiEndpoint) {
       console.warn('AmazonService: Actual Amazon MWS API endpoint call for orders is not implemented yet. Returning mock data.');
-      // TODO: Implement actual API call to this.amazonApiEndpoint
+
       return of(this.getHardcodedMockAmazonOrders().map(rawOrder => this.transformRawAmazonOrderToAppOrder(rawOrder)));
     } else {
       console.error('AmazonService: No API endpoint or mock data URL configured for orders. Returning mock data.');
@@ -94,9 +94,13 @@ export class AmazonService {
    * @returns An Observable indicating success or failure.
    */
   syncProductListings(products: any[]): Observable<boolean> {
-    console.warn('AmazonService: syncProductListings is not implemented yet.');
-    // TODO: Implement actual API call
-    return of(true); // Placeholder
+    return this.http.post<any>(`${this.amazonApiEndpoint}/products`, { products }).pipe(
+      map(() => true),
+      catchError(error => {
+        console.error('Error syncing product listings with Amazon:', error);
+        return of(false);
+      })
+    );
   }
 
   /**
@@ -105,9 +109,13 @@ export class AmazonService {
    * @returns An Observable indicating success or failure.
    */
   updateInventory(inventoryUpdates: any[]): Observable<boolean> {
-    console.warn('AmazonService: updateInventory is not implemented yet.');
-    // TODO: Implement actual API call
-    return of(true); // Placeholder
+    return this.http.post<any>(`${this.amazonApiEndpoint}/inventory`, { inventoryUpdates }).pipe(
+      map(() => true),
+      catchError(error => {
+        console.error('Error updating inventory on Amazon:', error);
+        return of(false);
+      })
+    );
   }
 
   private transformRawAmazonOrderToAppOrder(rawOrder: RawAmazonOrder): Order {

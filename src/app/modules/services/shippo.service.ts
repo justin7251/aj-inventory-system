@@ -185,18 +185,6 @@ export class ShippoService {
       return of(this.getHardcodedMockRates(shipmentRequest));
     }
 
-    // TODO: Implement actual POST to this.apiEndpoint/shipments/
-    // This is a placeholder for the actual API call structure.
-    // The real Shippo API returns a Shipment object which contains a 'rates' array.
-    // return this.http.post<any>(`${this.apiEndpoint}shipments`, shipmentRequest, { headers: this.getAuthHeaders() }).pipe(
-    //   map(response => response.rates), // Extract rates from the full shipment response
-    //   catchError(error => {
-    //     console.error('ShippoService: Error creating shipment and getting rates', error);
-    //     return of([]); // Return empty array on error
-    //   })
-    // );
-    // console.warn('ShippoService: Actual API call for createShipmentAndGetRates not implemented. Returning mock data due to TODO.');
-    // return of(this.getHardcodedMockRates(shipmentRequest));
     return this.http.post<any>(`${this.apiEndpoint}shipments`, shipmentRequest, { headers: this.getAuthHeaders() }).pipe(
       map(response => response.rates), // Extract rates from the full shipment response
       catchError(error => {
@@ -221,15 +209,6 @@ export class ShippoService {
       return of(this.getHardcodedMockTransaction(transactionRequest));
     }
 
-    // TODO: Implement actual POST to this.apiEndpoint/transactions/
-    // return this.http.post<ShippoTransaction>(`${this.apiEndpoint}transactions`, transactionRequest, { headers: this.getAuthHeaders() }).pipe(
-    //   catchError(error => {
-    //     console.error('ShippoService: Error creating shipping label (transaction)', error);
-    //     return of(null); // Return null on error
-    //   })
-    // );
-    // console.warn('ShippoService: Actual API call for createShippingLabel not implemented. Returning mock data due to TODO.');
-    // return of(this.getHardcodedMockTransaction(transactionRequest));
     return this.http.post<ShippoTransaction>(`${this.apiEndpoint}transactions`, transactionRequest, { headers: this.getAuthHeaders() }).pipe(
       catchError(error => {
         console.error('ShippoService: Error creating shipping label (transaction)', error);
@@ -249,15 +228,6 @@ export class ShippoService {
       return of(this.getHardcodedMockTrackingInfo(trackRequest));
     }
 
-    // TODO: Implement actual GET to this.apiEndpoint/tracks/{carrierToken}/{trackingNumber}/
-    // return this.http.get<ShippoTrack>(`${this.apiEndpoint}tracks/${carrierToken}/${trackingNumber}/`, { headers: this.getAuthHeaders() }).pipe(
-    //   catchError(error => {
-    //     console.error('ShippoService: Error tracking shipment', error);
-    //     return of(null); // Return null on error
-    //   })
-    // );
-    // console.warn('ShippoService: Actual API call for trackShipment not implemented. Returning mock data due to TODO.');
-    // return of(this.getHardcodedMockTrackingInfo(trackRequest));
     return this.http.get<ShippoTrack>(`${this.apiEndpoint}tracks/${carrierToken}/${trackingNumber}/`, { headers: this.getAuthHeaders() }).pipe(
       catchError(error => {
         console.error('ShippoService: Error tracking shipment', error);

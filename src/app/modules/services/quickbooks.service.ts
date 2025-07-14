@@ -83,10 +83,14 @@ export class QuickBooksService {
   // --- Invoice Synchronization ---
   syncInvoices(invoices: any[] /* Replace 'any' with your app's Invoice model */): Observable<boolean> {
     if (this.quickBooksApiEndpoint) {
-      console.warn('QuickBooksService: Actual API call for syncInvoices not implemented. Simulating success.');
       // TODO: Implement actual POST/PUT to this.quickBooksApiEndpoint/invoice
-      // This would likely involve transforming your app's invoice model to RawQuickBooksInvoice
-      return of(true);
+      return this.http.post<any>(`${this.quickBooksApiEndpoint}/invoice`, invoices).pipe(
+        map(() => true),
+        catchError(error => {
+          console.error('QuickBooksService: Error syncing invoices', error);
+          return of(false);
+        })
+      );
     } else {
       console.log('QuickBooksService: Simulating invoice sync (mock). Data:', invoices);
       return of(true);
@@ -102,9 +106,13 @@ export class QuickBooksService {
         })
       );
     } else if (this.quickBooksApiEndpoint) {
-      console.warn('QuickBooksService: Actual API call for fetchQuickBooksInvoices not implemented. Returning mock data.');
       // TODO: Implement actual GET from this.quickBooksApiEndpoint/query?query=SELECT * FROM Invoice
-      return of(this.getHardcodedMockInvoices());
+      return this.http.get<RawQuickBooksInvoice[]>(`${this.quickBooksApiEndpoint}/query?query=SELECT * FROM Invoice`).pipe(
+        catchError(error => {
+          console.error('QuickBooksService: Error fetching invoices', error);
+          return of([]);
+        })
+      );
     } else {
       console.error('QuickBooksService: No API endpoint or mock data URL. Returning hardcoded mock invoices.');
       return of(this.getHardcodedMockInvoices());
@@ -114,9 +122,14 @@ export class QuickBooksService {
   // --- Payment Synchronization ---
   syncPayments(payments: any[] /* Replace 'any' with your app's Payment model */): Observable<boolean> {
     if (this.quickBooksApiEndpoint) {
-      console.warn('QuickBooksService: Actual API call for syncPayments not implemented. Simulating success.');
       // TODO: Implement actual POST/PUT to this.quickBooksApiEndpoint/payment
-      return of(true);
+      return this.http.post<any>(`${this.quickBooksApiEndpoint}/payment`, payments).pipe(
+        map(() => true),
+        catchError(error => {
+          console.error('QuickBooksService: Error syncing payments', error);
+          return of(false);
+        })
+      );
     } else {
       console.log('QuickBooksService: Simulating payment sync (mock). Data:', payments);
       return of(true);
@@ -126,9 +139,14 @@ export class QuickBooksService {
   // --- Customer Data Synchronization ---
   syncCustomers(customers: any[] /* Replace 'any' with your app's Customer model */): Observable<boolean> {
     if (this.quickBooksApiEndpoint) {
-      console.warn('QuickBooksService: Actual API call for syncCustomers not implemented. Simulating success.');
       // TODO: Implement actual POST/PUT to this.quickBooksApiEndpoint/customer
-      return of(true);
+      return this.http.post<any>(`${this.quickBooksApiEndpoint}/customer`, customers).pipe(
+        map(() => true),
+        catchError(error => {
+          console.error('QuickBooksService: Error syncing customers', error);
+          return of(false);
+        })
+      );
     } else {
       console.log('QuickBooksService: Simulating customer sync (mock). Data:', customers);
       return of(true);

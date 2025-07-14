@@ -77,10 +77,14 @@ export class XeroService {
   // Pushes your application's invoices to Xero
   syncInvoicesToXero(invoices: any[] /* App's Invoice model */): Observable<boolean> {
     if (this.xeroApiEndpoint) {
-      console.warn('XeroService: Actual API call for syncInvoicesToXero not implemented. Simulating success.');
       // TODO: Implement actual POST/PUT to this.xeroApiEndpoint/Invoices
-      // This would involve transforming your app's invoice model to RawXeroInvoice
-      return of(true);
+      return this.http.post<any>(`${this.xeroApiEndpoint}/Invoices`, { Invoices: invoices }).pipe(
+        map(() => true),
+        catchError(error => {
+          console.error('XeroService: Error syncing invoices to Xero', error);
+          return of(false);
+        })
+      );
     } else {
       console.log('XeroService: Simulating invoice sync to Xero (mock). Data:', invoices);
       return of(true);
@@ -98,9 +102,14 @@ export class XeroService {
         })
       );
     } else if (this.xeroApiEndpoint) {
-      console.warn('XeroService: Actual API call for fetchInvoicesFromXero not implemented. Returning mock data.');
       // TODO: Implement actual GET from this.xeroApiEndpoint/Invoices
-      return of(this.getHardcodedMockXeroInvoices());
+      return this.http.get<{Invoices: RawXeroInvoice[]}>(`${this.xeroApiEndpoint}/Invoices`).pipe(
+        map(response => response.Invoices || []),
+        catchError(error => {
+          console.error('XeroService: Error fetching invoices from Xero', error);
+          return of([]);
+        })
+      );
     } else {
       console.error('XeroService: No API endpoint or mock data URL for Xero. Returning hardcoded mock invoices.');
       return of(this.getHardcodedMockXeroInvoices());
@@ -110,9 +119,14 @@ export class XeroService {
   // --- Payment Synchronization ---
   syncPaymentsToXero(payments: any[] /* App's Payment model */): Observable<boolean> {
     if (this.xeroApiEndpoint) {
-      console.warn('XeroService: Actual API call for syncPaymentsToXero not implemented. Simulating success.');
       // TODO: Implement actual POST/PUT to this.xeroApiEndpoint/Payments
-      return of(true);
+      return this.http.post<any>(`${this.xeroApiEndpoint}/Payments`, { Payments: payments }).pipe(
+        map(() => true),
+        catchError(error => {
+          console.error('XeroService: Error syncing payments to Xero', error);
+          return of(false);
+        })
+      );
     } else {
       console.log('XeroService: Simulating payment sync to Xero (mock). Data:', payments);
       return of(true);
@@ -122,9 +136,14 @@ export class XeroService {
   // --- Contact (Customer) Synchronization ---
   syncContactsToXero(contacts: any[] /* App's Customer/Contact model */): Observable<boolean> {
     if (this.xeroApiEndpoint) {
-      console.warn('XeroService: Actual API call for syncContactsToXero not implemented. Simulating success.');
       // TODO: Implement actual POST/PUT to this.xeroApiEndpoint/Contacts
-      return of(true);
+      return this.http.post<any>(`${this.xeroApiEndpoint}/Contacts`, { Contacts: contacts }).pipe(
+        map(() => true),
+        catchError(error => {
+          console.error('XeroService: Error syncing contacts to Xero', error);
+          return of(false);
+        })
+      );
     } else {
       console.log('XeroService: Simulating contact sync to Xero (mock). Data:', contacts);
       return of(true);

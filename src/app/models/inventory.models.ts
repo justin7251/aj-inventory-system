@@ -20,7 +20,14 @@ export interface Product {
 export interface Warehouse {
   warehouseId: string; // Primary Key
   locationName: string;
-  address?: string;
+  street1: string;
+  street2?: string;
+  city: string;
+  state: string;
+  zip: string;
+  country: string;
+  phone?: string;
+  email?: string;
 }
 
 export interface SalesOrderItem {

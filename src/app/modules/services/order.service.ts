@@ -180,16 +180,16 @@ export class OrderService {
 
       if (warehouses && warehouses.length > 0) {
         const primaryWarehouse = warehouses[0]; // Example: Use the first warehouse
-        // TODO: Enhance Warehouse model and data to include full address details for Shippo
         shipFromAddress = {
-          name: primaryWarehouse.locationName || 'Warehouse Default Name',
-          street1: primaryWarehouse.address || '123 Default Warehouse St', // Placeholder
-          city: 'DefaultCity', // Placeholder
-          state: 'XX', // Placeholder
-          zip: '00000', // Placeholder
-          country: 'US', // Placeholder - This should be dynamic based on warehouse location
-          phone: '555-555-5555', // Placeholder
-          email: 'noreply@example.com' // Placeholder
+          name: primaryWarehouse.locationName,
+          street1: primaryWarehouse.street1,
+          street2: primaryWarehouse.street2,
+          city: primaryWarehouse.city,
+          state: primaryWarehouse.state,
+          zip: primaryWarehouse.zip,
+          country: primaryWarehouse.country,
+          phone: primaryWarehouse.phone,
+          email: primaryWarehouse.email
         };
       } else {
         console.warn('OrderService: No warehouses configured. Cannot determine ship_from address for shipping.');

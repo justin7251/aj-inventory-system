@@ -89,10 +89,13 @@ export class FedExService {
    */
   getShippingRates(rateRequest: FedExRateRequest): Observable<FedExRateResponse[]> {
     if (this.fedexApiEndpoint) {
-      console.warn('FedExService: Actual API call for getShippingRates not implemented. Returning mock data.');
       // TODO: Implement actual POST to this.fedexApiEndpoint/rates
-      // This would involve transforming rateRequest to the FedEx API structure.
-      return of(this.getHardcodedMockRates(rateRequest));
+      return this.http.post<FedExRateResponse[]>(`${this.fedexApiEndpoint}/rates`, rateRequest).pipe(
+        catchError(error => {
+          console.error('FedExService: Error fetching shipping rates', error);
+          return of([]); // Return an empty array or handle as appropriate
+        })
+      );
     } else {
       console.log('FedExService: Simulating getShippingRates (mock). Request:', rateRequest);
       return of(this.getHardcodedMockRates(rateRequest));
@@ -106,9 +109,13 @@ export class FedExService {
    */
   createShippingLabel(labelRequest: FedExLabelRequest): Observable<FedExLabelResponse | null> {
     if (this.fedexApiEndpoint) {
-      console.warn('FedExService: Actual API call for createShippingLabel not implemented. Returning mock data.');
       // TODO: Implement actual POST to this.fedexApiEndpoint/shipments (or similar)
-      return of(this.getHardcodedMockLabel(labelRequest));
+      return this.http.post<FedExLabelResponse>(`${this.fedexApiEndpoint}/shipments`, labelRequest).pipe(
+        catchError(error => {
+          console.error('FedExService: Error creating shipping label', error);
+          return of(null); // Return null or handle as appropriate
+        })
+      );
     } else {
       console.log('FedExService: Simulating createShippingLabel (mock). Request:', labelRequest);
       return of(this.getHardcodedMockLabel(labelRequest));
@@ -122,9 +129,13 @@ export class FedExService {
    */
   trackShipment(trackingRequest: FedExTrackingRequest): Observable<FedExTrackingResponse | null> {
     if (this.fedexApiEndpoint) {
-      console.warn('FedExService: Actual API call for trackShipment not implemented. Returning mock data.');
       // TODO: Implement actual POST or GET to this.fedexApiEndpoint/track
-      return of(this.getHardcodedMockTrackingInfo(trackingRequest.trackingNumber));
+      return this.http.post<FedExTrackingResponse>(`${this.fedexApiEndpoint}/track`, trackingRequest).pipe(
+        catchError(error => {
+          console.error('FedExService: Error tracking shipment', error);
+          return of(null); // Return null or handle as appropriate
+        })
+      );
     } else {
       console.log('FedExService: Simulating trackShipment (mock). Request:', trackingRequest);
       return of(this.getHardcodedMockTrackingInfo(trackingRequest.trackingNumber));

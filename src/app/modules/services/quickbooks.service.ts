@@ -83,7 +83,6 @@ export class QuickBooksService {
   // --- Invoice Synchronization ---
   syncInvoices(invoices: any[] /* Replace 'any' with your app's Invoice model */): Observable<boolean> {
     if (this.quickBooksApiEndpoint) {
-      // TODO: Implement actual POST/PUT to this.quickBooksApiEndpoint/invoice
       return this.http.post<any>(`${this.quickBooksApiEndpoint}/invoice`, invoices).pipe(
         map(() => true),
         catchError(error => {
@@ -106,7 +105,6 @@ export class QuickBooksService {
         })
       );
     } else if (this.quickBooksApiEndpoint) {
-      // TODO: Implement actual GET from this.quickBooksApiEndpoint/query?query=SELECT * FROM Invoice
       return this.http.get<RawQuickBooksInvoice[]>(`${this.quickBooksApiEndpoint}/query?query=SELECT * FROM Invoice`).pipe(
         catchError(error => {
           console.error('QuickBooksService: Error fetching invoices', error);
@@ -122,7 +120,6 @@ export class QuickBooksService {
   // --- Payment Synchronization ---
   syncPayments(payments: any[] /* Replace 'any' with your app's Payment model */): Observable<boolean> {
     if (this.quickBooksApiEndpoint) {
-      // TODO: Implement actual POST/PUT to this.quickBooksApiEndpoint/payment
       return this.http.post<any>(`${this.quickBooksApiEndpoint}/payment`, payments).pipe(
         map(() => true),
         catchError(error => {
@@ -139,7 +136,6 @@ export class QuickBooksService {
   // --- Customer Data Synchronization ---
   syncCustomers(customers: any[] /* Replace 'any' with your app's Customer model */): Observable<boolean> {
     if (this.quickBooksApiEndpoint) {
-      // TODO: Implement actual POST/PUT to this.quickBooksApiEndpoint/customer
       return this.http.post<any>(`${this.quickBooksApiEndpoint}/customer`, customers).pipe(
         map(() => true),
         catchError(error => {

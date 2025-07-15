@@ -89,7 +89,6 @@ export class FedExService {
    */
   getShippingRates(rateRequest: FedExRateRequest): Observable<FedExRateResponse[]> {
     if (this.fedexApiEndpoint) {
-      // TODO: Implement actual POST to this.fedexApiEndpoint/rates
       return this.http.post<FedExRateResponse[]>(`${this.fedexApiEndpoint}/rates`, rateRequest).pipe(
         catchError(error => {
           console.error('FedExService: Error fetching shipping rates', error);
@@ -109,7 +108,6 @@ export class FedExService {
    */
   createShippingLabel(labelRequest: FedExLabelRequest): Observable<FedExLabelResponse | null> {
     if (this.fedexApiEndpoint) {
-      // TODO: Implement actual POST to this.fedexApiEndpoint/shipments (or similar)
       return this.http.post<FedExLabelResponse>(`${this.fedexApiEndpoint}/shipments`, labelRequest).pipe(
         catchError(error => {
           console.error('FedExService: Error creating shipping label', error);
@@ -129,7 +127,6 @@ export class FedExService {
    */
   trackShipment(trackingRequest: FedExTrackingRequest): Observable<FedExTrackingResponse | null> {
     if (this.fedexApiEndpoint) {
-      // TODO: Implement actual POST or GET to this.fedexApiEndpoint/track
       return this.http.post<FedExTrackingResponse>(`${this.fedexApiEndpoint}/track`, trackingRequest).pipe(
         catchError(error => {
           console.error('FedExService: Error tracking shipment', error);

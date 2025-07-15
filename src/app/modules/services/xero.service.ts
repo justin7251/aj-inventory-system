@@ -77,7 +77,6 @@ export class XeroService {
   // Pushes your application's invoices to Xero
   syncInvoicesToXero(invoices: any[] /* App's Invoice model */): Observable<boolean> {
     if (this.xeroApiEndpoint) {
-      // TODO: Implement actual POST/PUT to this.xeroApiEndpoint/Invoices
       return this.http.post<any>(`${this.xeroApiEndpoint}/Invoices`, { Invoices: invoices }).pipe(
         map(() => true),
         catchError(error => {
@@ -102,7 +101,6 @@ export class XeroService {
         })
       );
     } else if (this.xeroApiEndpoint) {
-      // TODO: Implement actual GET from this.xeroApiEndpoint/Invoices
       return this.http.get<{Invoices: RawXeroInvoice[]}>(`${this.xeroApiEndpoint}/Invoices`).pipe(
         map(response => response.Invoices || []),
         catchError(error => {
@@ -119,7 +117,6 @@ export class XeroService {
   // --- Payment Synchronization ---
   syncPaymentsToXero(payments: any[] /* App's Payment model */): Observable<boolean> {
     if (this.xeroApiEndpoint) {
-      // TODO: Implement actual POST/PUT to this.xeroApiEndpoint/Payments
       return this.http.post<any>(`${this.xeroApiEndpoint}/Payments`, { Payments: payments }).pipe(
         map(() => true),
         catchError(error => {
@@ -136,7 +133,6 @@ export class XeroService {
   // --- Contact (Customer) Synchronization ---
   syncContactsToXero(contacts: any[] /* App's Customer/Contact model */): Observable<boolean> {
     if (this.xeroApiEndpoint) {
-      // TODO: Implement actual POST/PUT to this.xeroApiEndpoint/Contacts
       return this.http.post<any>(`${this.xeroApiEndpoint}/Contacts`, { Contacts: contacts }).pipe(
         map(() => true),
         catchError(error => {

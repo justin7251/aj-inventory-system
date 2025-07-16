@@ -139,7 +139,6 @@ export class UPSService {
 
     // The request body and auth will be specific to the UPS Rating API.
     return this.http.post<any>(`${this.apiEndpoint}rating/v1/Rate`, { RateRequest: rateRequest }, { headers: this.getAuthHeaders() }).pipe(
-      map(response => response.RateResponse.RatedShipment), // Path to rates may vary
       catchError(error => {
         console.error('UPSService: Error getting shipping rates', error);
         console.warn('UPSService: Falling back to mock rates due to API error.');

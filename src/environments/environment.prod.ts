@@ -35,5 +35,29 @@ export const environment = {
     password: 'YOUR_UPS_PASSWORD',
     accountNumber: 'YOUR_UPS_ACCOUNT_NUMBER',
     apiMocking: false // In production, this should ideally be false
+  },
+  amazonMwsApiConfig: {
+    endpoint: 'https://mws.amazonservices.com',
+    mockDataUrl: '',
+    apiKey: 'YOUR_AMAZON_API_KEY_HERE',
+    apiMocking: false
+  },
+  fedexApiConfig: {
+    endpoint: 'https://ws.fedex.com:443/web-services',
+    mockDataUrl: '',
+    apiKey: 'YOUR_FEDEX_API_KEY_HERE',
+    apiMocking: false
+  },
+  quickbooksApiConfig: {
+    endpoint: 'https://quickbooks.api.intuit.com',
+    mockDataUrlPrefix: '',
+    apiKey: 'YOUR_QUICKBOOKS_API_KEY_HERE',
+    apiMocking: false
+  },
+  xeroApiConfig: {
+    endpoint: 'https://api.xero.com/api.xro/2.0',
+    mockDataUrlPrefix: '',
+    apiKey: 'YOUR_XERO_API_KEY_HERE',
+    apiMocking: false
   }
 };

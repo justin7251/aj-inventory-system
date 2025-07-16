@@ -48,15 +48,15 @@ describe('PackingQueueService', () => {
     spiedServerTimestamp = jasmine.createSpy('serverTimestamp').and.returnValue(Timestamp.now()); // Or a fixed date
 
     // Override global Firestore functions with spies
-    (global as any).collection = spiedCollection;
-    (global as any).addDoc = spiedAddDoc;
-    (global as any).doc = spiedDoc;
-    (global as any).updateDoc = spiedUpdateDoc;
-    (global as any).collectionData = spiedCollectionData;
-    (global as any).query = spiedQuery;
-    (global as any).where = spiedWhere;
-    (global as any).orderBy = spiedOrderBy;
-    (global as any).serverTimestamp = spiedServerTimestamp;
+    (window as any).collection = spiedCollection;
+    (window as any).addDoc = spiedAddDoc;
+    (window as any).doc = spiedDoc;
+    (window as any).updateDoc = spiedUpdateDoc;
+    (window as any).collectionData = spiedCollectionData;
+    (window as any).query = spiedQuery;
+    (window as any).where = spiedWhere;
+    (window as any).orderBy = spiedOrderBy;
+    (window as any).serverTimestamp = spiedServerTimestamp;
 
     firestoreMock = {}; // No methods needed on Firestore instance itself for these tests
 
@@ -76,15 +76,15 @@ describe('PackingQueueService', () => {
 
   afterEach(() => {
     // Restore original functions
-    (global as any).collection = originalFirestore.collection;
-    (global as any).addDoc = originalFirestore.addDoc;
-    (global as any).doc = originalFirestore.doc;
-    (global as any).updateDoc = originalFirestore.updateDoc;
-    (global as any).collectionData = originalFirestore.collectionData;
-    (global as any).query = originalFirestore.query;
-    (global as any).where = originalFirestore.where;
-    (global as any).orderBy = originalFirestore.orderBy;
-    (global as any).serverTimestamp = originalFirestore.serverTimestamp;
+    (window as any).collection = originalFirestore.collection;
+    (window as any).addDoc = originalFirestore.addDoc;
+    (window as any).doc = originalFirestore.doc;
+    (window as any).updateDoc = originalFirestore.updateDoc;
+    (window as any).collectionData = originalFirestore.collectionData;
+    (window as any).query = originalFirestore.query;
+    (window as any).where = originalFirestore.where;
+    (window as any).orderBy = originalFirestore.orderBy;
+    (window as any).serverTimestamp = originalFirestore.serverTimestamp;
   });
 
 
@@ -102,6 +102,7 @@ describe('PackingQueueService', () => {
         status: 'pending',
         customerName: 'Test Customer',
         deliveryAddress: '123 Test St',
+        warehouseId: 'wh1'
       };
       const expectedDocData = {
         ...newItem,
@@ -121,7 +122,7 @@ describe('PackingQueueService', () => {
   describe('getPendingPackingItems', () => {
     it('should call collectionData with a query for pending items ordered by creationDate', () => {
       const mockItems: PackingItem[] = [
-        { id: '1', orderId: 'o1', productName: 'p1', quantityToPack: 1, status: 'pending', customerName: 'c1', deliveryAddress: 'a1', productId: 'pid1', creationDate: Timestamp.now() },
+        { id: '1', orderId: 'o1', productName: 'p1', quantityToPack: 1, status: 'pending', customerName: 'c1', deliveryAddress: 'a1', productId: 'pid1', creationDate: Timestamp.now(), warehouseId: 'wh1' },
       ];
       spiedCollectionData.and.returnValue(of(mockItems));
 

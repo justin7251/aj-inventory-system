@@ -34,7 +34,7 @@ export class OrderService {
   public getProductCostMap(): Promise<Map<string, number>> {
     if (!this.productCostMap$) {
       const productsRef = collection(this.firestoreDb, 'products');
-      this.productCostMap$ = (collectionData(query(productsRef), { idField: 'id' }) as Observable<Product[]>).pipe(
+      this.productCostMap$ = (collectionData(query(productsRef), { idField: 'id' }) as Observable<AppProduct[]>).pipe(
         map(products => {
           const map = new Map<string, number>();
           products.forEach(p => {
@@ -249,7 +249,7 @@ export class OrderService {
 
             if (transaction && transaction.status === 'SUCCESS') {
               console.log(`OrderService: Label created for order ${newOrderRef.id}. Tracking: ${transaction.tracking_number}`);
-              const shippingUpdate: Partial<InventorySalesOrder> = { // Use InventorySalesOrder for type safety on shipping fields
+              const shippingUpdate: Partial<Order> = { // Use InventorySalesOrder for type safety on shipping fields
                 shippingCarrier: selectedRate.provider,
                 shippingServiceLevel: selectedRate.servicelevel.name,
                 shippingCost: parseFloat(selectedRate.amount),
@@ -264,7 +264,7 @@ export class OrderService {
                 shippingUpdate.estimatedDeliveryDate = estDate;
               }
 
-              await this.updateOrder(newOrderRef.id, shippingUpdate as Partial<Order>); // Cast back to Order for Firestore update
+              await this.updateOrder(newOrderRef.id, shippingUpdate); // Cast back to Order for Firestore update
             } else {
               console.error(`OrderService: Failed to create label for order ${newOrderRef.id}. Transaction status: ${transaction?.status}`);
             }

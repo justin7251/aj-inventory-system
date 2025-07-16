@@ -50,8 +50,11 @@ describe('FedExService', () => {
     httpMock = TestBed.inject(HttpTestingController);
 
     environment.fedexApiConfig = { // Ensure this is defined for tests
-      endpoint: 'https://mock-fedex-api.com'
+      endpoint: 'https://mock-fedex-api.com',
       // mockRateDataUrl: undefined // if you had specific mock files
+      apiKey: 'test',
+      apiMocking: true,
+      mockDataUrl: ''
     };
   });
 

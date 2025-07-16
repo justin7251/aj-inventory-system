@@ -25,4 +25,13 @@ export interface Order {
 	created_date?: Timestamp | Date | string;
 	deleted_date?: Timestamp | Date | string;
 	deleted?: boolean; // Make optional if not always present
+
+	// Shipping properties
+	shippingCarrier?: string;
+	shippingServiceLevel?: string;
+	shippingCost?: number;
+	trackingNumber?: string;
+	shippoTransactionId?: string;
+	labelUrl?: string;
+	estimatedDeliveryDate?: Date;
 }

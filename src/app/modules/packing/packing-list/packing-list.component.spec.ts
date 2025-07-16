@@ -20,8 +20,8 @@ let mockPackingQueueService: {
 let mockMatSnackBar: { open: jasmine.Spy };
 
 const mockPackingItems: PackingItem[] = [
-  { id: 'item1', orderId: 'order1', productId: 'prod1', productName: 'Product A', quantityToPack: 1, status: 'pending', customerName: 'Cust A', deliveryAddress: 'Addr A', creationDate: Timestamp.now() },
-  { id: 'item2', orderId: 'order2', productId: 'prod2', productName: 'Product B', quantityToPack: 2, status: 'packed', customerName: 'Cust B', deliveryAddress: 'Addr B', creationDate: Timestamp.now() },
+  { id: 'item1', orderId: 'order1', productId: 'prod1', productName: 'Product A', quantityToPack: 1, status: 'pending', customerName: 'Cust A', deliveryAddress: 'Addr A', creationDate: Timestamp.now(), warehouseId: 'wh1' },
+  { id: 'item2', orderId: 'order2', productId: 'prod2', productName: 'Product B', quantityToPack: 2, status: 'packed', customerName: 'Cust B', deliveryAddress: 'Addr B', creationDate: Timestamp.now(), warehouseId: 'wh2' },
 ];
 
 describe('PackingListComponent', () => {

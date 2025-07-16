@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { Firestore, collection, addDoc, doc, updateDoc, runTransaction, serverTimestamp, Timestamp, query, collectionData, orderBy, docData, DocumentReference } from '@angular/fire/firestore';
+import { Firestore, collection, addDoc, doc, updateDoc, runTransaction, serverTimestamp, Timestamp, query, collectionData, orderBy, docData, DocumentReference, where } from '@angular/fire/firestore';
 import { OrderService } from './order.service';
 import { PackingQueueService } from './packing-queue.service';
 import { Order, OrderItem } from '../model/order.model';
@@ -15,7 +15,7 @@ const originalFirestore = {
   collection,
   query,
   orderBy,
-  where, // Added where back
+  where,
   collectionData,
   docData,
   serverTimestamp
@@ -67,17 +67,17 @@ describe('OrderService', () => {
     spiedServerTimestamp = jasmine.createSpy('serverTimestamp').and.returnValue('mocked_server_timestamp');
 
     // Override global Firestore functions with spies
-    (global as any).runTransaction = spiedRunTransaction;
-    (global as any).addDoc = spiedAddDoc;
-    (global as any).updateDoc = spiedUpdateDoc;
-    (global as any).doc = spiedDoc;
-    (global as any).collection = spiedCollection;
-    (global as any).query = spiedQuery;
-    (global as any).orderBy = spiedOrderBy;
-    (global as any).where = spiedWhere;
-    (global as any).collectionData = spiedCollectionData;
-    (global as any).docData = spiedDocData;
-    (global as any).serverTimestamp = spiedServerTimestamp;
+    (window as any).runTransaction = spiedRunTransaction;
+    (window as any).addDoc = spiedAddDoc;
+    (window as any).updateDoc = spiedUpdateDoc;
+    (window as any).doc = spiedDoc;
+    (window as any).collection = spiedCollection;
+    (window as any).query = spiedQuery;
+    (window as any).orderBy = spiedOrderBy;
+    (window as any).where = spiedWhere;
+    (window as any).collectionData = spiedCollectionData;
+    (window as any).docData = spiedDocData;
+    (window as any).serverTimestamp = spiedServerTimestamp;
 
     firestoreMock = {};
     packingQueueServiceMock = {
@@ -111,17 +111,17 @@ describe('OrderService', () => {
 
   afterEach(() => {
     // Restore original functions
-    (global as any).runTransaction = originalFirestore.runTransaction;
-    (global as any).addDoc = originalFirestore.addDoc;
-    (global as any).updateDoc = originalFirestore.updateDoc;
-    (global as any).doc = originalFirestore.doc;
-    (global as any).collection = originalFirestore.collection;
-    (global as any).query = originalFirestore.query;
-    (global as any).orderBy = originalFirestore.orderBy;
-    (global as any).where = originalFirestore.where;
-    (global as any).collectionData = originalFirestore.collectionData;
-    (global as any).docData = originalFirestore.docData;
-    (global as any).serverTimestamp = originalFirestore.serverTimestamp;
+    (window as any).runTransaction = originalFirestore.runTransaction;
+    (window as any).addDoc = originalFirestore.addDoc;
+    (window as any).updateDoc = originalFirestore.updateDoc;
+    (window as any).doc = originalFirestore.doc;
+    (window as any).collection = originalFirestore.collection;
+    (window as any).query = originalFirestore.query;
+    (window as any).orderBy = originalFirestore.orderBy;
+    (window as any).where = originalFirestore.where;
+    (window as any).collectionData = originalFirestore.collectionData;
+    (window as any).docData = originalFirestore.docData;
+    (window as any).serverTimestamp = originalFirestore.serverTimestamp;
   });
 
   it('should be created', () => {
@@ -132,7 +132,7 @@ describe('OrderService', () => {
     const orderItem: OrderItem = { product_no: 'SKU001', quantity: 2, item_cost: 200, product_name: 'Test Product' };
     const orderData: Order = {
       user_id: 'user1', customer_name: 'Test Customer', telephone: 123, delivery_address: 'Addr',
-      payment_type: 'Card', items: [orderItem], delivery_cost: 10, discount: 0, total_cost: 210,
+      payment_type: 'Card', items: [orderItem], delivery_cost: 10, discount: 0, total_cost: 210, created_date: new Date()
     };
 
     it('should run two transactions for aggregation, add order doc, and add to packing queue', async () => {

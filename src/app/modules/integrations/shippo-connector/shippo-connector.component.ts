@@ -95,7 +95,12 @@ export class ShippoConnectorComponent implements OnInit {
       parcels: [this.parcelForm.value]
     };
 
-    this.shippoService.createShipmentAndGetRates(shipmentRequest).subscribe(
+    this.shippoService.createShipmentAndGetRates(
+      this.addressFromForm.value,
+      this.addressToForm.value,
+      // This is a placeholder. In a real app, you'd get this from a service.
+      [{ SKU: 'SKU123', name: 'Test Product', weight: 1, weightUnit: 'lb', length: 10, width: 10, height: 10, dimensionUnit: 'in', currentStock: {}, safetyStockQuantity: 0, preferredSupplierId: '' }]
+    ).subscribe(
       (responseRates) => {
         this.rates = responseRates;
         if (this.rates.length === 0) {
@@ -124,7 +129,7 @@ export class ShippoConnectorComponent implements OnInit {
     this.transactionInfo = null;
     this.errorMessages = [];
 
-    this.shippoService.createShippingLabel({ rate: this.selectedRateId, label_file_type: 'PNG' }).subscribe(
+    this.shippoService.createShippingLabel(this.selectedRateId, 'PNG').subscribe(
       (response) => {
         this.transactionInfo = response;
         if (!response || response.status !== 'SUCCESS') {
@@ -149,7 +154,7 @@ export class ShippoConnectorComponent implements OnInit {
     this.errorMessages = [];
     const formValue = this.trackingForm.value;
 
-    this.shippoService.trackShipment({ carrier: formValue.carrierToken, tracking_number: formValue.trackingNumber }).subscribe(
+    this.shippoService.trackShipment(formValue.carrierToken, formValue.trackingNumber).subscribe(
       (response) => {
         this.trackingInfo = response;
         if (!response) {

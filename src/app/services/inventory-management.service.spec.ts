@@ -137,11 +137,11 @@ describe('InventoryManagementService', () => {
       expect(advice?.shouldReorder).toBe(false);
 
       // Modify TEST001 to have low stock for reorder scenario
-      const products = service.products.getValue();
+      const products = (service as any).products.getValue();
       const test001Index = products.findIndex(p => p.SKU === 'TEST001');
       products[test001Index].currentStock = {'WHS-A': 12}; // Stock = 12, Safety = 10. Available = 2. Velocity = 0.5. DaysOut = 2/0.5 = 4 days. LeadTime = 10.
       // @ts-ignore
-      service.products.next(products); // update service's internal data
+      (service as any).products.next(products); // update service's internal data
 
       advice = await service.getReorderAdviceForSKU('TEST001');
       expect(advice?.shouldReorder).toBe(true);

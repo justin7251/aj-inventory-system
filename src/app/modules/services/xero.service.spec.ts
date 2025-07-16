@@ -22,7 +22,7 @@ describe('XeroService', () => {
       { InvoiceID: "x2", InvoiceNumber: "XINV002", Type: "ACCREC", Contact: { Name: "Customer X2" }, Total: 250, Status: "PAID" }
     ]
   };
-  const mockXeroInvoicesArray: RawXeroInvoice[] = mockXeroInvoicesResponse.Invoices;
+  const mockXeroInvoicesArray: RawXeroInvoice[] = mockXeroInvoicesResponse.Invoices as any;
 
 
   beforeEach(() => {
@@ -35,7 +35,9 @@ describe('XeroService', () => {
 
     environment.xeroApiConfig = {
       endpoint: 'https://mock-xero-api.com',
-      mockDataUrlPrefix: '/assets/mocks/xero-'
+      mockDataUrlPrefix: '/assets/mocks/xero-',
+      apiKey: 'test',
+      apiMocking: true
     };
   });
 

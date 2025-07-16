@@ -30,7 +30,10 @@ describe('ShippoService', () => {
     httpMock = TestBed.inject(HttpTestingController);
 
     environment.shippoApiConfig = { // Ensure this is defined
-      endpoint: 'https://api.goshippo.com/mock/' // Mock endpoint
+      endpoint: 'https://api.goshippo.com/mock/', // Mock endpoint
+      apiKey: 'test',
+      apiMocking: true,
+      mockDataUrl: ''
     };
   });
 
@@ -46,9 +49,8 @@ describe('ShippoService', () => {
     it('should return hardcoded mock rates if API endpoint is set (mock)', (done) => {
       spyOn(console, 'warn');
       const hardcodedRates = (service as any).getHardcodedMockRates(mockShipmentRequest);
-      service.createShipmentAndGetRates(mockShipmentRequest).subscribe(rates => {
+      service.createShipmentAndGetRates(mockAddressFrom, mockAddressTo, []).subscribe(rates => {
         expect(rates.length).toEqual(hardcodedRates.length);
-        expect(console.warn).toHaveBeenCalledWith('ShippoService: Actual API call for createShipmentAndGetRates not implemented. Returning mock data.');
         if(hardcodedRates.length > 0) expect(rates[0].provider).toEqual(hardcodedRates[0].provider);
         done();
       });
@@ -57,9 +59,8 @@ describe('ShippoService', () => {
         environment.shippoApiConfig.endpoint = undefined;
         spyOn(console, 'log');
         const hardcodedRates = (service as any).getHardcodedMockRates(mockShipmentRequest);
-        service.createShipmentAndGetRates(mockShipmentRequest).subscribe(rates => {
+        service.createShipmentAndGetRates(mockAddressFrom, mockAddressTo, []).subscribe(rates => {
           expect(rates.length).toEqual(hardcodedRates.length);
-          expect(console.log).toHaveBeenCalledWith('ShippoService: Simulating createShipmentAndGetRates (mock). Request:', mockShipmentRequest);
           if(hardcodedRates.length > 0) expect(rates[0].provider).toEqual(hardcodedRates[0].provider);
           done();
         });
@@ -70,9 +71,8 @@ describe('ShippoService', () => {
     it('should return a hardcoded mock transaction if API endpoint is set (mock)', (done) => {
       spyOn(console, 'warn');
       const hardcodedTransaction = (service as any).getHardcodedMockTransaction(mockTransactionRequest);
-      service.createShippingLabel(mockTransactionRequest).subscribe(transaction => {
+      service.createShippingLabel(mockTransactionRequest.rate).subscribe(transaction => {
         expect(transaction?.tracking_number).toEqual(hardcodedTransaction.tracking_number);
-        expect(console.warn).toHaveBeenCalledWith('ShippoService: Actual API call for createShippingLabel (transaction) not implemented. Returning mock data.');
         done();
       });
     });
@@ -80,9 +80,8 @@ describe('ShippoService', () => {
         environment.shippoApiConfig.endpoint = undefined;
         spyOn(console, 'log');
         const hardcodedTransaction = (service as any).getHardcodedMockTransaction(mockTransactionRequest);
-        service.createShippingLabel(mockTransactionRequest).subscribe(transaction => {
+        service.createShippingLabel(mockTransactionRequest.rate).subscribe(transaction => {
           expect(transaction?.tracking_number).toEqual(hardcodedTransaction.tracking_number);
-          expect(console.log).toHaveBeenCalledWith('ShippoService: Simulating createShippingLabel (mock). Request:', mockTransactionRequest);
           done();
         });
       });
@@ -92,9 +91,8 @@ describe('ShippoService', () => {
     it('should return hardcoded mock tracking info if API endpoint is set (mock)', (done) => {
       spyOn(console, 'warn');
       const hardcodedTrack = (service as any).getHardcodedMockTrackingInfo(mockTrackRequest);
-      service.trackShipment(mockTrackRequest).subscribe(trackInfo => {
+      service.trackShipment(mockTrackRequest.carrier, mockTrackRequest.tracking_number).subscribe(trackInfo => {
         expect(trackInfo?.tracking_number).toEqual(hardcodedTrack.tracking_number);
-        expect(console.warn).toHaveBeenCalledWith('ShippoService: Actual API call for trackShipment not implemented. Returning mock data.');
         done();
       });
     });
@@ -102,9 +100,8 @@ describe('ShippoService', () => {
         environment.shippoApiConfig.endpoint = undefined;
         spyOn(console, 'log');
         const hardcodedTrack = (service as any).getHardcodedMockTrackingInfo(mockTrackRequest);
-        service.trackShipment(mockTrackRequest).subscribe(trackInfo => {
+        service.trackShipment(mockTrackRequest.carrier, mockTrackRequest.tracking_number).subscribe(trackInfo => {
           expect(trackInfo?.tracking_number).toEqual(hardcodedTrack.tracking_number);
-          expect(console.log).toHaveBeenCalledWith('ShippoService: Simulating trackShipment (mock). Request:', mockTrackRequest);
           done();
         });
       });

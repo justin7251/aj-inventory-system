@@ -176,10 +176,10 @@ export class UpsConnectorComponent implements OnInit {
     this.errorMessages = [];
     const formVal = this.trackingForm.value;
 
-    this.upsService.trackShipment({ trackingNumber: formVal.trackingNumber }).subscribe(
+    this.upsService.trackShipment(formVal.trackingNumber).subscribe(
       (response) => {
         this.trackingInfo = response;
-        if (!response || !response.shipment || response.shipment.length === 0 || !response.shipment[0].package || response.shipment[0].package.length === 0) {
+        if (!response || !response.shipment || !response.shipment.length || !response.shipment[0].package || !response.shipment[0].package.length) {
             this.errorMessages.push('No tracking data returned or in unexpected format from UPS (mock).');
         }
         this.isLoadingTracking = false;

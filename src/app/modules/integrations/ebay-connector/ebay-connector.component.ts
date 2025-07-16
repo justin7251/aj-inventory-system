@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
-import { EbayService } from '../../modules/services/ebay.service'; // Corrected path
-import { OrderService } from '../../modules/services/order.service'; // Path was already corrected
+import { EbayService } from '../../services/ebay.service'; // Corrected path
+import { OrderService } from '../../services/order.service'; // Path was already corrected
 import { Order } from '../../model/order.model'; // Ensure this path is correct
 
 @Component({

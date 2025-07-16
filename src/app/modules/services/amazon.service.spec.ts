@@ -19,7 +19,9 @@ describe('AmazonService', () => {
     // Mock environment config if your service uses it for URLs
     environment.amazonMwsApiConfig = {
       endpoint: 'https://mock-amazon-api.com',
-      mockDataUrl: '/assets/mock-amazon-orders.json' // Example mock data URL
+      mockDataUrl: '/assets/mock-amazon-orders.json', // Example mock data URL
+      apiKey: 'test',
+      apiMocking: true
     };
   });
 

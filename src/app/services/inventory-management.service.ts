@@ -21,9 +21,9 @@ export class InventoryManagementService {
   // --- Mock Data Store ---
   // In a real app, these would come from a backend API / database (e.g., Firestore)
   private warehouses = new BehaviorSubject<Warehouse[]>([
-    { warehouseId: 'WHS-A', locationName: 'Main Warehouse', address: '123 Main St' },
-    { warehouseId: 'WHS-B', locationName: 'Secondary Warehouse', address: '456 Secondary Ave' },
-    { warehouseId: 'WHS-C', locationName: 'East Coast Hub', address: '789 East Coast Rd' },
+    { warehouseId: 'WHS-A', locationName: 'Main Warehouse', street1: '123 Main St', city: 'Anytown', state: 'CA', zip: '12345', country: 'US', phone: '123-456-7890', email: 'main@warehouse.com' },
+    { warehouseId: 'WHS-B', locationName: 'Secondary Warehouse', street1: '456 Secondary Ave', city: 'Othertown', state: 'NY', zip: '54321', country: 'US', phone: '123-456-7890', email: 'secondary@warehouse.com' },
+    { warehouseId: 'WHS-C', locationName: 'East Coast Hub', street1: '789 East Coast Rd', city: 'Eastville', state: 'FL', zip: '67890', country: 'US', phone: '123-456-7890', email: 'east@warehouse.com' },
   ]);
   private products = new BehaviorSubject<Product[]>([
     // Sample Product

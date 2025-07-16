@@ -33,7 +33,9 @@ describe('QuickBooksService', () => {
 
     environment.quickbooksApiConfig = {
       endpoint: 'https://mock-quickbooks-api.com',
-      mockDataUrlPrefix: '/assets/mocks/quickbooks-'
+      mockDataUrlPrefix: '/assets/mocks/quickbooks-',
+      apiKey: 'test',
+      apiMocking: true
     };
   });
 

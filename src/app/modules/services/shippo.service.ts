@@ -48,7 +48,7 @@ interface ShippoShipmentRequest {
   async?: boolean; // Default true for rates
 }
 
-interface ShippoRate {
+export interface ShippoRate {
   object_id: string;
   amount: string; // e.g., "7.54"
   currency: string; // e.g., "USD"
@@ -175,7 +175,7 @@ export class ShippoService {
       async: false // Request rates synchronously for this example
     };
     if (carrierAccounts) {
-      shipmentRequest.carrier_accounts = carrierAccounts;
+      (shipmentRequest as any).carrier_account = carrierAccounts;
     }
 
     console.log('ShippoService: Preparing createShipmentAndGetRates. Request:', shipmentRequest);
@@ -247,6 +247,7 @@ export class ShippoService {
       { object_id: 'rate_mock_royal_mail_1st', amount: '5.50', currency: 'GBP', provider: 'Royal Mail', provider_image_75: '', provider_image_200: '', servicelevel: { token: 'royal_mail_first_class_packet', name: 'Royal Mail First Class' }, estimated_days: 1, duration_terms: 'Est. 1-2 business days' },
       { object_id: 'rate_mock_royal_mail_2nd', amount: '3.50', currency: 'GBP', provider: 'Royal Mail', provider_image_75: '', provider_image_200: '', servicelevel: { token: 'royal_mail_second_class_packet', name: 'Royal Mail Second Class' }, estimated_days: 3, duration_terms: 'Est. 2-3 business days' }
     ];
+    return rates;
   }
 
   private getHardcodedMockTransaction(request: ShippoTransactionRequest): ShippoTransaction {

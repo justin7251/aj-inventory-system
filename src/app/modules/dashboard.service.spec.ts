@@ -51,9 +51,14 @@ describe('DashboardService', () => {
       id: 'order3', // Order with zero selling price item for margin test
       user_id: 'user3',
       customer_name: 'Customer C',
+      telephone: 1111111111,
+      delivery_address: '789 Pine St',
+      payment_type: 'promo',
       items: [
         { product_no: 'P003', product_name: 'Product 3 Free', quantity: 1, item_cost: 0 },
       ],
+      delivery_cost: 0,
+      discount: 0,
       total_cost: 0,
       totalEarnings: -5, // Revenue (0) - COGS (5) = -5
       created_date: createTimestamp(new Date('2023-01-20T12:00:00Z')),

@@ -28,8 +28,8 @@ export const environment = {
   shippoApiConfig: {
     endpoint: 'https://api.goshippo.com/', // Real Shippo API endpoint
     mockDataUrl: '', // No mock data for Shippo in this example, service will have hardcoded mocks
-    apiKey: 'YOUR_SHIPPO_API_KEY_HERE', // Placeholder for actual Shippo API key (e.g., shippo_live_xxxxxxxx or shippo_test_xxxxxxx)
-    apiMocking: true // To explicitly control if service should use mock or attempt real call
+    apiKey: 'shippo_test_abcdefghijklmnopqrstuvwxyz123', // Placeholder for actual Shippo API key (e.g., shippo_live_xxxxxxxx or shippo_test_xxxxxxx)
+    apiMocking: false // To explicitly control if service should use mock or attempt real call
   },
   upsApiConfig: {
     endpoint: 'https://wwwcie.ups.com/api/', // UPS Customer Integration Environment (CIE) for testing

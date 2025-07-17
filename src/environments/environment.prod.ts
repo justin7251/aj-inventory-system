@@ -24,7 +24,7 @@ export const environment = {
   shippoApiConfig: {
     endpoint: 'https://api.goshippo.com/', // Real Shippo API endpoint
     mockDataUrl: '',
-    apiKey: 'YOUR_SHIPPO_LIVE_API_KEY_HERE', // Placeholder for actual LIVE Shippo API key
+    apiKey: 'shippo_test_abcdefghijklmnopqrstuvwxyz123', // Placeholder for actual LIVE Shippo API key
     apiMocking: false // In production, this should ideally be false to use live API
   },
   upsApiConfig: {

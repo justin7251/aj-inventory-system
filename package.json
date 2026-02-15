@@ -11,20 +11,19 @@
   },
   "private": true,
   "dependencies": {
-    "-": "0.0.1",
-    "@angular-devkit/build-angular": "^20.0.4",
-    "@angular/animations": "^20.0.2",
-    "@angular/cdk": "^20.0.3",
-    "@angular/common": "^20.0.2",
-    "@angular/compiler": "^20.0.2",
-    "@angular/compiler-cli": "^20.0.2",
-    "@angular/core": "^20.0.2",
+    "@angular-devkit/build-angular": "^20.3.16",
+    "@angular/animations": "^20.3.16",
+    "@angular/cdk": "^20.2.14",
+    "@angular/common": "^20.3.16",
+    "@angular/compiler": "^20.3.16",
+    "@angular/compiler-cli": "^20.3.16",
+    "@angular/core": "^20.3.16",
     "@angular/fire": "^20.0.1",
-    "@angular/forms": "^20.0.2",
-    "@angular/material": "^20.0.2",
-    "@angular/platform-browser": "^20.0.2",
-    "@angular/platform-browser-dynamic": "^20.0.2",
-    "@angular/router": "^20.0.2",
+    "@angular/forms": "^20.3.16",
+    "@angular/material": "^20.2.14",
+    "@angular/platform-browser": "^20.3.16",
+    "@angular/platform-browser-dynamic": "^20.3.16",
+    "@angular/router": "^20.3.16",
     "@firebase/firestore": "^4.7.17",
     "@swimlane/ngx-charts": "^23.0.0-alpha.0",
     "@zxing/browser": "^0.1.5",
@@ -48,8 +47,8 @@
     "zone.js": "~0.15.0"
   },
   "devDependencies": {
-    "@angular/cli": "^20.0.3",
-    "@angular/language-service": "^20.0.2",
+    "@angular/cli": "^20.3.16",
+    "@angular/language-service": "^20.3.16",
     "@types/jasmine": "~3.8.0",
     "@types/jasminewd2": "~2.0.3",
     "@types/node": "^18.19.112",
@@ -66,7 +65,12 @@
     "ts-node": "~10.9.0"
   },
   "overrides": {
+    "form-data": "^2.5.4",
+    "qs": "^6.14.1",
+    "tmp": "^0.2.4",
     "tough-cookie": "4.1.4",
+    "vite": "^6.4.1",
+    "webpack": "^5.104.1",
     "xml2js": "0.6.2"
   }
 }

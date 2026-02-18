@@ -12,7 +12,7 @@ import { SharedModule } from 'src/app/shared/shared.module'; // For potential pi
     CommonModule,
     SharedModule, // Includes Material components, pipes etc.
     RouterModule.forChild([ // Example route, can be defined elsewhere
-      { path: 'profit-margin', component: ProfitAnalyticsReportComponent }
+      { path: '', component: ProfitAnalyticsReportComponent }
     ])
   ],
   exports: [

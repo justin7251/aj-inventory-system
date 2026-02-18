@@ -2,7 +2,8 @@ import { Component, OnInit } from '@angular/core';
 import { XeroService } from '../../services/xero.service'; // Assuming service is in modules/services
 
 @Component({
-  selector: 'app-xero-connector',
+  
+  standalone: false,
   templateUrl: './xero-connector.component.html',
   styleUrls: ['./xero-connector.component.scss']
 })
@@ -106,3 +107,4 @@ export class XeroConnectorComponent implements OnInit {
     }
   }
 }
+

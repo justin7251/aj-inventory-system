@@ -6,6 +6,7 @@ import { Order } from '../model/order.model';
 
 @Component({
   selector: 'app-order-edit',
+  standalone: false,
   templateUrl: './order-edit.component.html',
   styleUrls: ['./order-edit.component.scss']
 })
@@ -96,7 +97,7 @@ export class OrderEditComponent implements OnInit {
       // Changed db.UpdateOrder to orderService.updateOrder
       this.orderService.updateOrder(this.id, this.editOrderForm.value)
         .then(() => { // Changed res to () as res might not be used
-          this.router.navigate(['/default/orders']); // Ensure navigation path is correct
+          this.router.navigate(['/order']);
         }, err => {
           console.log(err);
         });

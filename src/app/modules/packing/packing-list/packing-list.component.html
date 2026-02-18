@@ -1,13 +1,14 @@
-<div class="container mt-4">
-  <mat-card>
-    <mat-card-header>
-      <mat-card-title>Packing Queue</mat-card-title>
-      <mat-card-subtitle>Items pending packing and their statuses.</mat-card-subtitle>
-    </mat-card-header>
-    <mat-card-content>
-      <div *ngIf="packingItems$ | async as packingItems; else loadingOrError">
-        <div *ngIf="packingItems.length > 0; else noItems" class="table-responsive">
-          <table mat-table [dataSource]="packingItems" class="mat-elevation-z8 w-100">
+<section class="packing-shell">
+  <div class="left-column">
+    <mat-card class="queue-card">
+      <mat-card-header>
+        <mat-card-title>Packing Queue</mat-card-title>
+        <mat-card-subtitle>Items pending packing and their statuses.</mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content>
+        <div *ngIf="packingItems$ | async as packingItems; else loadingOrError">
+          <div *ngIf="packingItems.length > 0; else noItems" class="table-responsive">
+            <table mat-table [dataSource]="packingItems" class="w-100">
 
             <!-- Creation Date Column -->
             <ng-container matColumnDef="creationDate">
@@ -72,21 +73,50 @@
 
             <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
             <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
-          </table>
+            </table>
+          </div>
+          <ng-template #noItems>
+            <div class="alert alert-info text-center mt-3">
+              <p>No items currently in the packing queue.</p>
+            </div>
+          </ng-template>
         </div>
-        <ng-template #noItems>
-          <div class="alert alert-info text-center mt-3">
-            <p>No items currently in the packing queue.</p>
+        <ng-template #loadingOrError>
+          <div class="text-center mt-5">
+            <mat-progress-spinner mode="indeterminate" diameter="50"></mat-progress-spinner>
+            <p>Loading packing items...</p>
           </div>
         </ng-template>
-      </div>
-      <ng-template #loadingOrError>
-        <!-- Check if there's an error object or just show loading -->
-        <div class="text-center mt-5">
-          <mat-progress-spinner mode="indeterminate" diameter="50"></mat-progress-spinner>
-          <p>Loading packing items...</p>
-        </div>
-      </ng-template>
-    </mat-card-content>
-  </mat-card>
-</div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+
+  <div class="right-column">
+    <mat-card class="add-stock-card">
+      <mat-card-title>Add Inventory</mat-card-title>
+      <mat-card-subtitle>Manual stock adjustment</mat-card-subtitle>
+      <mat-form-field appearance="fill">
+        <mat-label>Item SKU</mat-label>
+        <input matInput placeholder="Enter or scan SKU">
+      </mat-form-field>
+      <mat-form-field appearance="fill">
+        <mat-label>Quantity</mat-label>
+        <input matInput type="number" value="1">
+      </mat-form-field>
+      <mat-form-field appearance="fill">
+        <mat-label>Warehouse Location</mat-label>
+        <input matInput placeholder="AISLE-A-01">
+      </mat-form-field>
+      <button mat-flat-button color="primary">Add to Stock</button>
+    </mat-card>
+
+    <mat-card class="activity-card">
+      <mat-card-title>Recent Activity</mat-card-title>
+      <ul>
+        <li>+24 units added to stock</li>
+        <li>Order #ORD-8820 shipped</li>
+        <li>Location transfer B-12 to A-04</li>
+      </ul>
+    </mat-card>
+  </div>
+</section>

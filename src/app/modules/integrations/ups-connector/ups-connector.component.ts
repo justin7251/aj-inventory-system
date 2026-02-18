@@ -29,7 +29,8 @@ interface UPSTrackingResponse { /* ... simplified for brevity */
 
 
 @Component({
-  selector: 'app-ups-connector',
+  
+  standalone: false,
   templateUrl: './ups-connector.component.html',
   styleUrls: ['./ups-connector.component.scss']
 })
@@ -207,3 +208,4 @@ export class UpsConnectorComponent implements OnInit {
     return 'Not yet delivered.';
   }
 }
+

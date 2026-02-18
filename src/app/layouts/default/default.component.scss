@@ -1,44 +1,49 @@
-@import '@angular/material/prebuilt-themes/deeppurple-amber.css';
 :host {
-    display: flex;
-    flex-direction: column;
-    height: 100%;
+  display: block;
+  min-height: 100vh;
 }
 
-mat-drawer-container.app-container { // Targeting the specific container
-    height: 100%;
-    display: flex;
+.app-frame {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 288px 1fr;
+  background: #040d20;
 }
 
-mat-drawer.left-sidebar {
-    width: 250px; // Adjusted width for left sidebar
-    background: #f0f0f0;
+.left-sidebar {
+  border-right: 1px solid #1d3358;
+  background: linear-gradient(180deg, #08152c 0%, #071123 100%);
+  color: #e8eef7;
+  overflow: hidden;
 }
 
-mat-drawer-content.main-content {
-    flex-grow: 1;
-    padding: 20px;
-    overflow-y: auto;
+.workspace {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
 }
 
-mat-drawer.right-sidebar {
-    width: 200px; // Width for right sidebar
-    padding: 10px;
-    border-left: 1px solid #ccc;
-    background: #f9f9f9;
+.content-shell {
+  flex: 1;
+  padding: 18px 22px;
+  background: radial-gradient(circle at 85% 12%, rgba(37, 99, 235, 0.12), rgba(37, 99, 235, 0) 35%), #050f24;
 }
 
-/* Responsive adjustments */
-@media (max-width: 768px) {
-    mat-drawer.left-sidebar, mat-drawer.right-sidebar {
-        display: none; /* Hide sidebars on smaller screens */
-    }
+@media (max-width: 1200px) {
+  .app-frame { grid-template-columns: 88px 1fr; }
+}
 
-    mat-drawer-content.main-content {
-        padding: 10px; /* Adjust padding for smaller screens */
-    }
+@media (max-width: 900px) {
+  .app-frame {
+    grid-template-columns: 1fr;
+  }
 
-    // If sidebars are meant to be toggleable on small screens (mode="over")
-    // The default.component.ts would need logic to change mode and opened state
-    // For now, this assumes they are hidden.
+  .left-sidebar {
+    display: none;
+  }
+
+  .content-shell {
+    padding: 14px;
+  }
 }

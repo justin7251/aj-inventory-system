@@ -5,7 +5,8 @@ import { PackingQueueService } from '../../services/packing-queue.service';
 import { MatSnackBar } from '@angular/material/snack-bar'; // For user feedback
 
 @Component({
-  selector: 'app-packing-list',
+  
+  standalone: false,
   templateUrl: './packing-list.component.html',
   styleUrls: ['./packing-list.component.scss']
 })
@@ -87,3 +88,4 @@ export class PackingListComponent implements OnInit, OnDestroy {
     }
   }
 }
+

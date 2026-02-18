@@ -4,7 +4,8 @@ import { OrderService } from '../../services/order.service'; // Assuming OrderSe
 import { Order } from '../../model/order.model';
 
 @Component({
-  selector: 'app-amazon-connector',
+  
+  standalone: false,
   templateUrl: './amazon-connector.component.html',
   styleUrls: ['./amazon-connector.component.scss']
 })
@@ -104,3 +105,4 @@ export class AmazonConnectorComponent implements OnInit {
     );
   }
 }
+

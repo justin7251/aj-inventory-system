@@ -1,36 +1,29 @@
-<mat-toolbar color="primary">
+<mat-toolbar class="app-toolbar">
     <mat-toolbar-row>
-        <button mat-icon-button (click)="toggleSideBar()">
+        <button mat-icon-button class="menu-btn" (click)="toggleSideBar()">
             <mat-icon>menu</mat-icon>
         </button>
 
-        <span>AJ Inventory System  </span>
+        <div class="header-search">
+            <mat-icon>search</mat-icon>
+            <input type="text" placeholder="Search analytics, orders, or reports...">
+        </div>
 
-        <div fxFlex fxLayout="row" fxLayoutAlign="flex-end">
-            <ul fxLayout="row" fxLayoutGap="20px">
-                <li>
-                    <button mat-icon-button>
-                        <mat-icon>settings</mat-icon>
-                    </button>
-                </li>
-                <li>
-                    <button mat-icon-button>
-                        <mat-icon>help_outline</mat-icon>
-                    </button>
-                </li>
-                <li>
-                    <button mat-button [matMenuTriggerFor]="menu">
-                        <mat-icon>person_outline</mat-icon>
-                    </button>
-                    <mat-menu #menu="matMenu">
-                        <button mat-menu-item>
-                            <mat-icon>exit_to_app</mat-icon>
-                            Sign out
-                        </button>
-                    </mat-menu>
-
-                </li>
-            </ul>
+        <div class="toolbar-actions">
+            <button mat-icon-button class="action-btn">
+                <mat-icon>notifications</mat-icon>
+            </button>
+            <button mat-flat-button color="primary" class="export-btn">Export Report</button>
+            <mat-menu #menu="matMenu">
+                <button mat-menu-item>
+                    <mat-icon>manage_accounts</mat-icon>
+                    Profile
+                </button>
+                <button mat-menu-item>
+                    <mat-icon>exit_to_app</mat-icon>
+                    Sign out
+                </button>
+            </mat-menu>
         </div>
     </mat-toolbar-row>
 </mat-toolbar>

@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Auth, signInWithEmailAndPassword, signOut, onAuthStateChanged, User } from '@angular/fire/auth';
+import { Auth, signInWithEmailAndPassword, signOut, onAuthStateChanged, User, createUserWithEmailAndPassword } from '@angular/fire/auth';
 import { Observable, of } from 'rxjs';
 import { switchMap, map } from 'rxjs/operators'; // Added map
 
@@ -23,6 +23,10 @@ export class AuthService {
 
   login(email: string, password: string):Promise<any> {
     return signInWithEmailAndPassword(this.auth, email, password);
+  }
+
+  register(email: string, password: string): Promise<any> {
+    return createUserWithEmailAndPassword(this.auth, email, password);
   }
 
   logout(): Promise<void> {

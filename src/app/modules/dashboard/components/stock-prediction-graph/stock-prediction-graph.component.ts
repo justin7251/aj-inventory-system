@@ -1,12 +1,14 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
-import { Observable, BehaviorSubject, of, combineLatest, Subscription } from 'rxjs';
+import { Observable, BehaviorSubject, of } from 'rxjs';
 import { switchMap, map, catchError, startWith, tap, finalize } from 'rxjs/operators';
-import { ItemService } from '../../../services/item.service';
 import { Product } from '../../../model/product.model';
 import * as Highcharts from 'highcharts';
+import { ProductService } from '../../../services/product.service';
+import { StockAnalysisService } from '../../../services/stock-analysis.service';
 
 @Component({
   selector: 'app-stock-prediction-graph',
+  standalone: false,
   templateUrl: './stock-prediction-graph.component.html',
   styleUrls: ['./stock-prediction-graph.component.scss']
 })
@@ -21,12 +23,14 @@ export class StockPredictionGraphComponent implements OnInit, OnDestroy {
   error: string | null = null;
 
   private productsCache: Product[] = [];
-  private subscriptions = new Subscription();
 
-  constructor(private itemService: ItemService) {}
+  constructor(
+    private productService: ProductService,
+    private stockAnalysisService: StockAnalysisService
+  ) {}
 
   ngOnInit(): void {
-    this.products$ = this.itemService.getProductList().pipe(
+    this.products$ = this.productService.getAllProducts().pipe(
       tap(products => {
         this.productsCache = products; // Cache for easy lookup
         if (products && products.length > 0) {
@@ -65,7 +69,7 @@ export class StockPredictionGraphComponent implements OnInit, OnDestroy {
         this.isLoading = true;
         this.error = null;
 
-        return this.itemService.predictStock(productNo, currentStock).pipe(
+        return this.stockAnalysisService.predictFutureStock(productNo, currentStock).pipe(
           map(predictions => {
             if (!predictions || predictions.length === 0) {
               return this.getInitialChartOptions(`No prediction data available for ${selectedProduct.product_name || 'selected product'}.`);
@@ -138,7 +142,6 @@ export class StockPredictionGraphComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    this.subscriptions.unsubscribe();
     this.selectedProductNoSubject.complete();
   }
 }

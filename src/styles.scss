@@ -1,6 +1,111 @@
-/* You can add global styles to this file, and also import other style files */
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Manrope:wght@400;500;600;700&display=swap');
 @import '@angular/material/prebuilt-themes/indigo-pink.css';
 
+:root {
+  --bg: #050f24;
+  --surface: #0b1a34;
+  --surface-soft: #112444;
+  --text: #e8f0ff;
+  --text-muted: #8ea6c9;
+  --line: #1f355a;
+  --brand: #2563eb;
+  --brand-2: #06b6d4;
+  --accent: #f59e0b;
+  --success: #10b981;
+  --danger: #ef4444;
+  --shadow: 0 24px 50px rgba(2, 9, 24, 0.48);
+  --radius: 14px;
+}
 
-html, body { height: 100%; }
-body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
+html,
+body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  color: var(--text);
+  font-family: 'Manrope', 'Segoe UI', sans-serif;
+  background:
+    radial-gradient(circle at 12% 10%, rgba(37, 99, 235, 0.2) 0, rgba(37, 99, 235, 0) 33%),
+    radial-gradient(circle at 88% 12%, rgba(6, 182, 212, 0.16) 0, rgba(6, 182, 212, 0) 35%),
+    var(--bg);
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: 'Space Grotesk', 'Segoe UI', sans-serif;
+  letter-spacing: 0.01em;
+}
+
+.mat-mdc-card,
+mat-card {
+  background: rgba(11, 26, 52, 0.94) !important;
+  color: var(--text) !important;
+  border: 1px solid var(--line);
+  border-radius: var(--radius) !important;
+  box-shadow: none !important;
+}
+
+.mat-mdc-table,
+table.mat-mdc-table {
+  background: transparent !important;
+}
+
+.mat-mdc-header-row,
+.mat-mdc-row {
+  border-bottom-color: var(--line) !important;
+}
+
+.mat-mdc-header-cell {
+  color: #9db3d5 !important;
+  text-transform: uppercase;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+}
+
+.mat-mdc-cell {
+  color: #d8e5fa !important;
+}
+
+.mdc-text-field--filled:not(.mdc-text-field--disabled) {
+  background-color: rgba(18, 36, 68, 0.95) !important;
+}
+
+.mat-mdc-form-field .mat-mdc-floating-label,
+.mat-mdc-form-field .mdc-text-field__input {
+  color: #d6e6ff !important;
+}
+
+.mat-mdc-form-field .mat-mdc-input-element,
+.mat-mdc-form-field input.mat-mdc-input-element,
+.mat-mdc-form-field textarea.mat-mdc-input-element {
+  color: #eaf2ff !important;
+  -webkit-text-fill-color: #eaf2ff !important;
+}
+
+.mat-mdc-form-field .mat-mdc-input-element::placeholder {
+  color: #8fa7ca !important;
+  opacity: 1;
+}
+
+.mat-mdc-paginator,
+.mat-mdc-paginator-container {
+  background: rgba(11, 26, 52, 0.94) !important;
+  color: var(--text) !important;
+}
+
+.mat-mdc-paginator {
+  border-top: 1px solid var(--line);
+}
+
+.mat-mdc-paginator .mat-mdc-select-value,
+.mat-mdc-paginator .mat-mdc-select-min-line,
+.mat-mdc-paginator .mat-mdc-paginator-range-label,
+.mat-mdc-paginator .mat-mdc-icon-button {
+  color: #d8e5fa !important;
+}

@@ -4,7 +4,8 @@ import { OrderService } from '../../services/order.service'; // Path was already
 import { Order } from '../../model/order.model'; // Ensure this path is correct
 
 @Component({
-  selector: 'app-ebay-connector',
+  
+  standalone: false,
   templateUrl: './ebay-connector.component.html',
   styleUrls: ['./ebay-connector.component.scss']
 })
@@ -115,3 +116,4 @@ export class EbayConnectorComponent implements OnInit {
     );
   }
 }
+

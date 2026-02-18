@@ -6,7 +6,8 @@ import { Component } from '@angular/core';
  * It displays a list of available integrations for the user to navigate to.
  */
 @Component({
-  selector: 'app-integrations-landing',
+  
+  standalone: false,
   templateUrl: './integrations-landing.component.html',
   styleUrls: ['./integrations-landing.component.scss']
 })
@@ -24,3 +25,4 @@ export class IntegrationsLandingComponent {
 
   constructor() { }
 }
+

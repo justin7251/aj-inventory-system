@@ -1,5 +1,6 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { DashboardComponent } from './dashboard.component';
 import { LowStockProductsComponent } from './components/low-stock-products/low-stock-products.component'; // Added import
 import { StockPredictionGraphComponent } from './components/stock-prediction-graph/stock-prediction-graph.component'; // Added import
@@ -15,6 +16,7 @@ import { SharedModule } from 'src/app/shared/shared.module';
   ],
   imports: [
     CommonModule,
+    FormsModule,
     MatCardModule,
     MatDividerModule,
     SharedModule

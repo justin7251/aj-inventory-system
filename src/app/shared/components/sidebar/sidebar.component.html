@@ -1,44 +1,47 @@
-<mat-nav-list>
-    <a class="side_menu" mat-list-item routerLinkActive="list-item-active" routerLink="/"><i class="fa fa-home"></i>Dashboard</a>
-    <!-- require work -->
-    <a class="side_menu" mat-list-item routerLinkActive="list-item-active" routerLink="/items">
-        <i class="fa fa-shopping-basket"></i>Items
-    </a>
-    <a class="side_menu" mat-list-item routerLinkActive="list-item-active" routerLink="/product_form">
-        <span class="material-icons">loupe</span>
-        Add Item
-    </a>
-    <a class="side_menu" mat-list-item routerLinkActive="list-item-active" routerLink="/order_form">
-        <span class="material-icons">loupe</span>
-        Add Order
-    </a>
-    <a class="side_menu" mat-list-item routerLinkActive="list-item-active" routerLink="/order"><i class="fa fa-shopping-cart"></i>Sales Order</a>
-    <a class="side_menu" mat-list-item routerLinkActive="list-item-active" routerLink="/purchase"><i class="fa fa-shopping-bag"></i>Payment Recevied</a>
+<div class="sidebar-shell">
+    <div class="brand-row">
+        <div class="brand-icon"><mat-icon>inventory_2</mat-icon></div>
+        <span class="brand-text">Fulfillment Pro</span>
+    </div>
 
+    <mat-nav-list>
+        <a class="side-menu" mat-list-item routerLinkActive="list-item-active" [routerLinkActiveOptions]="{exact:true}" routerLink="/">
+            <mat-icon>dashboard</mat-icon>
+            <span>Dashboard</span>
+        </a>
+        <a class="side-menu" mat-list-item routerLinkActive="list-item-active" routerLink="/order">
+            <mat-icon>shopping_bag</mat-icon>
+            <span>Orders</span>
+        </a>
+        <a class="side-menu" mat-list-item routerLinkActive="list-item-active" routerLink="/items">
+            <mat-icon>inventory_2</mat-icon>
+            <span>Inventory</span>
+        </a>
+        <a class="side-menu" mat-list-item routerLinkActive="list-item-active" routerLink="/packing">
+            <mat-icon>local_shipping</mat-icon>
+            <span>Shipping</span>
+        </a>
+        <a class="side-menu" mat-list-item routerLinkActive="list-item-active" routerLink="/integrations">
+            <mat-icon>analytics</mat-icon>
+            <span>Integrations</span>
+        </a>
+        <a class="side-menu muted" mat-list-item>
+            <mat-icon>settings</mat-icon>
+            <span>Settings</span>
+        </a>
+        <a class="side-menu muted" mat-list-item>
+            <mat-icon>help_outline</mat-icon>
+            <span>Support</span>
+        </a>
+    </mat-nav-list>
 
+    <div class="spacer"></div>
 
-    <!-- <button mat-button (click)="authService.redirect('restock_form')" *ngIf="['admin', 'manager'].indexOf(Role) !== -1">Restock Form</button>
-    <button mat-button (click)="authService.redirect('restock')" *ngIf="['admin', 'manager'].indexOf(Role) !== -1">Restock List</button>
-    <button mat-button (click)="authService.redirect('product_form')">Product Form</button>
-    <button mat-button (click)="authService.redirect('product')">Product List</button>
-    <button mat-button (click)="authService.redirect('order_form')">Order Form</button>
-    <button mat-button (click)="authService.redirect('order')">Order List</button> -->
-
-
-
-<!-- 
-    <mat-divider></mat-divider>
-
-    <h2 matSubheader>Tools</h2>
-
-    <a mat-list-item routerLinkActive="list-item-active" routerLink="/contacts">
-        <mat-icon>import_contacts</mat-icon>
-        Contacts
-    </a>
-
-    <a mat-list-item routerLinkActive="list-item-active" routerLink="/contacts">
-        <mat-icon>contact_phone</mat-icon>
-        Leads
-    </a> -->
-
-</mat-nav-list>
+    <div class="profile-row">
+        <div class="avatar">AJ</div>
+        <div>
+            <p>Alex Henderson</p>
+            <small>Enterprise Admin</small>
+        </div>
+    </div>
+</div>

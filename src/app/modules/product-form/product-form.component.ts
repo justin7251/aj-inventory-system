@@ -5,7 +5,8 @@ import { MatDialog } from '@angular/material/dialog';
 import { BarcodeScannerComponent } from '../../shared/components/barcode-scanner/barcode-scanner.component';
 
 @Component({
-  selector: 'app-product-form',
+  
+  standalone: false,
   templateUrl: './product-form.component.html',
   styleUrls: ['./product-form.component.scss']
 })
@@ -85,3 +86,4 @@ export class ProductFormComponent implements OnInit {
     }
   }
 }
+

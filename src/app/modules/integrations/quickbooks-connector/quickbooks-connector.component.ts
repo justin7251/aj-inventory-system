@@ -2,7 +2,8 @@ import { Component, OnInit } from '@angular/core';
 import { QuickBooksService } from '../../services/quickbooks.service'; // Corrected path assuming service location
 
 @Component({
-  selector: 'app-quickbooks-connector',
+  
+  standalone: false,
   templateUrl: './quickbooks-connector.component.html',
   styleUrls: ['./quickbooks-connector.component.scss']
 })
@@ -109,3 +110,4 @@ export class QuickbooksConnectorComponent implements OnInit {
     }
   }
 }
+

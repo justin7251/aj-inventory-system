@@ -12,6 +12,8 @@ import { MatTableModule } from '@angular/material/table';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatListModule } from '@angular/material/list';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatProgressBarModule } from '@angular/material/progress-bar';
 
 // This module consolidates imports for Angular Material components
 // used throughout the application, particularly in shared components and layouts.
@@ -28,7 +30,9 @@ const materialModules = [
   MatTableModule,
   MatToolbarModule,
   MatMenuModule,
-  MatListModule
+  MatListModule,
+  MatProgressSpinnerModule,
+  MatProgressBarModule
 ];
 
 @NgModule({

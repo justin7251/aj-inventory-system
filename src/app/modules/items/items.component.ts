@@ -6,6 +6,7 @@ import { BarcodeScannerComponent } from '../../shared/components/barcode-scanner
 
 @Component({
   selector: 'app-items',
+  standalone: false,
   templateUrl: './items.component.html',
   styleUrls: ['./items.component.scss']
 })
@@ -57,6 +58,10 @@ export class ItemsComponent implements OnInit {
   
   clearFilter(): void {
     this.filteredTableData = [...this.tableData];
+  }
+
+  get visibleStock(): number {
+    return this.filteredTableData.reduce((sum, item) => sum + (+item.quantity || 0), 0);
   }
 
   create(product: Product){ // This method seems unused, consider removing or implementing with ProductService

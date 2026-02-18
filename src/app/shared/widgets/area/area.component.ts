@@ -4,6 +4,7 @@ import HC_exporting from 'highcharts/modules/exporting';
 
 @Component({
   selector: 'app-widget-area',
+  standalone: false,
   templateUrl: './area.component.html',
   styleUrls: ['./area.component.scss']
 })

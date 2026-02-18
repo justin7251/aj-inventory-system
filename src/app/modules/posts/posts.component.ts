@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 
 @Component({
   selector: 'app-posts',
+  standalone: false,
   templateUrl: './posts.component.html',
   styleUrls: ['./posts.component.scss']
 })

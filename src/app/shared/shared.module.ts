@@ -31,7 +31,6 @@ import { TableComponent } from './widgets/table/table.component';
 		SidebarComponent,
 		AreaComponent,
 		CardComponent,
-		CardComponent,
 		PieComponent,
 		TableComponent
 	],

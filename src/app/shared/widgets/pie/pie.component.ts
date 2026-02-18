@@ -4,6 +4,7 @@ import HC_exporting from 'highcharts/modules/exporting';
 
 @Component({
   selector: 'app-widget-pie',
+  standalone: false,
   templateUrl: './pie.component.html',
   styleUrls: ['./pie.component.scss']
 })

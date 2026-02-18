@@ -27,7 +27,7 @@ const routes: Routes = [
       { path: 'purchase', component: PurchaseComponent },
       { path: 'product_form', component: ProductFormComponent },
       { path: 'order_form', component: OrderFormComponent },
-      { path: 'order_edit', component: OrderEditComponent },
+      { path: 'order_edit/:id', component: OrderEditComponent },
       {
         path: 'integrations',
         loadChildren: () => import('./modules/integrations/integrations.module').then(m => m.IntegrationsModule)

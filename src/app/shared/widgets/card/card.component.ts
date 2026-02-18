@@ -4,6 +4,7 @@ import HC_exporting from 'highcharts/modules/exporting';
 
 @Component({
   selector: 'app-widget-card',
+  standalone: false,
   templateUrl: './card.component.html',
   styleUrls: ['./card.component.scss']
 })

@@ -17,8 +17,12 @@
       </div>
     </div>
     <button type="submit" [disabled]="loginForm.invalid">Login</button>
+    <button type="button" [disabled]="loginForm.invalid" (click)="onRegister()">Register</button>
     <div *ngIf="errorMessage">
       <p style="color: red;">{{ errorMessage }}</p>
+    </div>
+    <div *ngIf="successMessage">
+      <p style="color: green;">{{ successMessage }}</p>
     </div>
   </form>
 </div>

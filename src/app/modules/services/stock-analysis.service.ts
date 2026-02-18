@@ -20,7 +20,7 @@ export class StockAnalysisService {
   getProductSalesHistory(productNo: string): Observable<{ date: Timestamp, quantity: number }[]> {
     const ordersCollectionRef = collection(this.firestore, 'orders');
     // Use the main Order model for type consistency
-    return collectionData<Order>(ordersCollectionRef, { idField: 'id' }).pipe(
+    return (collectionData(ordersCollectionRef, { idField: 'id' }) as Observable<Order[]>).pipe(
       map(orders => {
         const salesHistory: { date: Timestamp, quantity: number }[] = [];
         orders.forEach(order => {

@@ -1,19 +1,113 @@
 :host {
-  .mat-icon {
-    vertical-align: middle;
-    margin-right: 20px;
-  }
-  .profile-card {
-    text-align: center;
-    padding: 0 20px 20px 20px;
-    img {
-      width: 100px;
-      height: 100px;
-      object-fit: cover;
-      border-radius: 50%;
-    }
-  }
-  .side_menu i, .side_menu span {
-    margin-right: 10px;
-  }
+  display: block;
+  height: 100vh;
+  color: #e8eef7;
+}
+
+.sidebar-shell {
+  height: 100%;
+  padding: 16px 12px;
+  display: flex;
+  flex-direction: column;
+}
+
+.brand-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 8px 18px;
+  margin-bottom: 10px;
+}
+
+.brand-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(145deg, #2f63f2, #2563eb);
+}
+
+.brand-text {
+  font-family: 'Space Grotesk', 'Segoe UI', sans-serif;
+  font-weight: 700;
+  font-size: 1.5rem;
+}
+
+.side-menu {
+  margin-bottom: 4px;
+  min-height: 44px;
+  padding-left: 6px;
+  border-radius: 10px;
+  color: #d7e4f5 !important;
+  transition: transform 0.15s ease, background-color 0.15s ease, color 0.15s ease;
+}
+
+.side-menu mat-icon,
+.side-menu span {
+  color: inherit !important;
+}
+
+:host ::ng-deep .side-menu .mdc-list-item__primary-text {
+  color: #d7e4f5 !important;
+  font-size: 0.98rem;
+  font-weight: 500;
+}
+
+.side-menu mat-icon {
+  margin-right: 12px;
+}
+
+.side-menu:hover {
+  background: rgba(255, 255, 255, 0.06);
+  transform: translateX(2px);
+}
+
+.side-menu.muted {
+  opacity: 0.84;
+}
+
+.list-item-active {
+  background: #0f2a55;
+  color: #fff !important;
+  font-weight: 600;
+}
+
+:host ::ng-deep .list-item-active .mdc-list-item__primary-text {
+  color: #fff !important;
+}
+
+.spacer {
+  flex: 1;
+}
+
+.profile-row {
+  margin-top: 10px;
+  padding: 12px;
+  border: 1px solid #1b3258;
+  border-radius: 10px;
+  background: #0b1b38;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #1f4dc2;
+  display: grid;
+  place-items: center;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.profile-row p {
+  margin: 0;
+  font-size: 0.84rem;
+}
+
+.profile-row small {
+  color: #89a6d3;
 }

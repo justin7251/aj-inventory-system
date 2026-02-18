@@ -13,6 +13,7 @@ import { OrderItem } from '../model/order.model'; // OrderItem model for type sa
 
 @Component({
   selector: 'app-order-form',
+  standalone: false,
   templateUrl: './order-form.component.html',
   styleUrls: ['./order-form.component.scss']
 })
@@ -93,14 +94,8 @@ export class OrderFormComponent implements OnInit {
 
   loadProducts(): void {
     this.productService.getAllProducts().subscribe(
-      // Assuming getAllProducts returns Product[] directly or similar structure that can be mapped
-      // This might need adjustment based on actual ProductService.getAllProducts() return type
-      (productsPayload: any[]) => { // Adjust 'any[]' to the actual type from ProductService
-        this.availableProducts = productsPayload.map(item => {
-          const data = item.payload.doc.data() as Product;
-          const id = item.payload.doc.id;
-          return { id, ...data };
-        });
+      (products: Product[]) => {
+        this.availableProducts = products;
       },
       error => console.error('Error loading products:', error)
     );

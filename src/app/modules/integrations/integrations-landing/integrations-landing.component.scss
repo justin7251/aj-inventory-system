@@ -1,5 +1,5 @@
 .active-link {
-  background-color: rgba(0, 0, 0, 0.04); /* Subtle background for active link */
+  background-color: rgba(37, 99, 235, 0.18);
 }
 
 mat-card-content {
@@ -8,4 +8,22 @@ mat-card-content {
 
 mat-icon[matListItemIcon] {
     margin-right: 10px; /* Space out icon from text */
+}
+
+.integrations-shell {
+  color: #d8e8ff;
+}
+
+.integrations-shell p,
+.integrations-shell mat-card-subtitle {
+  color: #9db3d5;
+}
+
+.integrations-shell .mat-mdc-list-item,
+.integrations-shell .mat-mdc-list-item .mdc-list-item__primary-text {
+  color: #d8e8ff !important;
+}
+
+.integrations-shell .mat-mdc-list-item .mdc-list-item__secondary-text {
+  color: #8ea6c9 !important;
 }

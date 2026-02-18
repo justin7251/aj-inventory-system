@@ -1,3 +1,25 @@
-footer {
-  padding: 20px;
+.app-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 20px;
+  color: var(--text-muted);
+  font-size: 0.86rem;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: rgba(8, 19, 39, 0.94);
+}
+
+.footer-tag {
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.7rem;
+}
+
+@media (max-width: 760px) {
+  .app-footer {
+    flex-direction: column;
+    align-items: flex-start;
+  }
 }

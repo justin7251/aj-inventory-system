@@ -1,13 +1,15 @@
-<!-- Title group  -->
- <div class="title-group container">
-   <h1 class="mat-h1">Add Item</h1>
- </div>
+<section class="product-shell">
+ <header class="title-group container">
+   <div>
+    <p class="crumb">HOME  >  INVENTORY  >  ADD ITEM</p>
+    <h1 class="mat-h1">Add Inventory</h1>
+   </div>
+   <button type="button" mat-flat-button color="primary" (click)="openBarcodeScanner()">Scan Barcode</button>
+ </header>
 
- <!-- Product form -->
 <div class="inner-wrapper">
   <form [formGroup]="productForm" (ngSubmit)="addProduct()" #resetProductForm="ngForm" novalidate>
-    <!-- Left block -->
-    <mat-card class="container">
+    <mat-card class="container form-card">
     <div class="controlers-wrapper example-container">
       <!-- Product Number -->
       <mat-form-field class="example-full-width">
@@ -62,10 +64,6 @@
       <mat-form-field class="example-full-width">
         <input matInput placeholder="Barcode" formControlName="barcode">
       </mat-form-field>
-      <button type="button" mat-stroked-button color="primary" (click)="openBarcodeScanner()" class="scan-button">
-        Scan Barcode
-      </button>
-
       <div class="form-group">
         <label class="error">{{ errorMessage}}</label>
         <label class="success">{{successMessage}}</label>
@@ -73,7 +71,7 @@
       <!-- Submit & Reset -->
       <div class="full-wrapper button-wrapper">
         <div class="button-wrapper">
-          <button mat-flat-button color="warn">Submit</button>
+          <button mat-flat-button color="primary">Add to Stock</button>
           <!-- <button mat-flat-button color="war" (click)="resetForm()">Clear</button> -->
         </div>
       </div>
@@ -81,3 +79,4 @@
     </mat-card>
   </form>
 </div>
+</section>

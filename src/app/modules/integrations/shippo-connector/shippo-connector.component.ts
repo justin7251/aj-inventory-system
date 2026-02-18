@@ -12,7 +12,8 @@ interface ShippoTrack { carrier: string; tracking_number: string; tracking_statu
 
 
 @Component({
-  selector: 'app-shippo-connector',
+  
+  standalone: false,
   templateUrl: './shippo-connector.component.html',
   styleUrls: ['./shippo-connector.component.scss']
 })
@@ -174,3 +175,4 @@ export class ShippoConnectorComponent implements OnInit {
     return `${track.tracking_status.status_details} (${track.tracking_status.status_date ? new Date(track.tracking_status.status_date).toLocaleString() : 'No date'})`;
   }
 }
+

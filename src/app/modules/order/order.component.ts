@@ -13,6 +13,7 @@ import { Order } from '../model/order.model';
 
 @Component({
   selector: 'app-order',
+  standalone: false,
   templateUrl: './order.component.html',
   styleUrls: ['./order.component.scss']
 })
@@ -54,6 +55,26 @@ export class OrderComponent implements OnInit {
 		      this.dataSource.paginator = this.paginator;
 		    }, 0);
 		})
+  }
+
+  private countByStatus(status: string): number {
+    return (this.OrderData || []).filter((o: any) => o?.status === status).length;
+  }
+
+  get pendingCount(): number {
+    return this.countByStatus('Pending');
+  }
+
+  get processingCount(): number {
+    return this.countByStatus('Processing');
+  }
+
+  get shippedCount(): number {
+    return this.countByStatus('Shipped');
+  }
+
+  get deliveredCount(): number {
+    return this.countByStatus('Delivered');
   }
   
   openDialog(items) {

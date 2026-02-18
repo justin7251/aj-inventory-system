@@ -1,15 +1,31 @@
-<!-- Title group  -->
-<div class="title-group">
-  <h1 class="mat-h1">Item List</h1>
-  <div class="button-group">
-    <button mat-raised-button color="primary" (click)="openBarcodeScanner()">
-      Scan Barcode
-    </button>
-    <button mat-raised-button (click)="clearFilter()" *ngIf="filteredTableData.length !== tableData.length">
-      Clear Filter
-    </button>
+<section class="inventory-shell">
+  <header class="title-group">
+    <div>
+      <p class="crumb">HOME  >  INVENTORY</p>
+      <h1 class="mat-h1">Inventory</h1>
+    </div>
+    <div class="button-group">
+      <button mat-flat-button color="primary" (click)="openBarcodeScanner()">Scan Barcode</button>
+      <button mat-stroked-button (click)="clearFilter()" *ngIf="filteredTableData.length !== tableData.length">Clear Filter</button>
+    </div>
+  </header>
+
+  <div class="metric-grid">
+    <mat-card class="metric-card">
+      <p>Total SKUs</p>
+      <h3>{{ tableData.length }}</h3>
+    </mat-card>
+    <mat-card class="metric-card">
+      <p>Filtered</p>
+      <h3>{{ filteredTableData.length }}</h3>
+    </mat-card>
+    <mat-card class="metric-card">
+      <p>Visible Stock</p>
+      <h3>{{ visibleStock }}</h3>
+    </mat-card>
   </div>
-</div>
-<div class="mat-elevation-z8">
-  <app-widget-table [tableData]="filteredTableData" [columnHeader]="columnHeader"></app-widget-table>
-</div>
+
+  <mat-card class="table-shell">
+    <app-widget-table [tableData]="filteredTableData" [columnHeader]="columnHeader"></app-widget-table>
+  </mat-card>
+</section>

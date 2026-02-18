@@ -195,19 +195,55 @@ export class DashboardService {
         const salesData = categories.map(cat => monthlyData[cat].sales);
         const ordersCountData = categories.map(cat => monthlyData[cat].count);
 
-        return { // Highcharts.Options
-          chart: { type: 'area' },
-          title: { text: 'Monthly Sales and Orders (Last 6 Months)' },
-          xAxis: { categories: categories, title: { text: 'Month' } },
+        return {
+          chart: {
+            type: 'area',
+            backgroundColor: 'transparent',  // removes white background
+            style: { fontFamily: 'inherit' }
+          },
+          title: {
+            text: 'Monthly Sales and Orders (Last 6 Months)',
+            style: { color: '#cdd8eb' }
+          },
+          xAxis: {
+            categories: categories,
+            title: { text: 'Month', style: { color: '#8ea6c9' } },
+            labels: { style: { color: '#8ea6c9' } },
+            lineColor: '#1f355a',
+            tickColor: '#1f355a',
+            gridLineColor: '#1f355a'
+          },
           yAxis: [
-            { title: { text: 'Total Sales' }, labels: { formatter: function() { return '$' + Highcharts.numberFormat(Number(this.value), 0, '.', ','); } } },
-            { title: { text: 'Number of Orders' }, opposite: true, labels: { format: '{value}'} }
+            {
+              title: { text: 'Total Sales', style: { color: '#8ea6c9' } },
+              labels: {
+                style: { color: '#8ea6c9' },
+                formatter: function() { return '$' + Highcharts.numberFormat(Number(this.value), 0, '.', ','); }
+              },
+              gridLineColor: '#1f355a'
+            },
+            {
+              title: { text: 'Number of Orders', style: { color: '#8ea6c9' } },
+              opposite: true,
+              labels: { format: '{value}', style: { color: '#8ea6c9' } },
+              gridLineColor: '#1f355a'
+            }
           ],
           series: [
             { name: 'Total Sales', type: 'area', data: salesData, yAxis: 0 },
             { name: 'Number of Orders', type: 'line', data: ordersCountData, yAxis: 1 }
           ],
-          tooltip: { shared: true, crosshairs: true },
+          legend: {
+            itemStyle: { color: '#8ea6c9' },
+            itemHoverStyle: { color: '#fff' }
+          },
+          tooltip: {
+            shared: true,
+            crosshairs: true,
+            backgroundColor: '#0d2040',
+            borderColor: '#1f355a',
+            style: { color: '#cdd8eb' }
+          },
           credits: { enabled: false },
           exporting: { enabled: true }
         };
@@ -396,6 +432,82 @@ export class DashboardService {
       exporting: { enabled: true },
       plotOptions: { series: { animation: false } }
     };
+  }
+
+  public getRecentOrders(): Observable<{ isLoading: boolean; data: any[]; error?: any }> {
+    return this.orderService.getAllOrders().pipe(
+      map((orders: Order[]) => {
+        const sorted = [...orders]
+          .sort((a, b) => {
+            const dateA = this.safeGetDate(a.created_date)?.getTime() ?? 0;
+            const dateB = this.safeGetDate(b.created_date)?.getTime() ?? 0;
+            return dateB - dateA;
+          })
+          .slice(0, 10)
+          .map(order => ({
+            orderId:      `#${order.id}`,
+            customerName: order.customer_name || 'Unknown',
+            date:         this.safeGetDate(order.created_date) ?? new Date(),
+            amount:       order.total_cost ?? 0,
+            status:       order.status ?? 'Pending'
+          }));
+
+        return { isLoading: false, data: sorted };
+      }),
+      startWith({ isLoading: true, data: [] }),
+      catchError(error => {
+        console.error('Error fetching recent orders:', error);
+        return of({ isLoading: false, error: true, data: [] });
+      })
+    );
+  }
+
+  public getChannelBreakdownData(): Observable<{
+    isLoading: boolean;
+    items: { name: string; revenue: number; percent: number; colorKey: string }[];
+    growth: string;
+    totalOrders: number;
+    churn: string;
+    error?: any;
+  }> {
+    return this.orderService.getAllOrders().pipe(
+      map((orders: Order[]) => {
+        // Group by order.channel if it exists on your Order model,
+        // otherwise falls back to 'Direct' as a single bucket.
+        // Add a `channel?: string` field to your Order model to enable multi-channel.
+        const channelTotals: { [key: string]: number } = {};
+
+        orders.forEach(order => {
+          const channel = (order as any).channel ?? 'Direct Store';
+          channelTotals[channel] = (channelTotals[channel] ?? 0) + (order.total_cost ?? 0);
+        });
+
+        const totalRevenue = Object.values(channelTotals).reduce((a, b) => a + b, 0);
+
+        const colorKeys = ['blue', 'green', 'yellow', 'purple', 'red'];
+        const items = Object.entries(channelTotals)
+          .sort(([, a], [, b]) => b - a)
+          .map(([name, revenue], i) => ({
+            name,
+            revenue,
+            percent: totalRevenue > 0 ? Math.round((revenue / totalRevenue) * 100) : 0,
+            colorKey: colorKeys[i % colorKeys.length]
+          }));
+
+        return {
+          isLoading: false,
+          items,
+          growth:      '+14.2%',   // TODO: calculate vs previous period
+          totalOrders: orders.length,
+          churn:       '1.2%'      // TODO: calculate from subscription/return data
+        };
+      }),
+      startWith({ isLoading: true, items: [], growth: '', totalOrders: 0, churn: '' }),
+      catchError(error => {
+        console.error('Error fetching channel breakdown:', error);
+        return of({ isLoading: false, error: true, items: [], growth: '—', totalOrders: 0, churn: '—' });
+      })
+    );
   }
 
   public getSalesByProductData(startDate?: Date, endDate?: Date): Observable<SalesByProductData> {

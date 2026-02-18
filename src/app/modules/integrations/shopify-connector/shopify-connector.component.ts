@@ -4,7 +4,8 @@ import { OrderService } from '../../services/order.service'; // Changed ItemServ
 import { Order } from '../../model/order.model';
 
 @Component({
-  selector: 'app-shopify-connector', // Changed selector
+  
+  standalone: false, // Changed selector
   templateUrl: './shopify-connector.component.html', // Changed template URL
   styleUrls: ['./shopify-connector.component.scss'] // Changed style URL
 })
@@ -70,3 +71,4 @@ export class ShopifyConnectorComponent implements OnInit {
     );
   }
 }
+

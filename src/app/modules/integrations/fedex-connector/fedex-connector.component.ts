@@ -26,7 +26,8 @@ interface FedExTrackingResponse {
 }
 
 @Component({
-  selector: 'app-fedex-connector',
+  
+  standalone: false,
   templateUrl: './fedex-connector.component.html',
   styleUrls: ['./fedex-connector.component.scss']
 })
@@ -167,3 +168,4 @@ export class FedexConnectorComponent implements OnInit {
     );
   }
 }
+

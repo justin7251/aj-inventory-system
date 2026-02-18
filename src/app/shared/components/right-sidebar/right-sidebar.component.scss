@@ -1,0 +1,44 @@
+.insights-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 8px;
+}
+
+.insights-panel h3 {
+  margin: 4px 0 10px;
+  font-size: 1rem;
+  color: var(--text);
+}
+
+.insight-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface-soft);
+}
+
+.label {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+}
+
+.value {
+  font-weight: 700;
+  color: var(--text);
+}
+
+.value.good {
+  color: #15803d;
+}
+
+.value.warn {
+  color: #b45309;
+}
+
+.panel-btn {
+  margin-top: 8px;
+}

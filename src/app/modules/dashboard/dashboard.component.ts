@@ -5,72 +5,66 @@ import {
   HighchartsChartOptionsData,
   SalesByProductData
 } from '../dashboard.service';
-import { Observable, of } from 'rxjs';
-// Finalize is no longer needed here as loading state is part of the emitted value by the service
-// import { finalize } from 'rxjs/operators';
+import { Observable } from 'rxjs';
 import * as Highcharts from 'highcharts';
 
 @Component({
   selector: 'app-dashboard',
+  standalone: false,
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.scss']
 })
 export class DashboardComponent implements OnInit, OnDestroy {
 
-  cards$: Observable<number[]>;
+  // ── Period toggle ──────────────────────────────────────
+  activePeriod: string = '30d';
 
-  orderSummaryData$: Observable<OrderSummaryData>;
-  monthlySalesChartOptions$: Observable<HighchartsChartOptionsData>;
-  salesByProductData$: Observable<SalesByProductData>;
-  monthlyCogsRevenueChartOptions$: Observable<HighchartsChartOptionsData>;
-  topSellingProductsChartData$: Observable<SalesByProductData>;
+  setPeriod(period: string): void {
+    this.activePeriod = period;
+    // TODO: pass period into your service calls to re-fetch filtered data
+  }
+
+  // ── Observables ────────────────────────────────────────
+  orderSummaryData$!:             Observable<OrderSummaryData>;
+  monthlySalesChartOptions$!:     Observable<HighchartsChartOptionsData>;
+  salesByProductData$!:           Observable<SalesByProductData>;
+  monthlyCogsRevenueChartOptions$!: Observable<HighchartsChartOptionsData>;
+  channelBreakdownData$!:         Observable<any>;   // ← was missing
+  recentOrders$!:                 Observable<any>;   // ← was missing
 
   salesByProductStartDate: string = '';
-  salesByProductEndDate: string = '';
-  
-  constructor(
-    private dashboardService: DashboardService
-  ) { }
-  
-  ngOnInit() {
-    this.cards$ = this.dashboardService.cards();
+  salesByProductEndDate:   string = '';
 
-    this.orderSummaryData$ = this.dashboardService.getOrderSummaryData();
-    this.monthlySalesChartOptions$ = this.dashboardService.getMonthlySalesAndOrdersData();
+  constructor(private dashboardService: DashboardService) {}
+
+  ngOnInit(): void {
+    Highcharts.setOptions({ accessibility: { enabled: false } });
+
+    this.orderSummaryData$             = this.dashboardService.getOrderSummaryData();
+    this.monthlySalesChartOptions$     = this.dashboardService.getMonthlySalesAndOrdersData();
     this.monthlyCogsRevenueChartOptions$ = this.dashboardService.getMonthlyCogsAndRevenue();
-    this.topSellingProductsChartData$ = this.dashboardService.getTopSellingProductsData(); // For top 5 products pie chart
 
-    // Initial load for sales by product (e.g., current month)
+    // Hook these up once your service has the methods.
+    // For now, emit empty loading states so the template doesn't crash.
+    this.channelBreakdownData$ = this.dashboardService.getChannelBreakdownData
+      ? this.dashboardService.getChannelBreakdownData()
+      : new Observable(obs => obs.next({ isLoading: false, items: [], growth: '—', totalOrders: 0, churn: '—' }));
+
+    this.recentOrders$ = this.dashboardService.getRecentOrders
+      ? this.dashboardService.getRecentOrders()
+      : new Observable(obs => obs.next({ isLoading: false, data: [] }));
+
     this.loadSalesByProductData();
   }
 
   loadSalesByProductData(): void {
-    let startDate: Date | undefined;
-    let endDate: Date | undefined;
+    const startDate = this.salesByProductStartDate
+      ? new Date(this.salesByProductStartDate) : undefined;
+    const endDate = this.salesByProductEndDate
+      ? new Date(this.salesByProductEndDate) : undefined;
 
-    if (this.salesByProductStartDate) {
-      startDate = new Date(this.salesByProductStartDate);
-      if (isNaN(startDate.getTime())) {
-        startDate = undefined;
-      }
-    }
-
-    if (this.salesByProductEndDate) {
-      endDate = new Date(this.salesByProductEndDate);
-      if (isNaN(endDate.getTime())) {
-        endDate = undefined;
-      }
-    }
-
-    // The service now handles default behavior if dates are not provided correctly.
-    // The service methods return Observables that emit objects including loading state.
     this.salesByProductData$ = this.dashboardService.getSalesByProductData(startDate, endDate);
   }
-  
-  ngOnDestroy() {
-    // Observables managed by async pipe don't need manual unsubscription.
-  }
 
-  // Unused properties like tableData, columnHeader were already removed.
-  // Loading flags like isSalesByProductLoading, isCogsRevenueLoading are removed.
+  ngOnDestroy(): void {}
 }

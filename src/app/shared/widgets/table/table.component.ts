@@ -6,13 +6,13 @@ import {Observable} from 'rxjs';
 
 @Component({
   selector: 'app-widget-table',
+  standalone: false,
   templateUrl: './table.component.html',
   styleUrls: ['./table.component.scss']
 })
 export class TableComponent implements OnInit {
-  @Input() tableData;
-  @Input() columnHeader;
-  objectKeys = Object.keys;
+  @Input() tableData: any[] = [];
+  @Input() columnHeader: Record<string, string> = {};
   dataSource = new MatTableDataSource<any>();
   // loading$: Observable<any[]>;
 
@@ -21,8 +21,12 @@ export class TableComponent implements OnInit {
 
   ngOnInit() {
     setTimeout(() => {
-      this.dataSource.data = this.tableData;
+      this.dataSource.data = this.tableData || [];
     }, 1000);
+  }
+
+  get columnKeys(): string[] {
+    return Object.keys(this.columnHeader || {});
   }
 
   ngAfterViewInit() {

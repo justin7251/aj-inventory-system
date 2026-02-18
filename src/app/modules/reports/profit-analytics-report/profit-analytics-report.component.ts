@@ -4,7 +4,8 @@ import { DashboardService, ChartData } from '../../dashboard.service';
 import { MonthlyProfitSummary, ProfitAnalyticsOrderDetail } from '../../model/analytics.model';
 
 @Component({
-  selector: 'app-profit-analytics-report',
+  
+  standalone: false,
   templateUrl: './profit-analytics-report.component.html',
   styleUrls: ['./profit-analytics-report.component.scss']
 })
@@ -32,3 +33,4 @@ export class ProfitAnalyticsReportComponent implements OnInit {
     return !!this.expandedOrderItems[orderId];
   }
 }
+

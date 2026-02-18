@@ -20,6 +20,8 @@ export interface Order {
 	discount: number;
 	total_cost: number;
 	totalEarnings?: number;
+  status?:  string;
+  channel?: string;
 	// Firestore typically returns Timestamps. Allow string for flexibility if parsing from other sources.
 	update_date?: Timestamp | Date | string;
 	created_date?: Timestamp | Date | string;

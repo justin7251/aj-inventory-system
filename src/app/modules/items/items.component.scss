@@ -1,10 +1,56 @@
+.inventory-shell {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
 .title-group {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
+}
+
+.crumb {
+  margin: 0 0 4px;
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+}
+
+.title-group h1 {
+  margin: 0;
+}
+
+.metric-grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.metric-card {
+  padding: 8px 6px;
+}
+
+.metric-card p {
+  margin: 0 0 8px;
+  color: var(--text-muted);
+}
+
+.metric-card h3 {
+  margin: 0;
+  font-size: 1.8rem;
 }
 
 .button-group button {
   margin-left: 10px;
+}
+
+.table-shell {
+  padding: 8px;
+}
+
+@media (max-width: 900px) {
+  .metric-grid {
+    grid-template-columns: 1fr;
+  }
 }
